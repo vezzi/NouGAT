@@ -1,0 +1,21 @@
+QCcontrol:
+ jellyfish:
+  bin: /bubo/home/h23/vezzi/assembly_pipeline/tools/jellyfish-1.1.11/bin/jellyfish
+  options: ""
+ abyss:
+  bin: /bubo/sw/apps/bioinfo/abyss/1.3.5/kalkyl/bin/ABYSS
+  options: [-o, preUnitgs.fa, -k, "54", --coverage-hist=histogram.hist]
+ fastqc:
+  bin: /bubo/sw/apps/bioinfo/fastqc/0.10.1/kalkyl/fastqc
+  options: [--threads,  "4" ,  --outdir,  fastqc]
+assemble:
+ abyss:
+  bin: /bubo/sw/apps/bioinfo/abyss/1.3.5/kalkyl/bin/abyss-pe
+  options: "balbal"
+ allpaths:
+  bin: PATH_TO_ALLPATHS
+  options: "options for all paths"
+evaluete:
+ FRC:
+  bin: pathFRC
+  options: "options"
