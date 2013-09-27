@@ -64,12 +64,11 @@ def submit_job(sample_config, global_config, sample_name):
     slurm_handle.write("#SBATCH -e {}_QC.err\n".format(sample_name))
     slurm_handle.write("#SBATCH -J {}_QC.job\n".format(sample_name))
     slurm_handle.write("#SBATCH -p node -n 8\n")
-    slurm_handle.write("#SBATCH -t 00:02:00\n")
+    slurm_handle.write("#SBATCH -t 05:00:00\n")
     slurm_handle.write("#SBATCH --mail-user francesco.vezzi@scilifelab.se\n")
     slurm_handle.write("#SBATCH --mail-type=ALL\n")
     
     slurm_handle.write("\n\n");
-    slurm_handle.write("workon assembly_pipeline\n")
     slurm_handle.write("python ~/assembly_pipeline/de_novo_scilife/script/deNovo_pipeline.py --global-config {} --sample-config {}\n\n".format(global_config,sample_config))
     slurm_handle.close()
     

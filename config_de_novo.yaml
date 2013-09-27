@@ -9,12 +9,18 @@ QCcontrol:
   bin: /bubo/sw/apps/bioinfo/fastqc/0.10.1/kalkyl/fastqc
   options: [--threads,  "4" ,  --outdir,  fastqc]
 assemble:
+ masurca:
+  bin: /bubo/home/h23/vezzi/assembly_pipeline/tools/MaSuRCA-2.0.4/
+  options: 
  abyss:
   bin: /bubo/sw/apps/bioinfo/abyss/1.3.5/kalkyl/bin/abyss-pe
-  options: "balbal"
+  options: [ -k, "54"]
  allpaths:
   bin: PATH_TO_ALLPATHS
-  options: "options for all paths"
+  options: ["balbal"]
+ soapdenovo:
+  bin: /bubo/home/h23/vezzi/assembly_pipeline/tools/SOAPdenovo2-src-r240/SOAPdenovo-63mer
+  options: [""]
 evaluete:
  FRC:
   bin: pathFRC

@@ -1,6 +1,7 @@
 import sys, os, yaml, glob
 import argparse
 import QCcontrol
+import assemble
 
 
 def main(args):
