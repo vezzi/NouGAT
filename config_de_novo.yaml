@@ -3,25 +3,37 @@ QCcontrol:
   bin: /bubo/home/h23/vezzi/assembly_pipeline/tools/jellyfish-1.1.11/bin/jellyfish
   options: ""
  abyss:
-  bin: /bubo/sw/apps/bioinfo/abyss/1.3.5/kalkyl/bin/ABYSS
+  bin: /bubo/sw/apps/bioinfo/abyss/1.3.5/kalkyl/bin/ABYSS-P
   options: [-o, preUnitgs.fa, -k, "54", --coverage-hist=histogram.hist]
  fastqc:
   bin: /bubo/sw/apps/bioinfo/fastqc/0.10.1/kalkyl/fastqc
-  options: [--threads,  "4" ,  --outdir,  fastqc]
+  options: [--threads,  "8" ,  --outdir,  fastqc]
+ trimmomatic:
+  bin: /home/vezzi/assembly_pipeline/tools/Trimmomatic-0.30/trimmomatic-0.30.jar
+  options: ["PE", "-phred33", "-threads", "4"]
 assemble:
  masurca:
   bin: /bubo/home/h23/vezzi/assembly_pipeline/tools/MaSuRCA-2.0.4/
   options: 
  abyss:
   bin: /bubo/sw/apps/bioinfo/abyss/1.3.5/kalkyl/bin/abyss-pe
-  options: [ -k, "54"]
- allpaths:
-  bin: PATH_TO_ALLPATHS
-  options: ["balbal"]
+  options: ["k=54", "np=8"]
+ abyss_mergePairs:
+  bin: /bubo/sw/apps/bioinfo/abyss/1.3.5/kalkyl/bin/abyss-mergepairs
+  options: ["-m 20", "-1 230", "-2 230"]
  soapdenovo:
   bin: /bubo/home/h23/vezzi/assembly_pipeline/tools/SOAPdenovo2-src-r240/SOAPdenovo-63mer
+  options: [""]
+ spades:
+  bin: /home/vezzi/assembly_pipeline/tools/SPAdes-2.5.1-Linux/bin/spades.py
+  options: ["--careful", "-t 8"]
+ allpaths:
+  bin: TODO
   options: [""]
 evaluete:
  FRC:
   bin: pathFRC
+  options: "options"
+ CEGMA:
+  bin: pathCEGMA
   options: "options"

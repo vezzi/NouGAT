@@ -54,7 +54,7 @@ def _run_abyss_kmerPlot(global_config, sample_config, sorted_libraries_by_insert
 
     program=global_config["QCcontrol"]["abyss"]["bin"]
     program_options=global_config["QCcontrol"]["abyss"]["options"]
-    command = [program]
+    command = ['mpirun', '-np', '8', program]
     for option in program_options:
             command.append(option)
     for library, libraryInfo in sorted_libraries_by_insert:
@@ -65,7 +65,7 @@ def _run_abyss_kmerPlot(global_config, sample_config, sorted_libraries_by_insert
             command.append(read1)
             if read2 is not None:
                 command.append(read2)
-        
+    print command
     subprocess.call(command, stdout=ABySS_Kmer_stdOut, stderr=ABySS_Kmer_stdErr)
     subprocess.call(("rm", "preUnitgs.fa"))
     _plotKmerPlot()

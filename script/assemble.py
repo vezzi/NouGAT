@@ -12,6 +12,15 @@ def run(global_config, sample_config, sorted_libraries_by_insert):
         _run_masurca(global_config, sample_config, sorted_libraries_by_insert)
     elif tool == "soapdenovo":
         _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert)
+    elif tool == "abyss":
+        _run_abyss(global_config, sample_config, sorted_libraries_by_insert)
+    elif tool == "spades":
+        _run_spades(global_config, sample_config, sorted_libraries_by_insert)
+    elif tool == "abyss_mergePairs":
+        _run_abyss_mergePairs(global_config, sample_config, sorted_libraries_by_insert)
+    else:
+        print "tool {} is not yet supported".format(tool)
+
 
 
 def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
@@ -176,11 +185,13 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
 
     program=global_config["assemble"]["abyss"]["bin"]
     program_options=global_config["assemble"]["abyss"]["options"]
-    command = [program]
+    
+    command = ""
+    command += "{} ".format(program)
     for option in program_options:
-            command.append(option)
-    libraries     = {}
-
+            command += "{} ".format(option)
+    
+    libraries = {}
     for library, libraryInfo in sorted_libraries_by_insert:
         read1       = libraryInfo["pair1"]
         read2       = libraryInfo["pair2"]
@@ -189,55 +200,176 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
         std         = libraryInfo["std"]
         if orientation=="innie":
             if read2 is None:
-                if not libraries["se"]: # check if this is the first time I insert a se file
+                if "se" not in libraries: # check if this is the first time I insert a se file
                     libraries["se"] = "se=\'"
                 libraries["se"] = libraries["se"] + read1
             else:
-                if not libraries["lib"]:
+                if not "lib" in libraries:
                     libraries["lib"] = {}
                 libName = "pe{}".format(insert)
-                if not libraries["lib"][libName]:
-                    libraries["lib"][libName] = "{}=\'".format(libName)
-                libraries["lib"][libName] += libraries["lib"][libName] + read1
-                libraries["lib"][libName] += libraries["lib"][libName] + read1
+                if not libName in libraries["lib"]:
+                    libraries["lib"][libName] = ""
+                libraries["lib"][libName] += libraries["lib"][libName] + "{} {} ".format(read1, read2)
         else:
-                if not libraries["mp"]:
-                    libraries["mp"] = {}
-                libName = "mp{}".format(insert)
-                if not libraries["mp"][libName]:
-                    libraries["mp"][libName] = "{}=\'".format(libName)
-                libraries["mp"][libName] += libraries["mp"][libName] + read1
-                libraries["mp"][libName] += libraries["mp"][libName] + read1
+            if not "mp" in libraries:
+                libraries["mp"] = {}
+            libName = "mp{}".format(insert)
+            if not libName in libraries["mp"]:
+                libraries["mp"][libName] = ""
+            libraries["mp"][libName] += libraries["mp"][libName] + "{} {} ".format(read1, read2)
         #now creat the command
-        commad.append("k=54");
-        command.append("name={}".format(outputName))
 
-        if libraries["se"]:
-            libraries["se"] = libraries["se"] + "\'"
-            command.append(libraries["se"])
-        if libraries["lib"]:
-            lib="lib=\'"
-            for libPE in libraries["lib"]:
-                lib = lib + " {}".format(libPE)
-            
-        for library, libraryInfo in sorted_libraries_by_insert:
-            read1       = libraryInfo["pair1"]
-            read2       = libraryInfo["pair2"]
-            orientation = libraryInfo["orientation"]
-            insert      = libraryInfo["insert"]
-            
+    command += "name={} ".format(outputName)
 
-        
-        
+    librariesSE       = ""
+    librariesPE       = ""
+    librariesMP       = ""
 
-            command.append(read1)
-            
-                command.append(read2)
-        
-    subprocess.call(command, stdout=abyss_stdOut, stderr=abyss_stdErr)
+    if "se" in libraries:
+        libraries["se"] = libraries["se"] + "\'"
+        librariesSE = libraries["se"]
+    if "lib" in libraries:
+        lib="lib=\'"
+        for libPE, libPEreads in libraries["lib"].iteritems():
+            lib = lib + "{} ".format(libPE)
+            librariesPE += " {}=\'{}\' ".format(libPE,libPEreads)
+        lib=lib + "\' "
+        command += "{} ".format(lib)
+    if "mp" in libraries:
+        mp="mp=\'"
+        for libMP, libMPreads in libraries["mp"].iteritems():
+            mp = mp + "{} ".format(libMP)
+            librariesMP += " {}=\'{}\' ".format(libMP,libMPreads)
+        mp=mp + "\' "
+        command += "{} ".format(mp)
+
+    command += "{} ".format(librariesSE)
+    command += "{} ".format(librariesPE)
+    command += "{} ".format(librariesMP)
+
+    subprocess.call(command, stdout=abyss_stdOut, stderr=abyss_stdErr, shell=True)
     os.chdir("..")
     
     return
+
+
+
+
+
+def _run_abyss_mergePairs(global_config, sample_config, sorted_libraries_by_insert):
+    print "running abyss-mergepairs ..."
+    mainDir = os.getcwd()
+    abyssFolder = os.path.join(os.getcwd(), "abyss_mergePairs")
+    if not os.path.exists(abyssFolder):
+        os.makedirs(abyssFolder)
+    else:
+        print "done (abyss_mergePairs folder already present, assumed already run)"
+        #return
+   
+    os.chdir(abyssFolder)
+
+    program=global_config["assemble"]["abyss_mergePairs"]["bin"]
+    program_options=global_config["assemble"]["abyss_mergePairs"]["options"]
+    
+    command = []
+    command.append(program)
+    for option in program_options:
+            command.append(option)
+    
+    libraries = {}
+    for library, libraryInfo in sorted_libraries_by_insert:
+        read1       = libraryInfo["pair1"]
+        read2       = libraryInfo["pair2"]
+        orientation = libraryInfo["orientation"]
+        insert      = libraryInfo["insert"]
+        std         = libraryInfo["std"]
+        outputNameArray  = read1.split('/')[-1].split('_')
+        outputName = "{}_{}".format(outputNameArray[0], outputNameArray[1])
+        
+        if orientation=="innie":
+            if read2 is not None:
+                currentCommand = command;
+                currentCommand.append('-o')
+                currentCommand.append(outputName)
+                currentCommand.append(read1)
+                currentCommand.append(read2)
+                print currentCommand
+                abyss_stdOut = open("mergePairs_{}.stdOut".format(outputName), "a")
+                abyss_stdErr = open("mergePairs_{}.stdErr".format(outputName), "a")
+                
+                subprocess.call(command, stdout=abyss_stdOut, stderr=abyss_stdErr)
+                
+                stdOutFile = open("mergePairs_{}.stdOut".format(outputName), "r")
+                line1 = stdOutFile.readline()
+                line2 = stdOutFile.readline()
+                for line in stdOutFile.readline():
+                    line1 = line2
+                    line2= line
+                print line1
+                print line2
+
+    os.chdir("..")
+    
+    return
+
+
+
+
+
+
+def _run_spades(global_config, sample_config, sorted_libraries_by_insert):
+    print "running spades ..."
+    outputName = sample_config["output"]
+    mainDir = os.getcwd()
+    spadesFolder = os.path.join(os.getcwd(), "spades")
+    if not os.path.exists(spadesFolder):
+        os.makedirs(spadesFolder)
+    else:
+        print "done (spades folder already present, assumed already run)"
+        #return
+   
+    os.chdir(spadesFolder)
+    abyss_stdOut = open("spades.stdOut", "a")
+    abyss_stdErr = open("spades.stdErr", "a")
+
+    program=global_config["assemble"]["spades"]["bin"]
+    program_options=global_config["assemble"]["spades"]["options"]
+    
+    command = ""
+    command += "{} ".format(program)
+    for option in program_options:
+        command += "{} ".format(option)
+
+    #creates the command on-the-fly
+    peLibrary = 1
+    mpLibrary = 1
+    for library, libraryInfo in sorted_libraries_by_insert:
+        read1       = libraryInfo["pair1"]
+        read2       = libraryInfo["pair2"]
+        orientation = libraryInfo["orientation"]
+        insert      = libraryInfo["insert"]
+        std         = libraryInfo["std"]
+        if orientation=="innie":
+            if read2 is None:
+                command += "--pe{}-s {} ".format(peLibrary, read1)
+            else:
+                command += "--pe{}-1 {} --pe{}-2 {} ".format(peLibrary, read1, peLibrary, read2)
+            peLibrary += 1
+        else:
+            command += "--mp{}-1 {} --mp{}-2 {} ".format(mpLibrary, read1, mpLibrary, read2)
+            mpLibrary += 1
+
+    command += "-o {} ".format(outputName)
+
+    print command
+    return
+
+    subprocess.call(command, stdout=abyss_stdOut, stderr=abyss_stdErr, shell=True)
+    os.chdir("..")
+    
+    return
+
+
 
 
 
