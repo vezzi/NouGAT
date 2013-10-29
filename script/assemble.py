@@ -1,6 +1,7 @@
 import sys, os, yaml, glob
 import subprocess
 import string
+import sys
 
 
 
@@ -18,6 +19,8 @@ def run(global_config, sample_config, sorted_libraries_by_insert):
         _run_spades(global_config, sample_config, sorted_libraries_by_insert)
     elif tool == "abyss_mergePairs":
         _run_abyss_mergePairs(global_config, sample_config, sorted_libraries_by_insert)
+    elif tool == "cabog":
+        _run_cabog(global_config, sample_config, sorted_libraries_by_insert)
     else:
         print "tool {} is not yet supported".format(tool)
 
@@ -38,7 +41,7 @@ def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
     program_options=global_config["assemble"]["soapdenovo"]["options"]
 
     soap_config_file = open("configuration.txt", "w")
-    soap_config_file.write("max_rd_len=150\n") #TODO make this a parameter in the options
+    soap_config_file.write("max_rd_len=250\n") #TODO make this a parameter in the options
     rank = 1
     for library, libraryInfo in sorted_libraries_by_insert:
         soap_config_file.write("[LIB]\n")
@@ -298,15 +301,8 @@ def _run_abyss_mergePairs(global_config, sample_config, sorted_libraries_by_inse
                 abyss_stdErr = open("mergePairs_{}.stdErr".format(outputName), "a")
                 
                 subprocess.call(command, stdout=abyss_stdOut, stderr=abyss_stdErr)
-                
-                stdOutFile = open("mergePairs_{}.stdOut".format(outputName), "r")
-                line1 = stdOutFile.readline()
-                line2 = stdOutFile.readline()
-                for line in stdOutFile.readline():
-                    line1 = line2
-                    line2= line
-                print line1
-                print line2
+                command_mv = ["mv", "mergePairs_{}.stdErr".format(outputName), "{}.txt".format(outputName)]
+                subprocess.call(command_mv)
 
     os.chdir("..")
     
@@ -321,16 +317,16 @@ def _run_spades(global_config, sample_config, sorted_libraries_by_insert):
     print "running spades ..."
     outputName = sample_config["output"]
     mainDir = os.getcwd()
-    spadesFolder = os.path.join(os.getcwd(), "spades")
-    if not os.path.exists(spadesFolder):
-        os.makedirs(spadesFolder)
+    assemblerFolder = os.path.join(os.getcwd(), "spades")
+    if not os.path.exists(assemblerFolder):
+        os.makedirs(assemblerFolder)
     else:
         print "done (spades folder already present, assumed already run)"
         #return
    
-    os.chdir(spadesFolder)
-    abyss_stdOut = open("spades.stdOut", "a")
-    abyss_stdErr = open("spades.stdErr", "a")
+    os.chdir(assemblerFolder)
+    spades_stdOut = open("spades.stdOut", "a")
+    spades_stdErr = open("spades.stdErr", "a")
 
     program=global_config["assemble"]["spades"]["bin"]
     program_options=global_config["assemble"]["spades"]["options"]
@@ -349,27 +345,92 @@ def _run_spades(global_config, sample_config, sorted_libraries_by_insert):
         orientation = libraryInfo["orientation"]
         insert      = libraryInfo["insert"]
         std         = libraryInfo["std"]
-        if orientation=="innie":
+        if orientation=="innie" or orientation=="none":
             if read2 is None:
                 command += "--pe{}-s {} ".format(peLibrary, read1)
             else:
                 command += "--pe{}-1 {} --pe{}-2 {} ".format(peLibrary, read1, peLibrary, read2)
             peLibrary += 1
-        else:
+        elif orientation=="outtie":
             command += "--mp{}-1 {} --mp{}-2 {} ".format(mpLibrary, read1, mpLibrary, read2)
             mpLibrary += 1
+        else:
+            print "orientation{} not supported.... why the program didnot failed earlier?".format(orientation)
 
     command += "-o {} ".format(outputName)
 
     print command
-    return
+    subprocess.call(command, stdout=spades_stdOut, stderr=spades_stdErr, shell=True)
+    command = ["mv", "{}/contigs.fasta".format(outputName), "{}_contigs.fasta".format(outputName)]
+    subprocess.call(command, stdout=spades_stdOut, stderr=spades_stdErr)
+    command = ["mv", "{}/scaffolds.fasta".format(outputName), "{}_scaffolds.fasta".format(outputName)]
+    subprocess.call(command, stdout=spades_stdOut, stderr=spades_stdErr)
+    command = ["rm", "-r", outputName]
+    subprocess.call(command, stdout=spades_stdOut, stderr=spades_stdErr)
 
-    subprocess.call(command, stdout=abyss_stdOut, stderr=abyss_stdErr, shell=True)
     os.chdir("..")
     
     return
 
 
+
+def _run_cabog(global_config, sample_config, sorted_libraries_by_insert):
+    print "running CABOG ..."
+    outputName = sample_config["output"]
+    mainDir = os.getcwd()
+    assemblerFolder = os.path.join(os.getcwd(), "cabog")
+    if not os.path.exists(assemblerFolder):
+        os.makedirs(assemblerFolder)
+    else:
+        print "done (cabog folder already present, assumed already run)"
+        return
+    os.chdir(assemblerFolder)
+    programBIN = global_config["assemble"]["cabog"]["bin"] # in masurca case there is no exectuable as a make file must be created
+    program_options=global_config["assemble"]["cabog"]["options"]
+
+    sys.path.insert(0, programBIN)
+    libraries = 1
+    cabog_stdOut = open("cabog.stdOut", "w")
+    cabog_stdErr = open("cabog.stdErr", "w")
+    for library, libraryInfo in sorted_libraries_by_insert:
+        command_fastqToCA = "fastqToCA "
+        read1=libraryInfo["pair1"]
+        read2=libraryInfo["pair2"]
+        orientation = libraryInfo["orientation"]
+        insert      = libraryInfo["insert"]
+        std         = libraryInfo["std"]
+        command_fastqToCA  += " -libraryname "
+        command_fastqToCA  += " {}_{}".format(outputName, libraries)
+        command_fastqToCA  += " -insertsize "
+        command_fastqToCA  += " {} {} ".format(insert,std)
+        command_fastqToCA  += " -technology "
+        command_fastqToCA  += " illumina "
+        command_fastqToCA  += " -type "
+        command_fastqToCA  += " illumina "
+        
+        if orientation=="innie" or orientation=="none" :
+            command_fastqToCA  += " -innie "
+            if read2 is None:
+                command_fastqToCA  += " -reads "
+                command_fastqToCA  += " {} ".format(read1)
+            else:
+                command_fastqToCA  += " -mates "
+                command_fastqToCA  += " {},{} ".format(read1, read2)
+        elif orientation=="outtie":
+            command_fastqToCA  += " -outtie "
+            command_fastqToCA  += " -mates "
+            command_fastqToCA  += " {},{} ".format(read1, read2)
+        command_fastqToCA  += " > "
+        command_fastqToCA  += " {}_{}.frg ".format(outputName, libraries)
+        print command_fastqToCA
+        subprocess.call(command_fastqToCA, stderr=cabog_stdErr, shell=True)
+        libraries += 1
+    
+    command_runCA = "runCA  -d . -p {} *frg".format(outputName)
+    subprocess.call(command_runCA, stdout=cabog_stdOut, stderr=cabog_stdErr, shell=True)
+    os.chdir("..")
+    print "CABOG succesfully exectued"
+    return
 
 
 

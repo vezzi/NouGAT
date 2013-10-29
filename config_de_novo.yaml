@@ -27,6 +27,9 @@ assemble:
  spades:
   bin: /home/vezzi/assembly_pipeline/tools/SPAdes-2.5.1-Linux/bin/spades.py
   options: ["--careful", "-t 8"]
+ cabog:
+  bin: 
+  options: [""]
  allpaths:
   bin: TODO
   options: [""]

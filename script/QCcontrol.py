@@ -65,6 +65,8 @@ def _run_abyss_kmerPlot(global_config, sample_config, sorted_libraries_by_insert
             command.append(read1)
             if read2 is not None:
                 command.append(read2)
+        if orientation == "none":
+                command.append(read1)
     print command
     subprocess.call(command, stdout=ABySS_Kmer_stdOut, stderr=ABySS_Kmer_stdErr)
     subprocess.call(("rm", "preUnitgs.fa"))

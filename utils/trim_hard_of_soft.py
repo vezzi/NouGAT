@@ -73,9 +73,16 @@ def main(args):
         trimmomatic_stdOut = open("trimmomatic.stdOut", "a")
         trimmomatic_stdErr = open("trimmomatic.stdErr", "a")
         subprocess.call(currentCommand, stdout=trimmomatic_stdOut, stderr=trimmomatic_stdErr)
+
+
+        command_singleReads = "zcat *unp.fastq.gz | gzip -c > {}_single.fastq.gz".format(sample_dir_name)
+        subprocess.call(command_singleReads, stdout=trimmomatic_stdOut, stderr=trimmomatic_stdErr, shell=True)
+
+        command_rm = ["rm", outputFile1U, outputFile2U]
+        subprocess.call(command_rm, stdout=trimmomatic_stdOut, stderr=trimmomatic_stdErr)
+
         trimmomatic_stdOut.close()
         trimmomatic_stdErr.close()
-    
         os.chdir(workingDir)
 
 
