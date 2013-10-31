@@ -37,16 +37,17 @@ def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
         print "done (soapdenovo folder already present, assumed already run)"
         return
     os.chdir(soapFolder)
-    programBIN = global_config["assemble"]["soapdenovo"]["bin"] # in masurca case there is no exectuable as a make file must be created
-    program_options=global_config["assemble"]["soapdenovo"]["options"]
+    programBIN      = global_config["assemble"]["soapdenovo"]["bin"] # in masurca case there is no exectuable as a make file must be created
+    program_options =global_config["assemble"]["soapdenovo"]["options"]
+    kmer            = sample_config["kmer"]
 
     soap_config_file = open("configuration.txt", "w")
     soap_config_file.write("max_rd_len=250\n") #TODO make this a parameter in the options
     rank = 1
     for library, libraryInfo in sorted_libraries_by_insert:
         soap_config_file.write("[LIB]\n")
-        read1=libraryInfo["pair1"]
-        read2=libraryInfo["pair2"]
+        read1       =libraryInfo["pair1"]
+        read2       =libraryInfo["pair2"]
         orientation = libraryInfo["orientation"]
         insert      = libraryInfo["insert"]
         std         = libraryInfo["std"]
@@ -54,13 +55,15 @@ def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
         soap_config_file.write("rank={}\n".format(rank))
         rank += 1
         soap_config_file.write("map_len=30\n")
-        
-        if orientation=="innie":
+        if orientation=="innie" or orientation=="none":
             soap_config_file.write("asm_flags=3\n")
             soap_config_file.write("pair_num_cutoff=3\n")
             soap_config_file.write("reverse_seq=0\n")
-            soap_config_file.write("q1={}\n".format(read1))
-            soap_config_file.write("q2={}\n".format(read2))
+            if read2 is None:
+                soap_config_file.write("q={}\n".format(read1))
+            else:
+                soap_config_file.write("q1={}\n".format(read1))
+                soap_config_file.write("q2={}\n".format(read2))
         elif orientation=="outtie":
             soap_config_file.write("asm_flags=2\n")
             soap_config_file.write("pair_num_cutoff=5\n")
@@ -69,20 +72,24 @@ def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
             soap_config_file.write("q2={}\n".format(read2))
 
     soap_config_file.close()
-
-    masurca_stdOut = open("soap.stdOut", "w")
-    masurca_stdErr = open("soap.stdErr", "w")
-    command = [programBIN , "all", "-s", "configuration.txt", "-K", "53",  "-o", "soapAssembly", "-p" , "8" ] # TODO: make everyhitn more parameter dependent
-    subprocess.call(command, stdout=masurca_stdOut, stderr=masurca_stdErr)
-
-    
-    if(os.path.exists("soapAssembly.scafSeq")):
-        os.rename("soapAssembly.scafSeq", "{}.fasta".format(outputName))
-    else:
-         print "something wrong with soapdenovo!!!"
-
+    soap_stdOut = open("soap.stdOut", "w")
+    soap_stdErr = open("soap.stdErr", "w")
+    os.makedirs(os.path.join(soapFolder, "runSOAP"))
+    os.chdir("runSOAP")
+    command = [programBIN , "all", "-s", "../configuration.txt", "-K", "{}".format(kmer),  "-o", "soapAssembly", "-p" , "8" ] # TODO: make everyhitn more parameter dependent
+    returnValue = subprocess.call(command, stdout=soap_stdOut, stderr=soap_stdErr)
     os.chdir("..")
-    print "soap succesfully exectued"
+    if returnValue == 0:
+        if(os.path.exists(os.path.join("runSOAP","soapAssembly.scafSeq"))):
+            subprocess.call(["mv", os.path.join("runSOAP","soapAssembly.scafSeq"), "{}.scf.fasta".format(outputName) ])
+            subprocess.call(["mv", os.path.join("runSOAP","soapAssembly.contig"), "{}.ctg.fasta".format(outputName) ])
+            subprocess.call(["rm", "-r", "runSOAP"])
+        else:
+            print "something wrong with SOAPdenovo -> no contig file generated"
+    else:
+        print "SOAPdenovo terminated with an error. Please check running folder for more informations"
+    os.chdir("..")
+    print "SOAPdenovo exectued"
     return
 
 
@@ -114,7 +121,7 @@ def _run_masurca(global_config, sample_config, sorted_libraries_by_insert):
     libraryPEnum = 0
     libraryMP    = "m"
     libraryMPnum = 0
-
+#TODO: single ended reads
     for library, libraryInfo in sorted_libraries_by_insert:
         read1=libraryInfo["pair1"]
         read2=libraryInfo["pair2"]
@@ -122,9 +129,10 @@ def _run_masurca(global_config, sample_config, sorted_libraries_by_insert):
         insert      = libraryInfo["insert"]
         std         = libraryInfo["std"]
         if orientation=="innie":
-            configurationLine = "PE = {}{} {} {} {} {}".format(libraryPE, allTheLetters[libraryPEnum], insert, std, read1, read2)
-            masurca_config_file.write("{}\n".format(configurationLine))
-            libraryPEnum+=1 #TODO: check when more than 21 PE libraries ae specified
+            if read2 is not None:
+                configurationLine = "PE = {}{} {} {} {} {}".format(libraryPE, allTheLetters[libraryPEnum], insert, std, read1, read2)
+                masurca_config_file.write("{}\n".format(configurationLine))
+                libraryPEnum+=1 #TODO: check when more than 21 PE libraries ae specified
         elif orientation=="outtie":
             configurationLine = "JUMP = {}{} {} {} {} {}".format(libraryMP, allTheLetters[libraryMPnum], insert, std, read1, read2)
             masurca_config_file.write("{}\n".format(configurationLine))
@@ -160,19 +168,32 @@ def _run_masurca(global_config, sample_config, sorted_libraries_by_insert):
     command = [os.path.join(programPATH,"bin/runSRCA.pl") , "configuration.txt"]
     subprocess.call(command, stdout=masurca_stdOut, stderr=masurca_stdErr)
 
-    if(os.path.exists("assemble.sh")):
-        command = ["assemble.sh"]
-        subprocess.call(command, stdout=masurca_stdOut, stderr=masurca_stdErr)
-
+    if not os.path.exists("assemble.sh"):
+        print "MaSuRCA: assemble.sh not created. Unknown failure"
+        return
+    command = ["./assemble.sh"]
+    returnValue = subprocess.call(command, stdout=masurca_stdOut, stderr=masurca_stdErr)
+    if returnValue == 0:
+        #if os.path.exists(os.path.join("runABySS","{}-contigs.fa".format(outputName))):
+        #    subprocess.call(["cp", os.path.join("runABySS","{}-contigs.fa".format(outputName)), "{}.ctg.fasta".format(outputName) ])
+        #    subprocess.call(["cp", os.path.join("runABySS","{}-scaffolds.fa".format(outputName)), "{}.scaf.fasta".format(outputName) ])
+        #    subprocess.call(["rm", "-r", "runABySS"])
+        #else:
+        #    print "something wrong with MaSuRCA -> no contig file generated"
+    else:
+        print "MaSuRCA terminated with an error. Please check running folder for more informations"
     os.chdir("..")
-    print "masurca succesfully exectued"
+    print "MaSuRCA executed"
     return
+
 
 
 
 
 def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     print "running abyss ..."
+    ##TO DO ::: avoid to load module
+    ##subprocess.call(["module","load","abyss/1.3.5"])
     outputName = sample_config["output"]
     mainDir = os.getcwd()
     abyssFolder = os.path.join(os.getcwd(), "abyss")
@@ -201,7 +222,7 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
         orientation = libraryInfo["orientation"]
         insert      = libraryInfo["insert"]
         std         = libraryInfo["std"]
-        if orientation=="innie":
+        if orientation=="innie" or orientation=="none":
             if read2 is None:
                 if "se" not in libraries: # check if this is the first time I insert a se file
                     libraries["se"] = "se=\'"
@@ -220,14 +241,11 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
             if not libName in libraries["mp"]:
                 libraries["mp"][libName] = ""
             libraries["mp"][libName] += libraries["mp"][libName] + "{} {} ".format(read1, read2)
-        #now creat the command
-
+    #now create the command
     command += "name={} ".format(outputName)
-
     librariesSE       = ""
     librariesPE       = ""
     librariesMP       = ""
-
     if "se" in libraries:
         libraries["se"] = libraries["se"] + "\'"
         librariesSE = libraries["se"]
@@ -250,9 +268,21 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     command += "{} ".format(librariesPE)
     command += "{} ".format(librariesMP)
 
-    subprocess.call(command, stdout=abyss_stdOut, stderr=abyss_stdErr, shell=True)
+    os.makedirs(os.path.join(abyssFolder, "runABySS"))
+    os.chdir("runABySS")
+    returnValue = subprocess.call(command, stdout=abyss_stdOut, stderr=abyss_stdErr, shell=True)
     os.chdir("..")
-    
+    if returnValue == 0:
+        if os.path.exists(os.path.join("runABySS","{}-contigs.fa".format(outputName))):
+            subprocess.call(["cp", os.path.join("runABySS","{}-contigs.fa".format(outputName)), "{}.ctg.fasta".format(outputName) ])
+            subprocess.call(["cp", os.path.join("runABySS","{}-scaffolds.fa".format(outputName)), "{}.scaf.fasta".format(outputName) ])
+            subprocess.call(["rm", "-r", "runABySS"])
+        else:
+            print "something wrong with ABySS -> no contig file generated"
+    else:
+        print "ABySS terminated with an error. Please check running folder for more informations"
+    os.chdir("..")
+    print "abyss executed"
     return
 
 
@@ -359,17 +389,18 @@ def _run_spades(global_config, sample_config, sorted_libraries_by_insert):
 
     command += "-o {} ".format(outputName)
 
-    print command
-    subprocess.call(command, stdout=spades_stdOut, stderr=spades_stdErr, shell=True)
-    command = ["mv", "{}/contigs.fasta".format(outputName), "{}_contigs.fasta".format(outputName)]
-    subprocess.call(command, stdout=spades_stdOut, stderr=spades_stdErr)
-    command = ["mv", "{}/scaffolds.fasta".format(outputName), "{}_scaffolds.fasta".format(outputName)]
-    subprocess.call(command, stdout=spades_stdOut, stderr=spades_stdErr)
-    command = ["rm", "-r", outputName]
-    subprocess.call(command, stdout=spades_stdOut, stderr=spades_stdErr)
+    returnValue = subprocess.call(command, stdout=spades_stdOut, stderr=spades_stdErr, shell=True)
+    if returnValue == 0:
+        if os.path.exists(os.path.join("outputName","contigs.fasta")):
+            subprocess.call(["cp", os.path.join("outputName","contigs.fasta"),  "{}.ctg.fasta".format(outputName)])
+            subprocess.call(["cp", os.path.join("outputName","scaffoldss.fasta"),  "{}.scf.fasta".format(outputName)])
+            subprocess.call(["rm", "-r", outputName])
+        else:
+            print "something wrong with SPADES -> no contig file generated"
+    else:
+        print "SPADES terminated with an error. Please check running folder for more informations"
 
     os.chdir("..")
-    
     return
 
 
@@ -393,7 +424,7 @@ def _run_cabog(global_config, sample_config, sorted_libraries_by_insert):
     cabog_stdOut = open("cabog.stdOut", "w")
     cabog_stdErr = open("cabog.stdErr", "w")
     for library, libraryInfo in sorted_libraries_by_insert:
-        command_fastqToCA = "fastqToCA "
+        command_fastqToCA = os.path.join(programBIN, "fastqToCA")
         read1=libraryInfo["pair1"]
         read2=libraryInfo["pair2"]
         orientation = libraryInfo["orientation"]
@@ -422,14 +453,25 @@ def _run_cabog(global_config, sample_config, sorted_libraries_by_insert):
             command_fastqToCA  += " {},{} ".format(read1, read2)
         command_fastqToCA  += " > "
         command_fastqToCA  += " {}_{}.frg ".format(outputName, libraries)
-        print command_fastqToCA
         subprocess.call(command_fastqToCA, stderr=cabog_stdErr, shell=True)
         libraries += 1
     
-    command_runCA = "runCA  -d . -p {} *frg".format(outputName)
-    subprocess.call(command_runCA, stdout=cabog_stdOut, stderr=cabog_stdErr, shell=True)
+    command_runCA = os.path.join(programBIN, "runCA")
+    command_runCA += "  -d runCABOGfolder -p {} *frg".format(outputName)
+    returnValue = subprocess.call(command_runCA, stdout=cabog_stdOut, stderr=cabog_stdErr, shell=True)
+    if returnValue == 0:
+        #assembly succed, remove files and save assembly
+        if os.path.exists(os.path.join("runCABOGfolder","9-terminator", "{}.ctg.fasta".format(outputName))):
+            subprocess.call(["mv", os.path.join("runCABOGfolder","9-terminator", "{}.ctg.fasta".format(outputName)), "{}.ctg.fasta".format(outputName)])
+            subprocess.call(["mv", os.path.join("runCABOGfolder","9-terminator", "{}.scf.fasta".format(outputName)), "{}.scf.fasta".format(outputName)])
+            subprocess.call(["rm", "-r", "runCABOGfolder"])
+        else:
+            print "something wrong with CABOG -> no contig file generated"
+    else:
+        print "CABOG terminated with an error. Please check running folder for more informations"
+
     os.chdir("..")
-    print "CABOG succesfully exectued"
+    print "CABOG exectued"
     return
 
 
