@@ -5,9 +5,82 @@ from matplotlib import pyplot as plt
 
 
 
-def run(global_config, sample_config, sorted_libraries_by_insert):
+def run(global_config, sample_config):
+    sorted_libraries_by_insert = sorted(sample_config["libraries"].iteritems(), key=lambda (k,v): v["insert"])
+    if os.path.exists(os.path.join(os.getcwd(), "DATA")):
+        sorted_libraries_by_insert = update_sample_config(sorted_libraries_by_insert)
+    else:
+        sorted_libraries_by_insert = prepare_folder_structure(sorted_libraries_by_insert)
+
     _run_fastqc(global_config, sample_config, sorted_libraries_by_insert)
     _run_abyss_kmerPlot(global_config, sample_config, sorted_libraries_by_insert)
+
+
+
+def prepare_folder_structure(sorted_libraries_by_insert):
+    mainDir = os.getcwd()
+    DataFolder = os.path.join(os.getcwd(), "DATA")
+    if os.path.exists(DataFolder):
+        sys.exit("DATA dir already exists: danger to over-write data: terminate execution")
+    os.makedirs(DataFolder)
+    os.chdir(DataFolder)
+    CurrentDir = os.getcwd()
+    #now prepare softlinks to data and give to libraries human readable names
+    currentLibraryNumber = 1;
+    type = ["SE", "PE", "MP"]
+    for library, libraryInfo in sorted_libraries_by_insert:
+        pair1 = libraryInfo["pair1"]
+        pair2 = libraryInfo["pair2"]
+        orientation = libraryInfo["orientation"]
+        pair1, pair2 = createSoftLinks(pair1, pair2, orientation, type, currentLibraryNumber)
+        libraryInfo["pair1"] = pair1
+        libraryInfo["pair2"] = pair2
+        currentLibraryNumber += 1
+    os.chdir("..")
+    return sorted_libraries_by_insert
+
+def update_sample_config(sorted_libraries_by_insert):
+    mainDir = os.getcwd()
+    DataFolder = os.path.join(os.getcwd(), "DATA")
+    if not os.path.exists(DataFolder):
+        sys.exit("DATA dir does not exists: we should not be here!!!!")
+    os.chdir(DataFolder)
+    currentLibraryNumber = 1
+    type = ["SE", "PE", "MP"]
+    for library, libraryInfo in sorted_libraries_by_insert:
+        pair1 = libraryInfo["pair1"]
+        pair2 = libraryInfo["pair2"]
+        orientation = libraryInfo["orientation"]
+        libraryInfo["pair1"] = _new_name(pair1, orientation, type, currentLibraryNumber, 1)
+        libraryInfo["pair2"] = _new_name(pair2, orientation, type, currentLibraryNumber, 2)
+        currentLibraryNumber += 1
+    os.chdir("..")
+    return sorted_libraries_by_insert
+
+def createSoftLinks(pair1, pair2, orientation, type, currentLibraryNumber):
+    pair1NewName = _new_name(pair1, orientation, type, currentLibraryNumber, 1)
+    pair2NewName = _new_name(pair2, orientation, type, currentLibraryNumber, 2)
+    os.symlink(pair1, pair1NewName)
+    if pair2NewName is not None:
+         os.symlink(pair2, pair2NewName)
+    return pair1NewName, pair2NewName
+
+def _new_name(oldPathName, orientation, type, currentLibraryNumber, pairNumber):
+    if oldPathName is None:
+        return oldPathName;
+    oldName = os.path.split(oldPathName)[1]
+    oldNameHead , oldNameTail = oldName.split(".",1)
+    newName = "lib{}_".format(currentLibraryNumber)
+    if orientation == "none":
+        newName += "SE."
+    elif orientation == "innie":
+        newName += "PE_{}.".format(pairNumber)
+    elif orientation == "outtie":
+        newName += "MP_{}.".format(pairNumber)
+    newName += oldNameTail
+    newName = os.path.join(os.getcwd(), newName)
+    return newName
+
 
 
 def _run_fastqc(global_config, sample_config, sorted_libraries_by_insert):
