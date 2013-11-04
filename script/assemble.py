@@ -89,6 +89,14 @@ def _run_soapdenovo(global_config, sample_config):
     programBIN      = global_config["assemble"]["soapdenovo"]["bin"] # in masurca case there is no exectuable as a make file must be created
     program_options =global_config["assemble"]["soapdenovo"]["options"]
     kmer            = sample_config["kmer"]
+    threads = ["-p", "8"]
+    for option in program_options:
+        if "-p" in option:
+            multiThread_option = option.split(" ")
+            threads = ["-p", multiThread_option[1]]
+    if not threads[1]:
+        print "SOAPdenovo: suspicous program option, -p specified but missing number of threads: ABORTING"
+        return
 
     soap_config_file = open("configuration.txt", "w")
     soap_config_file.write("max_rd_len=250\n") #TODO make this a parameter in the options
@@ -125,7 +133,7 @@ def _run_soapdenovo(global_config, sample_config):
     soap_stdErr = open("soap.stdErr", "w")
     os.makedirs(os.path.join(soapFolder, "runSOAP"))
     os.chdir("runSOAP")
-    command = [programBIN , "all", "-s", "../configuration.txt", "-K", "{}".format(kmer),  "-o", "soapAssembly", "-p" , "8" ] # TODO: make everyhitn more parameter dependent
+    command = [programBIN , "all", "-s", "../configuration.txt", "-K", "{}".format(kmer),  "-o", "soapAssembly", threads[0] , threads[1] ] # TODO: make everyhitn more parameter dependent
     returnValue = subprocess.call(command, stdout=soap_stdOut, stderr=soap_stdErr)
     os.chdir("..")
     if returnValue == 0:

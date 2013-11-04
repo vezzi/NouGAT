@@ -1,0 +1,39 @@
+QCcontrol:
+ jellyfish:
+  bin:
+  options: ""
+ abyss:
+  bin:
+  options: [-o, preUnitgs.fa, -k, "54", --coverage-hist=histogram.hist]
+ fastqc:
+  bin:
+  options: [--threads,  "8" ,  --outdir,  fastqc]
+ trimmomatic:
+  bin:
+  options: ["PE", "-phred33", "-threads", "4"]
+assemble:
+ masurca:
+  bin:
+  options: 
+ abyss:
+  bin:
+  options: ["k=54", "np=24"]
+ abyss_mergePairs:
+  bin:
+  options: ["-m 20", "-1 230", "-2 230"]
+ soapdenovo:
+  bin: /usr/local/bin/SOAPdenovo63mer
+  options: ["-p 24"]
+ spades:
+  bin:
+  options: ["--careful", "-t 24"]
+ cabog:
+  bin:
+  options: [""]
+evaluete:
+ FRC:
+  bin: pathFRC
+  options: ""
+ CEGMA:
+  bin: pathCEGMA
+  options: ""
