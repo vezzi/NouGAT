@@ -30,13 +30,10 @@ assemble:
  cabog:
   bin: /home/vezzi/assembly_pipeline/tools/wgs-7.0/Linux-amd64/bin/
   options: [""]
- allpaths:
-  bin: TODO
-  options: [""]
 evaluete:
  FRC:
   bin: pathFRC
-  options: "options"
+  options: ""
  CEGMA:
   bin: pathCEGMA
-  options: "options"
+  options: ""

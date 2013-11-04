@@ -332,7 +332,7 @@ def _run_abyss(global_config, sample_config):
     if returnValue == 0:
         if os.path.exists(os.path.join("runABySS","{}-contigs.fa".format(outputName))):
             subprocess.call(["cp", os.path.join("runABySS","{}-contigs.fa".format(outputName)), "{}.ctg.fasta".format(outputName) ])
-            subprocess.call(["cp", os.path.join("runABySS","{}-scaffolds.fa".format(outputName)), "{}.scaf.fasta".format(outputName) ])
+            subprocess.call(["cp", os.path.join("runABySS","{}-scaffolds.fa".format(outputName)), "{}.scf.fasta".format(outputName) ])
             subprocess.call(["rm", "-r", "runABySS"])
         else:
             print "something wrong with ABySS -> no contig file generated"
@@ -417,7 +417,7 @@ def _run_spades(global_config, sample_config):
     os.chdir(assemblerFolder)
     ##create DATA directory
     sorted_libraries_by_insert = sorted(sample_config["libraries"].iteritems(), key=lambda (k,v): v["insert"])
-    sorted_libraries_by_insert = prepare_folder_structure(sorted_libraries_by_insert)
+    #sorted_libraries_by_insert = prepare_folder_structure(sorted_libraries_by_insert)
 
     spades_stdOut = open("spades.stdOut", "a")
     spades_stdErr = open("spades.stdErr", "a")
@@ -455,9 +455,9 @@ def _run_spades(global_config, sample_config):
 
     returnValue = subprocess.call(command, stdout=spades_stdOut, stderr=spades_stdErr, shell=True)
     if returnValue == 0:
-        if os.path.exists(os.path.join("outputName","contigs.fasta")):
-            subprocess.call(["cp", os.path.join("outputName","contigs.fasta"),  "{}.ctg.fasta".format(outputName)])
-            subprocess.call(["cp", os.path.join("outputName","scaffoldss.fasta"),  "{}.scf.fasta".format(outputName)])
+        if os.path.exists(os.path.join(outputName,"contigs.fasta")):
+            subprocess.call(["cp", os.path.join(outputName,"contigs.fasta"),  "{}.ctg.fasta".format(outputName)])
+            subprocess.call(["cp", os.path.join(outputName,"scaffolds.fasta"),  "{}.scf.fasta".format(outputName)])
             subprocess.call(["rm", "-r", outputName])
         else:
             print "something wrong with SPADES -> no contig file generated"
