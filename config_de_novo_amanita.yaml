@@ -1,39 +1,40 @@
-QCcontrol:
+Pipelines:
+ QCcontrol
+ assemble
+ evaluete
+ align
+ user_define
+Tools:
  jellyfish:
-  bin:
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/jellyfish-1.1.11/bin/jellyfish
   options: ""
- abyss:
-  bin:
-  options: [-o, preUnitgs.fa, -k, "54", --coverage-hist=histogram.hist]
  fastqc:
-  bin:
-  options: [--threads,  "8" ,  --outdir,  fastqc]
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/FastQC/fastqc
+  options: [--threads,  "20" ,  --outdir,  fastqc]
  trimmomatic:
-  bin:
-  options: ["PE", "-phred33", "-threads", "4"]
-assemble:
- masurca:
-  bin:
-  options: 
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/Trimmomatic-0.32/trimmomatic-0.30.jar
+  options: ["PE", "-phred33", "-threads", "20"]
  abyss:
-  bin:
-  options: ["k=54", "np=24"]
+  bin: /usr/local/abyss-1.3.6/bin/ABYSS
+  options: ["k=54", "np=20"]
  abyss_mergePairs:
-  bin:
+  bin: /usr/local/abyss-1.3.6/bin/abyss-mergepairs
   options: ["-m 20", "-1 230", "-2 230"]
  soapdenovo:
-  bin: /usr/local/bin/SOAPdenovo63mer
-  options: ["-p 24"]
- spades:
-  bin:
-  options: ["--careful", "-t 24"]
- cabog:
-  bin:
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/SOAPdenovo2/SOAPdenovo-63mer
   options: [""]
-evaluete:
- FRC:
-  bin: pathFRC
+ allpaths:
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/allpathslg-47856/
+  options: [""]
+ bwa:
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/bwa-0.7.5a/bwa
   options: ""
- CEGMA:
-  bin: pathCEGMA
+ picard:
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/picard-tools-1.103/
+  options: ""
+ samtools:
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/samtools-0.1.18/samtools
+  options: ""
+ qaTools:
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/qaTools/
   options: ""

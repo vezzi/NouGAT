@@ -138,23 +138,30 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     if "abyss" in sample_config:
         program_options=sample_config["abyss"]
     
-
-    command = ['mpirun', '-np', '8', program]
-    for option in program_options:
-        command.append(option)
-
+#TODO fix this it must became a parameter
+    command = "mpirun -np 20 {} ".format(program)
+    #['mpirun', '-np', '20', program]
+    kmer = sample_config["kmer"]
+    #command.append('-k')
+    #command.append(kmer)
+    command += "-k {} ".format(kmer)
+    command += "--coverage-hist=histogram.hist -o preUnitgs.fa"
+    #command.extend(['--coverage-hist=histogram.hist', '-o', 'preUnitgs.fa'])
     for library, libraryInfo in sorted_libraries_by_insert:
         read1=libraryInfo["pair1"]
         read2=libraryInfo["pair2"]
         orientation = libraryInfo["orientation"]
         if orientation=="innie":
-            command.append(read1)
+            #command.append(read1)
+            command += " {} ".format(read1)
             if read2 is not None:
-                command.append(read2)
+#                command.append(read2)
+                command += " {} ".format(read2)
         if orientation == "none":
-                command.append(read1)
+            command += " {} ".format(read1)
+#                command.append(read1)
     print command
-    subprocess.call(command, stdout=ABySS_Kmer_stdOut, stderr=ABySS_Kmer_stdErr)
+    subprocess.call(command, shell=True, stdout=ABySS_Kmer_stdOut, stderr=ABySS_Kmer_stdErr)
     subprocess.call(("rm", "preUnitgs.fa"))
     _plotKmerPlot()
 
