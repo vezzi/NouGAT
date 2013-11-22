@@ -2,7 +2,8 @@ import sys, os, yaml, glob
 import argparse
 import QCcontrol
 import assemble
-
+import evaluete
+import align
 
 def main(args):
     with open(args.global_config) as in_handle:
@@ -12,40 +13,37 @@ def main(args):
         sample_config = yaml.load(sample_config_handle)
 
     check_consistency(global_config,sample_config)
+    
+    if sample_config["pipeline"] == "user_define":
+        sys.exit("user_define pipeline (i.e. a pipeline that execute one after the other the commands specified by the user is not yet supported)")
+
     run_analys(global_config, sample_config)
     
 
 
 def run_analys(global_config, sample_config):
-    analysis = sample_config["operation"].keys()[0] # analysis to be executed
+    analysis = sample_config["pipeline"] # analysis to be executed
     command = analysis
     command_fn = getattr(__import__(command), "run")
     command_fn(global_config, sample_config)
     
 
 
-#def analysis_initiate(global_config, sample_config):
-#    print "going to evalaute input data for de novo"
 
 
 def check_consistency(global_config, sample_config):
-    if "operation" not in sample_config:
-        sys.exit("Error: operations must be specified in yaml sample configuration")
+    if "pipeline" not in sample_config:
+        sys.exit("Error: pipeline must be specified in yaml sample configuration")
     if "genomeSize" not in sample_config:
         sys.exit("Error: genomeSize must be specified in yaml sample configuration (at least an estimate must be provided)")
-    if "kmer" not in sample_config:
-        sys.exit("Error: kmer must be specified in yaml sample configuration")
     if "libraries" not in sample_config:
         sys.exit("Error: libraries must be specified in yaml sample configuration. At least one library must be specified")
-    #check that a possible opration is specified
-    operations = [operation for operation in global_config]
-    operation = sample_config["operation"].keys()[0]
-    if operation not in operations:
-        sys.exit("Error: operation {} does not exist. Supported operations are: {}".format(operation, operations))
-    tool = sample_config["operation"][operation]["tool"]
-    supportedTools = global_config[operation].keys()
-    if tool not in supportedTools:
-        sys.exit("Error: tool {} not supported for operation {}. Only the following tools can be used: {}".format(tool, operation, supportedTools))
+    #check that the sepcified pipeline is supported
+    pipelines = global_config["Pipelines"]
+    pipeline  = sample_config["pipeline"]
+    if pipeline not in pipelines:
+        sys.exit("Error: pipeline {} does not exist. Supported pipelines are: {}".format(pipeline, pipelines))
+
     libraries=[library for library in sample_config["libraries"]]
     if len(libraries) < 1:
         sys.exit("Error: 0 libraries specified: at least one library must be present in the sample configuration file")
@@ -64,6 +62,8 @@ def check_consistency(global_config, sample_config):
             sys.exit("Error: insert must be a integer")
         if not isinstance(libraryData["std"], int):
             sys.exit("Error: insert must be a integer")
+#TODO: check that tools specified in the configuraiton are really working
+
 
 
 if __name__ == '__main__':

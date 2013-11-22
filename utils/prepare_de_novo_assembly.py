@@ -21,9 +21,10 @@ def main(args):
             sample_YAML_name = os.path.join(assembly_folder, "{}_{}.yaml".format(sample_dir_name, assembler))
             sample_YAML = open(sample_YAML_name, 'w')
        
-            sample_YAML.write("operation:\n")
-            sample_YAML.write(" assemble:\n")
-            sample_YAML.write("  tool: {}\n".format(assembler))
+            sample_YAML.write("pipeline:\n")
+            sample_YAML.write(" assemble\n")
+            sample_YAML.write("tools:\n")
+            sample_YAML.write(" [{}]\n".format(assembler))
             sample_YAML.write("genomeSize: {}\n".format(args.genomeSize))
             sample_YAML.write("kmer: {}\n".format(args.kmer))
             sample_YAML.write("output: {}\n".format(sample_dir_name))
@@ -70,7 +71,7 @@ def checkSupportedAssemblers(assemblers, global_config):
     with open(global_config) as in_handle:
         global_config = yaml.load(in_handle)
     for assembler in assemblers:
-        if assembler not in global_config["assemble"]:
+        if assembler not in global_config["Tools"]:
             print "assembler {} not supported. Supported assemblers specified in the global configuration are:".format(assembler)
             for supported_assembler, options in global_config["assemble"].items():
                 print supported_assembler

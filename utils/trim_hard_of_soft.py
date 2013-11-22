@@ -16,10 +16,10 @@ def main(args):
         global_config = yaml.load(in_handle)
         
     command = ["java", "-jar"];
-    if "trimmomatic" not in global_config["QCcontrol"]:
+    if "trimmomatic" not in global_config["Tools"]:
         sys.exit("Error: trimmomatic is not specified in the global configuratipon yaml file")
-    program=global_config["QCcontrol"]["trimmomatic"]["bin"]
-    program_options=global_config["QCcontrol"]["trimmomatic"]["options"]
+    program=global_config["Tools"]["trimmomatic"]["bin"]
+    program_options=global_config["Tools"]["trimmomatic"]["options"]
 
     command.append(program)
     for option in program_options:
@@ -92,13 +92,13 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Perform hard trimming and quality trimming. Best suited for high numebr of samples. By default it removes leading \
         bases with low coverage and perform quality trimming. Output is returned in gz format')
-    parser.add_argument('--sample-data-dir', help="full path to directory containing one folder per sample. Each sample contaains only one library (i.e., one PE lib)", type=str)
+    parser.add_argument('--sample-data-dir', help="full path to directory containing one folder per sample. Each sample contains only one library (i.e., one PE lib)", type=str)
     parser.add_argument('--hard-trim', help="perform only hard trim (--keep1 and keep2 must be specified)", action='store_true')
     parser.add_argument('--keep', help="keeps only the first keep bases in read 1 and read 2. (defult is no hard trim).", type=int)
     parser.add_argument('--no-quality-trim', help="no quality trim is performed", action='store_true')
     parser.add_argument('--min-length', help="minimum length to output", default=36,  type=int)
     parser.add_argument('--global-config', help="global configuration file with path to programs and options")
-    
+    parser.add_argument('--threads', help="Number of threads to use (overwrites global-config option) --> NOT WORKING")
     args = parser.parse_args()
 
     main(args)

@@ -1,22 +1,24 @@
-QCcontrol:
+Pipelines:
+ QCcontrol
+ assemble
+ evaluete
+ align
+ user_define
+Tools:
  jellyfish:
   bin: /bubo/home/h23/vezzi/assembly_pipeline/tools/jellyfish-1.1.11/bin/jellyfish
   options: ""
- abyss:
-  bin: /bubo/sw/apps/bioinfo/abyss/1.3.5/kalkyl/bin/ABYSS-P
-  options: [-o, preUnitgs.fa, -k, "54", --coverage-hist=histogram.hist]
  fastqc:
   bin: /bubo/sw/apps/bioinfo/fastqc/0.10.1/kalkyl/fastqc
   options: [--threads,  "8" ,  --outdir,  fastqc]
  trimmomatic:
   bin: /home/vezzi/assembly_pipeline/tools/Trimmomatic-0.30/trimmomatic-0.30.jar
-  options: ["PE", "-phred33", "-threads", "4"]
-assemble:
+  options: ["PE", "-phred33", "-threads", "8"]
  masurca:
   bin: /bubo/home/h23/vezzi/assembly_pipeline/tools/MaSuRCA-2.0.4/
   options: 
  abyss:
-  bin: /bubo/sw/apps/bioinfo/abyss/1.3.5/kalkyl/bin/abyss-pe
+  bin: /bubo/sw/apps/bioinfo/abyss/1.3.5/kalkyl/bin/
   options: ["k=54", "np=8"]
  abyss_mergePairs:
   bin: /bubo/sw/apps/bioinfo/abyss/1.3.5/kalkyl/bin/abyss-mergepairs
@@ -30,10 +32,21 @@ assemble:
  cabog:
   bin: /home/vezzi/assembly_pipeline/tools/wgs-7.0/Linux-amd64/bin/
   options: [""]
-evaluete:
  FRC:
-  bin: pathFRC
+  bin: /home/vezzi/assembly_pipeline/tools/FRC_align/src/FRC
   options: ""
  CEGMA:
-  bin: pathCEGMA
+  bin: /sw/apps/bioinfo/cegma/2.4.010312/kalkyl/bin/cegma
+  options: ""
+ bwa:
+  bin: /sw/apps/bioinfo/bwa/0.7.4/kalkyl/bin/bwa
+  options: ""
+ picard:
+  bin: /proj/a2010002/nobackup/sw/mf/bioinfo-tools/picard-tools/1.95/
+  options: ""
+ samtools:
+  bin: /sw/apps/bioinfo/samtools/0.1.19/kalkyl/bin/samtools
+  options: ""
+ qaTools:
+  bin: /home/vezzi/assembly_pipeline/tools/qaTools/
   options: ""

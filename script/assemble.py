@@ -2,93 +2,46 @@ import sys, os, yaml, glob
 import subprocess
 import string
 import sys
-
+import common
 
 
 
 
 def run(global_config, sample_config):
-    tool = sample_config["operation"]["assemble"]["tool"]
-    if tool == "masurca":
-        _run_masurca(global_config, sample_config)
-    elif tool == "soapdenovo":
-        _run_soapdenovo(global_config, sample_config)
-    elif tool == "abyss":
-        _run_abyss(global_config, sample_config)
-    elif tool == "spades":
-        _run_spades(global_config, sample_config)
-    elif tool == "abyss_mergePairs":
-        _run_abyss_mergePairs(global_config, sample_config)
-    elif tool == "cabog":
-        _run_cabog(global_config, sample_config)
+    sorted_libraries_by_insert = common._sort_libraries_by_insert(sample_config)
+    if "tools" in sample_config:
+        #need to follow the commands listed here
+        for command in sample_config["tools"]:
+            command_fn = getattr( sys.modules[__name__] , "_run_{}".format(command))
+            sample_config = command_fn(global_config, sample_config, sorted_libraries_by_insert)
     else:
-        print "tool {} is not yet supported".format(tool)
-
-def prepare_folder_structure(sorted_libraries_by_insert):
-    mainDir = os.getcwd()
-    DataFolder = os.path.join(os.getcwd(), "DATA")
-    if os.path.exists(DataFolder):
-        sys.exit("DATA dir already exists: danger to over-write data: terminate execution")
-    os.makedirs(DataFolder)
-    os.chdir(DataFolder)
-    CurrentDir = os.getcwd()
-    #now prepare softlinks to data and give to libraries human readable names
-    currentLibraryNumber = 1;
-    type = ["SE", "PE", "MP"]
-    for library, libraryInfo in sorted_libraries_by_insert:
-        pair1 = libraryInfo["pair1"]
-        pair2 = libraryInfo["pair2"]
-        orientation = libraryInfo["orientation"]
-        pair1, pair2 = createSoftLinks(pair1, pair2, orientation, type, currentLibraryNumber)
-        libraryInfo["pair1"] = pair1
-        libraryInfo["pair2"] = pair2
-        currentLibraryNumber += 1
-    os.chdir("..")
-    return sorted_libraries_by_insert
-
-def createSoftLinks(pair1, pair2, orientation, type, currentLibraryNumber):
-    pair1NewName = _new_name(pair1, orientation, type, currentLibraryNumber, 1)
-    pair2NewName = _new_name(pair2, orientation, type, currentLibraryNumber, 2)
-    os.symlink(pair1, pair1NewName)
-    if pair2NewName is not None:
-         os.symlink(pair2, pair2NewName)
-    return pair1NewName, pair2NewName
-
-def _new_name(oldPathName, orientation, type, currentLibraryNumber, pairNumber):
-    if oldPathName is None:
-        return oldPathName;
-    oldName = os.path.split(oldPathName)[1]
-    oldNameHead , oldNameTail = oldName.split(".",1)
-    newName = "lib{}_".format(currentLibraryNumber)
-    if orientation == "none":
-        newName += "SE."
-    elif orientation == "innie":
-        newName += "PE_{}.".format(pairNumber)
-    elif orientation == "outtie":
-        newName += "MP_{}.".format(pairNumber)
-    newName += oldNameTail
-    newName = os.path.join(os.getcwd(), newName)
-    return newName
+        #run default pipeline for de novo assembly
+        sample_config = _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert)
+    
 
 
-def _run_soapdenovo(global_config, sample_config):
+
+
+def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
     print "running SOAPdenovo ..."
+    assembler = "soapdenovo"
     outputName = sample_config["output"]
-    mainDir = os.getcwd()
-    soapFolder = os.path.join(os.getcwd(), "soapdenovo")
-    if not os.path.exists(soapFolder):
-        os.makedirs(soapFolder)
-    else:
-        print "done (soapdenovo folder already present, assumed already run)"
-        return
-    os.chdir(soapFolder)
-    ##create DATA directory
-    sorted_libraries_by_insert = sorted(sample_config["libraries"].iteritems(), key=lambda (k,v): v["insert"])
-    sorted_libraries_by_insert = prepare_folder_structure(sorted_libraries_by_insert)
-
-    programBIN      = global_config["assemble"]["soapdenovo"]["bin"] # in masurca case there is no exectuable as a make file must be created
-    program_options =global_config["assemble"]["soapdenovo"]["options"]
-    kmer            = sample_config["kmer"]
+    currentDirectory  = os.getcwd()
+    assemblyDirectory = os.path.join(currentDirectory, assembler)
+    if common.directory_exists(assemblyDirectory):
+        return sample_config
+    os.chdir(assemblyDirectory) # now I am in the assembly directory
+    sorted_libraries_by_insert = common.prepare_folder_structure(sorted_libraries_by_insert)
+    programBIN      = global_config["Tools"][assembler]["bin"] # in masurca case there is no exectuable as a make file must be created
+    program_options = global_config["Tools"][assembler]["options"]
+    if assembler in sample_config:
+        program_options=sample_config[assembler]
+    
+    
+    ########### HERE IT START THE SPECIFIC ASSEMBLER PART
+    kmer = 54
+    if "kmer" in sample_config:
+        kmer = sample_config["kmer"]
     threads = ["-p", "8"]
     for option in program_options:
         if "-p" in option:
@@ -96,10 +49,10 @@ def _run_soapdenovo(global_config, sample_config):
             threads = ["-p", multiThread_option[1]]
     if not threads[1]:
         print "SOAPdenovo: suspicous program option, -p specified but missing number of threads: ABORTING"
-        return
+        return sample_config
 
     soap_config_file = open("configuration.txt", "w")
-    soap_config_file.write("max_rd_len=250\n") #TODO make this a parameter in the options
+    soap_config_file.write("max_rd_len=100\n") #TODO make this a parameter in the options
     rank = 1
     for library, libraryInfo in sorted_libraries_by_insert:
         soap_config_file.write("[LIB]\n")
@@ -129,12 +82,13 @@ def _run_soapdenovo(global_config, sample_config):
             soap_config_file.write("q2={}\n".format(read2))
 
     soap_config_file.close()
-    soap_stdOut = open("soap.stdOut", "w")
-    soap_stdErr = open("soap.stdErr", "w")
-    os.makedirs(os.path.join(soapFolder, "runSOAP"))
+    assembler_stdOut = open("soap.stdOut", "w")
+    assembler_stdErr = open("soap.stdErr", "w")
+    os.makedirs(os.path.join(assemblyDirectory, "runSOAP"))
     os.chdir("runSOAP")
-    command = [programBIN , "all", "-s", "../configuration.txt", "-K", "{}".format(kmer),  "-o", "soapAssembly", threads[0] , threads[1] ] # TODO: make everyhitn more parameter dependent
-    returnValue = subprocess.call(command, stdout=soap_stdOut, stderr=soap_stdErr)
+    #TODO : lots of missing options
+    command = [programBIN , "all", "-s", "../configuration.txt", "-K", "{}".format(kmer), "-L", "500", "-o", "soapAssembly", threads[0] , threads[1] ]
+    returnValue = subprocess.call(command, stdout=assembler_stdOut, stderr=assembler_stdErr)
     os.chdir("..")
     if returnValue == 0:
         if(os.path.exists(os.path.join("runSOAP","soapAssembly.scafSeq"))):
@@ -145,25 +99,31 @@ def _run_soapdenovo(global_config, sample_config):
             print "something wrong with SOAPdenovo -> no contig file generated"
     else:
         print "SOAPdenovo terminated with an error. Please check running folder for more informations"
+        return sample_config
     os.chdir("..")
-    print "SOAPdenovo exectued"
-    return
+    return sample_config
 
 
-def _run_masurca(global_config, sample_config):
-    print "running Masurca ..."
-    mainDir = os.getcwd()
-    masurcaFolder = os.path.join(os.getcwd(), "masurca")
-    if not os.path.exists(masurcaFolder):
-        os.makedirs(masurcaFolder)
-    else:
-        print "done (masurca folder already present, assumed already run)"
-        return
-    os.chdir(masurcaFolder)
-    ##create DATA directory
-    sorted_libraries_by_insert = sorted(sample_config["libraries"].iteritems(), key=lambda (k,v): v["insert"])
-    sorted_libraries_by_insert = prepare_folder_structure(sorted_libraries_by_insert)
-
+def _run_masurca(global_config, sample_config,sorted_libraries_by_insert):
+    print "running MaSuRCA ..."
+    print "MaSurCA still to be implemented "
+    return sample_config
+    
+    assembler = "masurca"
+    outputName = sample_config["output"]
+    currentDirectory  = os.getcwd()
+    assemblyDirectory = os.path.join(currentDirectory, assembler)
+    if common.directory_exists(assemblyDirectory):
+        return sample_config
+    os.chdir(assemblyDirectory) # now I am in the assembly directory
+    sorted_libraries_by_insert = common.prepare_folder_structure(sorted_libraries_by_insert)
+    programBIN      = global_config["Tools"][assembler]["bin"] # in masurca case there is no exectuable as a make file must be created
+    program_options = global_config["Tools"][assembler]["options"]
+    if assembler in sample_config:
+        program_options=sample_config[assembler]
+    
+    
+    ########### HERE IT START THE SPECIFIC ASSEMBLER PART
     programPATH = global_config["assemble"]["masurca"]["bin"] # in masurca case there is no exectuable as a make file must be created
     program_options=global_config["assemble"]["masurca"]["options"]
 
@@ -231,7 +191,7 @@ def _run_masurca(global_config, sample_config):
 
     if not os.path.exists("assemble.sh"):
         print "MaSuRCA: assemble.sh not created. Unknown failure"
-        return
+        return sample_config
     command = ["./assemble.sh"]
     returnValue = subprocess.call(command, stdout=masurca_stdOut, stderr=masurca_stdErr)
     if returnValue == 0:
@@ -243,38 +203,35 @@ def _run_masurca(global_config, sample_config):
             print "something wrong with MaSuRCA -> no contig file generated"
     else:
         print "MaSuRCA terminated with an error. Please check running folder for more informations"
+        return sample_config
     os.chdir("..")
-    print "MaSuRCA executed"
-    return
+    return sample_config
 
 
 
 
 
-def _run_abyss(global_config, sample_config):
-    print "running abyss ..."
-    ##TO DO ::: avoid to load module
-    ##subprocess.call(["module","load","abyss/1.3.5"])
+def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
+    print "running ABySS ..."
+    assembler = "abyss"
     outputName = sample_config["output"]
-    mainDir = os.getcwd()
-    abyssFolder = os.path.join(os.getcwd(), "abyss")
-    if not os.path.exists(abyssFolder):
-        os.makedirs(abyssFolder)
-    else:
-        print "done (abyss folder already present, assumed already run)"
-        #return
-   
-    os.chdir(abyssFolder)
-    ##create DATA directory
-    sorted_libraries_by_insert = sorted(sample_config["libraries"].iteritems(), key=lambda (k,v): v["insert"])
-    sorted_libraries_by_insert = prepare_folder_structure(sorted_libraries_by_insert)
+    currentDirectory  = os.getcwd()
+    assemblyDirectory = os.path.join(currentDirectory, assembler)
+    if common.directory_exists(assemblyDirectory):
+        return sample_config
+    os.chdir(assemblyDirectory) # now I am in the assembly directory
+    sorted_libraries_by_insert = common.prepare_folder_structure(sorted_libraries_by_insert)
+    programBIN      = global_config["Tools"][assembler]["bin"] # in abyss case there is no exectuable
+    program_options = global_config["Tools"][assembler]["options"]
+    if assembler in sample_config:
+        program_options=sample_config[assembler]
+    
+    ########### HERE IT START THE SPECIFIC ASSEMBLER PART
+    
+    assembler_stdOut = open("abyss.stdOut", "a")
+    assembler_stdErr = open("abyss.stdErr", "a")
+    program=os.path.join(programBIN, "abyss-pe")
 
-    
-    abyss_stdOut = open("abyss.stdOut", "a")
-    abyss_stdErr = open("abyss.stdErr", "a")
-    program=global_config["assemble"]["abyss"]["bin"]
-    program_options=global_config["assemble"]["abyss"]["options"]
-    
     command = ""
     command += "{} ".format(program)
     for option in program_options:
@@ -333,9 +290,9 @@ def _run_abyss(global_config, sample_config):
     command += "{} ".format(librariesPE)
     command += "{} ".format(librariesMP)
 
-    os.makedirs(os.path.join(abyssFolder, "runABySS"))
+    os.makedirs(os.path.join(assemblyDirectory, "runABySS"))
     os.chdir("runABySS")
-    returnValue = subprocess.call(command, stdout=abyss_stdOut, stderr=abyss_stdErr, shell=True)
+    returnValue = subprocess.call(command, stdout=assembler_stdOut, stderr=assembler_stdErr, shell=True)
     os.chdir("..")
     if returnValue == 0:
         if os.path.exists(os.path.join("runABySS","{}-contigs.fa".format(outputName))):
@@ -344,34 +301,33 @@ def _run_abyss(global_config, sample_config):
             subprocess.call(["rm", "-r", "runABySS"])
         else:
             print "something wrong with ABySS -> no contig file generated"
+            return sample_config
     else:
         print "ABySS terminated with an error. Please check running folder for more informations"
     os.chdir("..")
-    print "abyss executed"
-    return
+    return sample_config
 
 
 
 
 
-def _run_abyss_mergePairs(global_config, sample_config):
+def _run_abyss_mergePairs(global_config, sample_config , sorted_libraries_by_insert):
     print "running abyss-mergepairs ..."
-    mainDir = os.getcwd()
-    abyssFolder = os.path.join(os.getcwd(), "abyss_mergePairs")
-    if not os.path.exists(abyssFolder):
-        os.makedirs(abyssFolder)
-    else:
-        print "done (abyss_mergePairs folder already present, assumed already run)"
-        #return
-   
-    os.chdir(abyssFolder)
-##create DATA directory
-    sorted_libraries_by_insert = sorted(sample_config["libraries"].iteritems(), key=lambda (k,v): v["insert"])
-    sorted_libraries_by_insert = prepare_folder_structure(sorted_libraries_by_insert)
-
-    program=global_config["assemble"]["abyss_mergePairs"]["bin"]
-    program_options=global_config["assemble"]["abyss_mergePairs"]["options"]
+    assembler = "abyss_mergePairs"
+    outputName = sample_config["output"]
+    currentDirectory  = os.getcwd()
+    assemblyDirectory = os.path.join(currentDirectory, assembler)
+    if common.directory_exists(assemblyDirectory):
+        return sample_config
+    os.chdir(assemblyDirectory) # now I am in the assembly directory
+    sorted_libraries_by_insert = common.prepare_folder_structure(sorted_libraries_by_insert)
+    programBIN      = global_config["Tools"][assembler]["bin"] # in abyss case there is no exectuable
+    program_options = global_config["Tools"][assembler]["options"]
+    if assembler in sample_config:
+        program_options=sample_config[assembler]
+    ########### HERE IT START THE SPECIFIC ASSEMBLER PART
     
+    program=programBIN
     command = []
     command.append(program)
     for option in program_options:
@@ -394,47 +350,43 @@ def _run_abyss_mergePairs(global_config, sample_config):
                 currentCommand.append(outputName)
                 currentCommand.append(read1)
                 currentCommand.append(read2)
-                print currentCommand
                 abyss_stdOut = open("mergePairs_{}.stdOut".format(outputName), "a")
                 abyss_stdErr = open("mergePairs_{}.stdErr".format(outputName), "a")
-                
+                print command
                 subprocess.call(command, stdout=abyss_stdOut, stderr=abyss_stdErr)
                 command_mv = ["mv", "mergePairs_{}.stdErr".format(outputName), "{}.txt".format(outputName)]
                 subprocess.call(command_mv)
 
     os.chdir("..")
-    
-    return
+    return sample_config
 
 
 
 
 
 
-def _run_spades(global_config, sample_config):
+def _run_spades(global_config, sample_config, sorted_libraries_by_insert):
     print "running spades ..."
+    assembler = "spades"
     outputName = sample_config["output"]
-    mainDir = os.getcwd()
-    assemblerFolder = os.path.join(os.getcwd(), "spades")
-    if not os.path.exists(assemblerFolder):
-        os.makedirs(assemblerFolder)
-    else:
-        print "done (spades folder already present, assumed already run)"
-        #return
-   
-    os.chdir(assemblerFolder)
-    ##create DATA directory
-    sorted_libraries_by_insert = sorted(sample_config["libraries"].iteritems(), key=lambda (k,v): v["insert"])
-    #sorted_libraries_by_insert = prepare_folder_structure(sorted_libraries_by_insert)
+    currentDirectory  = os.getcwd()
+    assemblyDirectory = os.path.join(currentDirectory, assembler)
+    if common.directory_exists(assemblyDirectory):
+        return sample_config
+    os.chdir(assemblyDirectory) # now I am in the assembly directory
+    sorted_libraries_by_insert = common.prepare_folder_structure(sorted_libraries_by_insert)
+    programBIN      = global_config["Tools"][assembler]["bin"] # in abyss case there is no exectuable
+    program_options = global_config["Tools"][assembler]["options"]
+    if assembler in sample_config:
+        program_options=sample_config[assembler]
+    ########### HERE IT START THE SPECIFIC ASSEMBLER PART
 
-    spades_stdOut = open("spades.stdOut", "a")
-    spades_stdErr = open("spades.stdErr", "a")
 
-    program=global_config["assemble"]["spades"]["bin"]
-    program_options=global_config["assemble"]["spades"]["options"]
+    assembler_stdOut = open("spades.stdOut", "a")
+    assembler_stdErr = open("spades.stdErr", "a")
     
     command = ""
-    command += "{} ".format(program)
+    command += "{} ".format(programBIN)
     for option in program_options:
         command += "{} ".format(option)
 
@@ -461,7 +413,7 @@ def _run_spades(global_config, sample_config):
 
     command += "-o {} ".format(outputName)
 
-    returnValue = subprocess.call(command, stdout=spades_stdOut, stderr=spades_stdErr, shell=True)
+    returnValue = subprocess.call(command, stdout=assembler_stdOut, stderr=assembler_stdErr, shell=True)
     if returnValue == 0:
         if os.path.exists(os.path.join(outputName,"contigs.fasta")):
             subprocess.call(["cp", os.path.join(outputName,"contigs.fasta"),  "{}.ctg.fasta".format(outputName)])
@@ -473,28 +425,26 @@ def _run_spades(global_config, sample_config):
         print "SPADES terminated with an error. Please check running folder for more informations"
 
     os.chdir("..")
-    return
+    return sample_config
 
 
 
-def _run_cabog(global_config, sample_config):
-    print "running CABOG ..."
+def _run_cabog(global_config, sample_config, sorted_libraries_by_insert):
+    print "running cabog ..."
+    assembler = "cabog"
     outputName = sample_config["output"]
-    mainDir = os.getcwd()
-    assemblerFolder = os.path.join(os.getcwd(), "cabog")
-    if not os.path.exists(assemblerFolder):
-        os.makedirs(assemblerFolder)
-    else:
-        print "done (cabog folder already present, assumed already run)"
-        return
-    os.chdir(assemblerFolder)
-    ##create DATA directory
-    sorted_libraries_by_insert = sorted(sample_config["libraries"].iteritems(), key=lambda (k,v): v["insert"])
-    sorted_libraries_by_insert = prepare_folder_structure(sorted_libraries_by_insert)
+    currentDirectory  = os.getcwd()
+    assemblyDirectory = os.path.join(currentDirectory, assembler)
+    if common.directory_exists(assemblyDirectory):
+        return sample_config
+    os.chdir(assemblyDirectory) # now I am in the assembly directory
+    sorted_libraries_by_insert = common.prepare_folder_structure(sorted_libraries_by_insert)
+    programBIN      = global_config["Tools"][assembler]["bin"] # in abyss case there is no exectuable
+    program_options = global_config["Tools"][assembler]["options"]
+    if assembler in sample_config:
+        program_options=sample_config[assembler]
+    ########### HERE IT START THE SPECIFIC ASSEMBLER PART
 
-
-    programBIN = global_config["assemble"]["cabog"]["bin"] # in masurca case there is no exectuable as a make file must be created
-    program_options=global_config["assemble"]["cabog"]["options"]
 
     sys.path.insert(0, programBIN)
     libraries = 1
@@ -548,8 +498,8 @@ def _run_cabog(global_config, sample_config):
         print "CABOG terminated with an error. Please check running folder for more informations"
 
     os.chdir("..")
-    print "CABOG exectued"
-    return
+    return sample_config
+
 
 
 
