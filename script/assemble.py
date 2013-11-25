@@ -42,14 +42,9 @@ def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
     kmer = 54
     if "kmer" in sample_config:
         kmer = sample_config["kmer"]
-    threads = ["-p", "8"]
-    for option in program_options:
-        if "-p" in option:
-            multiThread_option = option.split(" ")
-            threads = ["-p", multiThread_option[1]]
-    if not threads[1]:
-        print "SOAPdenovo: suspicous program option, -p specified but missing number of threads: ABORTING"
-        return sample_config
+    threads = ["-p", "8"] # default for UPPMAX
+    if "threads" in sample_config:
+        threads = ["-p", "{}".format(sample_config["threads"])]
 
     soap_config_file = open("configuration.txt", "w")
     soap_config_file.write("max_rd_len=100\n") #TODO make this a parameter in the options
@@ -88,7 +83,10 @@ def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
     os.chdir("runSOAP")
     #TODO : lots of missing options
     command = [programBIN , "all", "-s", "../configuration.txt", "-K", "{}".format(kmer), "-L", "500", "-o", "soapAssembly", threads[0] , threads[1] ]
+    print command
+
     returnValue = subprocess.call(command, stdout=assembler_stdOut, stderr=assembler_stdErr)
+
     os.chdir("..")
     if returnValue == 0:
         if(os.path.exists(os.path.join("runSOAP","soapAssembly.scafSeq"))):
@@ -99,6 +97,7 @@ def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
             print "something wrong with SOAPdenovo -> no contig file generated"
     else:
         print "SOAPdenovo terminated with an error. Please check running folder for more informations"
+        oc.chdir("..")
         return sample_config
     os.chdir("..")
     return sample_config
@@ -230,10 +229,14 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     
     assembler_stdOut = open("abyss.stdOut", "a")
     assembler_stdErr = open("abyss.stdErr", "a")
-    program=os.path.join(programBIN, "abyss-pe")
+    program=programBIN
 
     command = ""
     command += "{} ".format(program)
+    threads = 8 # default for UPPMAX
+    if "threads" in sample_config :
+        threads = sample_config["threads"]
+    command += "np={} ".format(threads)
     for option in program_options:
             command += "{} ".format(option)
     
@@ -252,17 +255,17 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
             else:
                 if not "lib" in libraries:
                     libraries["lib"] = {}
-                libName = "pe{}".format(insert)
+                libName = insert # lib name is the insert size
                 if not libName in libraries["lib"]:
                     libraries["lib"][libName] = ""
-                libraries["lib"][libName] += libraries["lib"][libName] + "{} {} ".format(read1, read2)
+                libraries["lib"][libName] +=  "{} {} ".format(read1, read2)
         else:
             if not "mp" in libraries:
                 libraries["mp"] = {}
-            libName = "mp{}".format(insert)
+            libName = format(insert)
             if not libName in libraries["mp"]:
                 libraries["mp"][libName] = ""
-            libraries["mp"][libName] += libraries["mp"][libName] + "{} {} ".format(read1, read2)
+            libraries["mp"][libName] +=  "{} {} ".format(read1, read2)
     #now create the command
     command += "name={} ".format(outputName)
     librariesSE       = ""
@@ -273,16 +276,16 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
         librariesSE = libraries["se"]
     if "lib" in libraries:
         lib="lib=\'"
-        for libPE, libPEreads in libraries["lib"].iteritems():
-            lib = lib + "{} ".format(libPE)
-            librariesPE += " {}=\'{}\' ".format(libPE,libPEreads)
+        for libPE, libPEreads in sorted(libraries["lib"].iteritems()):
+            lib = lib + "lib{} ".format(libPE)
+            librariesPE += " lib{}=\'{}\' ".format(libPE,libPEreads)
         lib=lib + "\' "
         command += "{} ".format(lib)
     if "mp" in libraries:
         mp="mp=\'"
-        for libMP, libMPreads in libraries["mp"].iteritems():
-            mp = mp + "{} ".format(libMP)
-            librariesMP += " {}=\'{}\' ".format(libMP,libMPreads)
+        for libMP, libMPreads in sorted(libraries["mp"].iteritems()):
+            mp = mp + "lib{} ".format(libMP)
+            librariesMP += " lib{}=\'{}\' ".format(libMP,libMPreads)
         mp=mp + "\' "
         command += "{} ".format(mp)
 
@@ -293,6 +296,7 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     os.makedirs(os.path.join(assemblyDirectory, "runABySS"))
     os.chdir("runABySS")
     returnValue = subprocess.call(command, stdout=assembler_stdOut, stderr=assembler_stdErr, shell=True)
+
     os.chdir("..")
     if returnValue == 0:
         if os.path.exists(os.path.join("runABySS","{}-contigs.fa".format(outputName))):
@@ -499,9 +503,3 @@ def _run_cabog(global_config, sample_config, sorted_libraries_by_insert):
 
     os.chdir("..")
     return sample_config
-
-
-
-
-
-

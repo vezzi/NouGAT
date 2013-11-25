@@ -15,7 +15,7 @@ Tools:
   bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/Trimmomatic-0.32/trimmomatic-0.30.jar
   options: ["PE", "-phred33", "-threads", "20"]
  abyss:
-  bin: /usr/local/abyss-1.3.6/bin/ABYSS
+  bin: /usr/local/abyss-1.3.6/bin/abyss-pe
   options: ["k=54", "np=20"]
  abyss_mergePairs:
   bin: /usr/local/abyss-1.3.6/bin/abyss-mergepairs

@@ -126,7 +126,7 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
         os.makedirs(ABySS_Kmer_Folder)
     else:
         print "done (ABySS_Kmer_Folder folder already present, assumed already run)"
-        return
+        #return
    
     os.chdir(ABySS_Kmer_Folder)
     ABySS_Kmer_stdOut = open("ABySS_Kmer_Folder.stdOut", "a")
@@ -138,28 +138,24 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     if "abyss" in sample_config:
         program_options=sample_config["abyss"]
     
-#TODO fix this it must became a parameter
-    command = "mpirun -np 20 {} ".format(program)
-    #['mpirun', '-np', '20', program]
+    threads = 8 # default for UPPMAX
+    if "threads" in sample_config :
+        threads = sample_config["threads"]
+
+    command = "mpirun -np {} {} ".format(threads, program)
     kmer = sample_config["kmer"]
-    #command.append('-k')
-    #command.append(kmer)
     command += "-k {} ".format(kmer)
     command += "--coverage-hist=histogram.hist -o preUnitgs.fa"
-    #command.extend(['--coverage-hist=histogram.hist', '-o', 'preUnitgs.fa'])
     for library, libraryInfo in sorted_libraries_by_insert:
         read1=libraryInfo["pair1"]
         read2=libraryInfo["pair2"]
         orientation = libraryInfo["orientation"]
         if orientation=="innie":
-            #command.append(read1)
             command += " {} ".format(read1)
             if read2 is not None:
-#                command.append(read2)
                 command += " {} ".format(read2)
         if orientation == "none":
             command += " {} ".format(read1)
-#                command.append(read1)
     print command
     subprocess.call(command, shell=True, stdout=ABySS_Kmer_stdOut, stderr=ABySS_Kmer_stdErr)
     subprocess.call(("rm", "preUnitgs.fa"))
@@ -173,18 +169,18 @@ def _plotKmerPlot():
     Kmer_coverage  = Kmer_histogram[Kmer_histogram.columns[0]].tolist()
     Kmer_count     = Kmer_histogram[Kmer_histogram.columns[1]].tolist()
     Kmer_freq      = [Kmer_coverage[i]*Kmer_count[i] for i in range(len(Kmer_coverage))]
-    kmer_freq_peak = Kmer_freq.index(max(Kmer_freq[7:]))	#coverage peak, disregarding initial peak
-    kmer_freq_peak_value=max(Kmer_freq[7:])
+    kmer_freq_peak = Kmer_freq.index(max(Kmer_freq[15:400]))	#coverage peak, disregarding initial peak
+    kmer_freq_peak_value=max(Kmer_freq[15:400])
     
     xmax = 200
-    ymax = kmer_freq_peak_value+(kmer_freq_peak_value*0.30)
+    ymax = kmer_freq_peak_value + (kmer_freq_peak_value*0.30)
     
     plt.plot(Kmer_coverage, Kmer_freq)
     plt.title('K-mer length = %s' % 54)
     plt.xlim((0,xmax))
     plt.ylim((0,ymax))
     plt.vlines(kmer_freq_peak, 0, kmer_freq_peak_value, colors='r', linestyles='--')
-    plt.text(kmer_freq_peak, kmer_freq_peak_value+20000, str(kmer_freq_peak))
+    plt.text(kmer_freq_peak, kmer_freq_peak_value+2000, str(kmer_freq_peak))
     plotname = "kmer_coverage.png"
     plt.savefig(plotname)
     plt.clf()
