@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
+import shutil as sh
 
 
 def main(args):
@@ -71,18 +72,33 @@ def main(args):
             assemblyStats.append(computeAssemblyStats(assembler, assemblySeq, sample_config["minCtgLength"], sample_config["genomeSize"]))
    
     latex_document = _insert_stat_table(latex_document, assemblyStats)
-    #now compute QA stast
+    #now copy QAstast
+    if not os.path.exists("pictures"):
+        os.makedirs("pictures")
+    for assembler in assemblers:
+        if not os.path.exists(os.path.join("pictures", assembler)):
+            os.makedirs(os.path.join("pictures", assembler))
+    #directory structure created
     for assembler in assemblers:
         latex_document = _new_section(latex_document, assembler)
-        CoverageDistribution200 = os.path.join(validationDirectory, assembler, "QAstats", "Coverage_distribution_noOutliers.png")
-        GC_vs_Coverage          = os.path.join(validationDirectory, assembler, "QAstats", "GC_vs_Coverage_noOutliers.png")
-        GC_vs_CtgLength         = os.path.join(validationDirectory, assembler, "QAstats", "GC_vs_CtgLength.png")
-        MedianCov_vs_CtgLength  = os.path.join(validationDirectory, assembler, "QAstats", "MedianCov_vs_CtgLength_noOutliers.png")
-        pictures=[[CoverageDistribution200, "Contig coverage distribtion" ],\
-                  [GC_vs_Coverage, "GC-content versus contig-coverage"],\
-                  [GC_vs_CtgLength, "GC-content versus contig-Length"],\
-                  [MedianCov_vs_CtgLength, "Median-coverage vs Contig-Length"]]
-        latex_document = _insert_QA_figure(latex_document,  pictures, "QA pictires")
+        Original_CoverageDistribution200 = os.path.join(validationDirectory, assembler, "QAstats", "Coverage_distribution_noOutliers.png")
+        Original_GC_vs_Coverage          = os.path.join(validationDirectory, assembler, "QAstats", "GC_vs_Coverage_noOutliers.png")
+        Original_GC_vs_CtgLength         = os.path.join(validationDirectory, assembler, "QAstats", "GC_vs_CtgLength.png")
+        Original_MedianCov_vs_CtgLength  = os.path.join(validationDirectory, assembler, "QAstats", "MedianCov_vs_CtgLength_noOutliers.png")
+        Copied_CoverageDistribution200   = os.path.join("pictures", assembler, "Coverage_distribution_noOutliers.png")
+        Copied_GC_vs_Coverage            = os.path.join("pictures", assembler, "GC_vs_Coverage_noOutliers.png")
+        Copied_GC_vs_CtgLength           = os.path.join("pictures", assembler, "GC_vs_CtgLength.png")
+        Copied_MedianCov_vs_CtgLength    = os.path.join("pictures", assembler, "MedianCov_vs_CtgLength_noOutliers.png")
+        sh.copy(Original_CoverageDistribution200, Copied_CoverageDistribution200)
+        sh.copy(Original_GC_vs_Coverage , Copied_GC_vs_Coverage )
+        sh.copy(Original_GC_vs_CtgLength , Copied_GC_vs_CtgLength )
+        sh.copy(Original_MedianCov_vs_CtgLength , Copied_MedianCov_vs_CtgLength )
+        
+        pictures=[[Copied_CoverageDistribution200, "Contig coverage distribtion" ],\
+                  [Copied_GC_vs_Coverage, "GC-content versus contig-coverage"],\
+                  [Copied_GC_vs_CtgLength, "GC-content versus contig-Length"],\
+                  [Copied_MedianCov_vs_CtgLength, "Median-coverage vs Contig-Length"]]
+        latex_document = _insert_QA_figure(latex_document,  pictures, "QA pictures")
     # now FRCurve
     latex_document = _new_section(latex_document, "FRCurve")
     FRCurves = []
@@ -94,19 +110,18 @@ def main(args):
     latex_document = _latexFooter(latex_document)
     with open("{0}.tex".format(outputName),'w') as f:
         f.write(latex_document)
-    command = ["pdflatex",  "{0}.tex".format(outputName)]
-    latex_stdOut = open("latex.stdOut", "a")
-    latex_stdErr = open("latex.stdErr", "a")
-    subprocess.call(command, stdout=latex_stdOut , stderr=latex_stdErr)
+    #command = ["pdflatex",  "{0}.tex".format(outputName)]
+    #latex_stdOut = open("latex.stdOut", "a")
+    #latex_stdErr = open("latex.stdErr", "a")
+    #subprocess.call(command, stdout=latex_stdOut , stderr=latex_stdErr)
 
     os.chdir("..")
     # now prepare delivery folder
     if not os.path.exists("{}_delivery_report".format(outputName)):
         os.makedirs("{}_delivery_report".format(outputName))
     os.chdir("{}_delivery_report".format(outputName))
-    import shutil as sh
     #copy pdf report
-    sh.copy(os.path.join(validationDirectory, "LaTeX", "{}.pdf".format(outputName)), "{}.pdf".format(outputName))
+    #sh.copy(os.path.join(validationDirectory, "LaTeX", "{}.pdf".format(outputName)), "{}.pdf".format(outputName))
     #now copy QA tables
     for assembler in assemblers:
         if os.path.exists(os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName) )):
@@ -114,8 +129,10 @@ def main(args):
                 os.makedirs(assembler)
             if not os.path.exists(os.path.join(assembler, "assembly")):
                 os.makedirs(os.path.join(assembler, "assembly"))
-            sh.copy(os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName)), os.path.join(assembler, "assembly",  "{}.scf.fasta".format(outputName)))
-            sh.copy(os.path.join(assemblies_dir, assembler, "{}.ctg.fasta".format(outputName)), os.path.join(assembler, "assembly",  "{}.ctg.fasta".format(outputName)))
+            if os.path.exists(os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName))):
+                sh.copy(os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName)), os.path.join(assembler, "assembly",  "{}.scf.fasta".format(outputName)))
+            if os.path.exists(os.path.join(assemblies_dir, assembler, "{}.ctg.fasta".format(outputName))):
+                sh.copy(os.path.join(assemblies_dir, assembler, "{}.ctg.fasta".format(outputName)), os.path.join(assembler, "assembly",  "{}.ctg.fasta".format(outputName)))
             if not os.path.exists(os.path.join(assembler, "QA_table")):
                 os.makedirs(os.path.join(assembler, "QA_table"))
             sh.copy(os.path.join(validationDirectory, assembler, "QAstats", "Contigs_Cov_SeqLen_GC.csv"), os.path.join(assembler, "QA_table", "Contigs_Cov_SeqLen_GC.csv"))

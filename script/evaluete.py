@@ -202,7 +202,7 @@ def _run_FRC(global_config, sorted_alignments_by_insert, sample_config):
         mpInsert    = sorted_alignments_by_insert[1][0]
         mpMinInsert = int(mpInsert - mpInsert*0.40)
         mpMaxInsert = int(mpInsert + mpInsert*0.40)
-        cl  +=  ["--mp-sam", mpSam, "--mp-min-insert", "{}".format(mpMinInsert), "--mp-max-insert", "{}".format(mpMaxInsert)]
+        cl  +=  ["--mp-sam", mpSam, "--mp-min-insert", "{}".format(mpMinInsert), "--mp-max-insert", "{}".format(mpMaxInsert), "--genome-size", "{}".format(genomeSize)]
     
     cl += ["--output", output]
 
