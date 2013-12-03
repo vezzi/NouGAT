@@ -95,7 +95,7 @@ def align_bwa(read1, read2, reference):
     os.chdir("..")
     return BAMsorted
 
-def align_bwa_mem(read1, read2, reference):
+def align_bwa_mem(read1, read2, reference, threads):
     if not common.which("bwa"):
         sys.exit("error while trying to run  aling_bwa: bwa not present in the path, please make sure to install bwa properly")
     if not common.which("samtools"):
@@ -118,7 +118,7 @@ def align_bwa_mem(read1, read2, reference):
 
     if not os.path.exists(SAMMapped):
         with open(SAMMapped, "w") as fh:
-                returnValue = subprocess.call(["bwa", "mem", "-M", "-t", "8", reference, read1, read2], stdout=fh)
+                returnValue = subprocess.call(["bwa", "mem", "-M", "-t", "{}".format(threads), reference, read1, read2], stdout=fh)
                 if  not returnValue == 0:
                     sys.exit("error, while aligning reads with bwa mem")
     if not os.path.exists(BAMunsorted):
@@ -139,18 +139,18 @@ def align_bwa_mem(read1, read2, reference):
 def compl_rev(read_file):
     originalHeader  = os.path.basename(read_file).split(".fastq")[0].split("_")
     outputFileName  = "{}rc_{}_{}.fastq.gz".format(originalHeader[0],originalHeader[1],originalHeader[2])
-    outputFileName  = os.path.join("DATA",outputFileName)
     outputFileName  = os.path.abspath(outputFileName)
     if os.path.exists(outputFileName):
         return outputFileName
     
     fd_in = ""
     if ".gz" in read_file:
-        fd_in = gzip.GzipFile(filename=read_file, mode='rb')
+        fd_in = gzip.open(filename=read_file, mode='rb')
     else:
         fd_in = open(filename, 'rb')
 
-    fd_out          = gzip.GzipFile(filename=outputFileName, mode='wb', compresslevel=9)
+
+    fd_out          = gzip.open(outputFileName, 'wb')
     header = fd_in.readline().rstrip()
     while header:
         read    = fd_in.readline().rstrip()

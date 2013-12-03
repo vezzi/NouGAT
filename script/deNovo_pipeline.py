@@ -1,8 +1,8 @@
 import sys, os, yaml, glob
 import argparse
+import evaluete
 import QCcontrol
 import assemble
-import evaluete
 import align
 
 def main(args):

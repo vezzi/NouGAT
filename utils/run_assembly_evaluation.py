@@ -2,6 +2,8 @@ import sys, os, yaml, glob
 import subprocess
 import argparse
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
 
@@ -43,7 +45,7 @@ def main(args):
         yaml.dump(sample_config, stream)    # Write a YAML representation of data to 'document.yaml'.
         stream.close()
 
-        command = "python ~/assembly_pipeline/de_novo_scilife/script/deNovo_pipeline.py --global-config {} --sample-config {}_{}.yaml".format(global_config, outputName, assembler)
+        command = "python  ~/DE_NOVO_PIPELINE/de_novo_scilife/script/deNovo_pipeline.py --global-config {} --sample-config {}_{}.yaml".format(global_config, outputName, assembler)
         subprocess.call(command, shell=True)
         os.chdir("..")
     if processed == 0:

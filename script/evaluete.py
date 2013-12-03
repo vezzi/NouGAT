@@ -4,7 +4,11 @@ import common
 import re
 import align
 import pandas as pd
-from matplotlib import pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+#from matplotlib import pyplot as plt
 
 
 
@@ -94,9 +98,8 @@ def _run_CEGMA(global_config, sample_config):
 
 
 def _align_reads(sample_config, sorted_libraries_by_insert):
-    aligner     = "bwa"
     reference   = sample_config["reference"]
-    
+    aligner     = "bwa"
     function_to_call = "build_reference_{}".format(aligner)
     command_fn = getattr(__import__("align"), function_to_call)
     reference = command_fn(reference)
@@ -111,13 +114,16 @@ def _align_reads(sample_config, sorted_libraries_by_insert):
         orientation = libraryInfo["orientation"]
         insert      = libraryInfo["insert"]
         std         = libraryInfo["std"]
+        threads     = 8
+        if "threads" in sample_config:
+            threads  = sample_config["threads"]
         if orientation=="innie" or orientation=="none":
-            libraryInfo["alignment"] = command_fn(read1, read2, reference)
+            libraryInfo["alignment"] = command_fn(read1, read2, reference, threads)
         else:
             #TODO: can be multithreaded
             read1 = libraryInfo["pair1"] = align.compl_rev(read1)
             read2 = libraryInfo["pair2"] = align.compl_rev(read2)
-            libraryInfo["alignment"] = command_fn(read1, read2, reference)
+            libraryInfo["alignment"] = command_fn(read1, read2, reference, threads)
     return sorted_libraries_by_insert
 
 def _merge_bam_files(global_config, sample_config, sorted_libraries_by_insert):
