@@ -19,7 +19,74 @@ def run(global_config, sample_config):
         sample_config = _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert)
     
 
+def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
+    print "running allpaths ..."
+    assembler = "allpaths"
+    outputName = sample_config["output"]
+    currentDirectory  = os.getcwd()
+    assemblyDirectory = os.path.join(currentDirectory, assembler)
+    if common.directory_exists(assemblyDirectory):
+        return sample_config
+    os.chdir(assemblyDirectory) # now I am in the assembly directory
+    sorted_libraries_by_insert = common.prepare_folder_structure(sorted_libraries_by_insert)
+    programBIN      = global_config["Tools"][assembler]["bin"] # in masurca case there is no exectuable as a make file must be created
+    program_options = global_config["Tools"][assembler]["options"]
+    if assembler in sample_config:
+        program_options=sample_config[assembler]
+    ########### HERE IT START THE SPECIFIC ASSEMBLER PART
 
+    inGroups_file = open("in_groups.csv", "w")
+    inLibs_file   = open("in_libs.csv", "w")
+    inGroups_file.write("group_name, library_name, file_name\n")
+    inLibs_file.write("library_name, project_name, organism_name, type, paired, frag_size, frag_stddev, insert_size, insert_stddev, read_orientation,genomic_start, genomic_end\n")
+    
+    librariesForInLibs     = []
+    librariesForInLibsDict = {}
+    group_name              = 1;
+
+    for library, libraryInfo in sorted_libraries_by_insert:
+        read1       =libraryInfo["pair1"]
+        read2       =libraryInfo["pair2"]
+        orientation = libraryInfo["orientation"]
+        insert      = libraryInfo["insert"]
+        std         = libraryInfo["std"]
+        if orientation=="innie":
+            path,file=os.path.split(read1)
+            file = file.replace("_1.fastq", "_?.fastq")
+            inGroups_file.write("PE{}, lib{}, {}\n".format(group_name, insert, os.path.join(path, file)))
+            group_name += 1
+            if insert not in librariesForInLibsDict:
+                librariesForInLibsDict[insert] = insert
+                librariesForInLibs.append("lib{}, genome, genome, fragment, 1, {}, {}, , , inward, 0, 0\n".format(insert,insert, std))
+        elif orientation=="outtie":
+            path,file=os.path.split(read1)
+            file = file.replace("_1.fastq", "_?.fastq")
+            inGroups_file.write("MP{}, lib{}, {}\n".format(group_name, insert, os.path.join(path, file)))
+            group_name += 1
+            if insert not in librariesForInLibsDict:
+                librariesForInLibsDict[insert] = insert
+                librariesForInLibs.append("lib{}, genome, genome, fragment, 1, , , {}, {}, outward, 0, 0\n".format(insert,insert, std))
+        else:
+            print "all paths support only innies and outties"
+
+    inGroups_file.close()
+    for lib in librariesForInLibs:
+        inLibs_file.write(lib)
+    inLibs_file.close()
+
+    #NOW RUN ALLPATHS FOR REAL
+    #TODO: must check if path is correctly set
+    command = ["PrepareAllPathsInputs.pl" , "DATA_DIR=$PWD", "PLOIDY=1", "PICARD_TOOLS_DIR={}".format(global_config["Tools"]["picard"]["bin"])]
+    print command
+    #returnValue = subprocess.call(command)
+
+    #TODO: check return value
+    #command = ["RunAllPathsLG", "PRE=.", "REFERENCE_NAME=.", "DATA_SUBDIR=.", "RUN=allpaths", "SUBDIR=run"]
+    #returnValue = subprocess.call(command)
+
+    #to do cehck the return value
+
+    return sample_config
 
 
 def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):

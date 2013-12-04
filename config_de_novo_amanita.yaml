@@ -24,7 +24,7 @@ Tools:
   bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/SOAPdenovo2/SOAPdenovo-63mer
   options: [""]
  allpaths:
-  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/allpathslg-47856/
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/allpathslg-47856/bin/bin/
   options: [""]
  bwa:
   bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/bwa-0.7.5a/bwa
