@@ -1,0 +1,52 @@
+Pipelines:
+ QCcontrol
+ assemble
+ evaluete
+ align
+ user_define
+Tools:
+ jellyfish:
+  bin: 
+  options: [""]
+ fastqc:
+  bin: 
+  options: [""]
+ trimmomatic:
+  bin: 
+  options: [""]
+ masurca:
+  bin: 
+  options: [""]
+ abyss:
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/abyss-1.3.6/bin/bin/abyss-pe
+  options: ["k=54", "np=20"]
+ abyss_mergePairs:
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/abyss-1.3.6/bin/bin/abyss-mergepairs
+  options: ["-m 20", "-1 230", "-2 230"]
+ soapdenovo:
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/SOAPdenovo2-src-r240/SOAPdenovo-63mer
+  options: [""]
+ spades:
+  bin:
+  options: [""]
+ cabog:
+  bin:
+  options: [""]
+ FRC:
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/FRC_align/src/FRC
+  options: [""]
+ CEGMA:
+  bin:
+  options: [""]
+ bwa:
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/bwa-0.7.5a/bwa
+  options: [""]
+ picard:
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/picard-tools-1.103
+  options: [""]
+ samtools:
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/samtools-0.1.19/samtools
+  options: [""]
+ qaTools:
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/qaTools/
+  options: [""]
