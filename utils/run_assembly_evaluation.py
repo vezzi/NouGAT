@@ -47,7 +47,7 @@ def main(args):
         stream.close()
 
         command = "python  ~/DE_NOVO_PIPELINE/de_novo_scilife/script/deNovo_pipeline.py --global-config {} --sample-config {}_{}.yaml".format(global_config, outputName, assembler)
-        subprocess.call(command, shell=True)
+        #subprocess.call(command, shell=True)
         os.chdir("..")
     if processed == 0:
         for assembler in assemblers:
@@ -165,9 +165,9 @@ def _plotFRCurve(outputName, FRCurves):
         if maxXvalue > maxXvalues[i]*100:
             maxXvalue = maxXvalues[i] + int(maxXvalues[i]*0.10)
 
-    plt.ylim((-5,120))
+    plt.ylim((-5,140))
     plt.xlim((-1,maxXvalue))
-    plt.legend(loc=3, ncol=2, mode="expand", borderaxespad=0.)
+    plt.legend(loc=4, ncol=1, borderaxespad=0.)
     plt.savefig(FRCurveName)
     plt.clf()
     return FRCurveName
