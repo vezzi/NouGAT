@@ -27,6 +27,7 @@ def main(args):
         sample_YAML.write(" [qaTools, FRC]\n")
         sample_YAML.write("genomeSize: {}\n".format(args.genomeSize))
         sample_YAML.write("output: {}\n".format(sample_dir_name))
+        sample_YAML.write("threads: 16\n")
         sample_YAML.write("minCtgLength: 2000\n")
         sample_YAML.write("reference:\n")
         sample_YAML.write("libraries:\n")
@@ -59,11 +60,10 @@ def main(args):
 
         sample_YAML.close()
         
-        command_to_run = "python ~/assembly_pipeline/de_novo_scilife/utils/run_assembly_evaluation.py --global-config {} --sample-config {}_validation.yaml \
- --assemblies-dir {} --assembler {}".format(args.global_config, sample_dir_name, assembly_data_dir , " ".join(assemblers))
+        command_to_run = "python ~/DE_NOVO_PIPELINE/de_novo_scilife/utils/run_assembly_evaluation.py --global-config {} --sample-config {}_validation.yaml \
+ --assemblies-dir {} --assembler {} --generatePDF 1".format(args.global_config, sample_dir_name, assembly_data_dir , " ".join(assemblers))
         print command_to_run
         subprocess.call(command_to_run, shell=True)
-        
         
         os.chdir(workingDir)
 

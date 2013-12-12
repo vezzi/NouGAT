@@ -16,10 +16,28 @@ def run(global_config, sample_config):
 
     print "remove adator"
     sample_config = _run_trimmomatic(global_config, sample_config,sorted_libraries_by_insert)
+    print "align sequences"
+    sorted_libraries_by_insert = sorted(sample_config["libraries"].iteritems(), key=lambda (k,v): v["insert"]) # recompute sorted libraries by insert
+    ## TO DO: create a reference
+    
 
-    print "align seqeunces"
+    if not os.path.exists("alignments"):
+        os.makedirs("alignments")
+    os.chdir("alignments")
+    print sorted_libraries_by_insert
+    sorted_libraries_by_insert =  align._align_reads(global_config, sample_config,  sorted_libraries_by_insert) # align reads
+    print sorted_libraries_by_insert
+    sorted_alignments_by_insert = align._merge_bam_files(global_config, sample_config, sorted_libraries_by_insert) # merge alignments
+    print sorted_libraries_by_insert
+    sorted_alignments_by_insert = align.picard_CGbias(global_config, sample_config,sorted_alignments_by_insert)
+    print sorted_libraries_by_insert
+    sorted_alignments_by_insert = align.picard_collectInsertSizeMetrics(global_config, sample_config,sorted_alignments_by_insert)
+    print sorted_libraries_by_insert
+    sorted_alignments_by_insert = align.picard_markDuplicates(global_config, sample_config,sorted_alignments_by_insert)
+    print sorted_libraries_by_insert
 
-
+    os.chdir("..")
+    return 0
 
 
 def _run_trimmomatic(global_config, sample_config, sorted_libraries_by_insert):
@@ -40,28 +58,42 @@ def _run_trimmomatic(global_config, sample_config, sorted_libraries_by_insert):
         workingDir = "{}_MP_{}".format(library,insert)
         if not os.path.exists(workingDir):
             os.makedirs(workingDir)
-        else:
-            print "{} folder already present, assumed already run".format(workingDir)
-            continue
+
         os.chdir(workingDir)
         currentDir = os.getcwd()
         output_read1_pair = os.path.join(currentDir, "{}_MP_1.fastq.gz".format(library))
         output_read1_sing = os.path.join(currentDir, "{}_MP_u_1.fastq.gz".format(library))
         output_read2_pair = os.path.join(currentDir, "{}_MP_2.fastq.gz".format(library))
         output_read2_sing = os.path.join(currentDir, "{}_MP_u_2.fastq.gz".format(library))
-        
+
+        if os.path.exists(output_read1_pair):
+            print "library {} already computed: skyp this".format(library)
+            libraryInfo["pair1"] = output_read1_pair
+            libraryInfo["pair2"] = output_read2_pair
+            os.chdir("..")
+            continue
+
         threads = 8
         if "threads" in sample_config:
             threads = sample_config["threads"]
         
-        returnValue = command = ["java",  "-jar", program, "PE", "-threads", "{}".format(threads), "-trimlog", "{}_trim.log".format(library), "-phred33",  read1, read2,  output_read1_pair ,output_read1_sing , output_read2_pair, output_read2_sing ,"ILLUMINACLIP:{}:2:30:10".format(adaprterFile) ]
-        print ' '.join(map(str,command))
-        
-        #subprocess.call(command, stdout=fastq_stdOut, stderr=fastq_stdErr)
+        command = ["java",  "-jar", program, "PE", "-threads", "{}".format(threads),  "-phred33",  read1, read2,  output_read1_pair ,output_read1_sing , output_read2_pair, output_read2_sing ,"ILLUMINACLIP:{}:2:30:10".format(adaprterFile), "MINLEN:30" ]
+        #print ' '.join(map(str,command))
+        stdOut = open("trimmomatic.stdOut", "w")
+        stdErr = open("trimmomatic.stdErr", "w")
+        returnValue = subprocess.call(command, stdout=stdOut, stderr=stdErr)
+        returnValue = 0
+        if returnValue != 0:
+            print "error while running command: {}".format(command)
+        else:
+            libraryInfo["pair1"] = output_read1_pair
+            libraryInfo["pair2"] = output_read2_pair
+
+
         os.chdir("..")
     
     
-    print "trimmomatic succesfully exectued"
+    print "trimmomatic done"
     return sample_config
 
 

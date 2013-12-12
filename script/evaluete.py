@@ -18,8 +18,17 @@ def run(global_config, sample_config):
     _check_libraries(sorted_libraries_by_insert)
     # all following tools rely on alignment. Check if alignment has been already performed
     sample_config = _build_new_reference(sample_config) # filter out short contigs
-    sorted_libraries_by_insert =  _align_reads(sample_config,  sorted_libraries_by_insert) # align reads
-    sorted_alignments_by_insert = _merge_bam_files(global_config, sample_config, sorted_libraries_by_insert) # merge alignments
+    if not os.path.exists("alignments"):
+        os.makedirs("alignments")
+    os.chdir("alignments")
+    sorted_libraries_by_insert =  align._align_reads(global_config, sample_config,  sorted_libraries_by_insert) # align reads
+    sorted_alignments_by_insert = align._merge_bam_files(global_config, sample_config, sorted_libraries_by_insert) # merge alignments
+    sorted_alignments_by_insert = align.picard_CGbias(global_config, sample_config,sorted_alignments_by_insert)
+    sorted_alignments_by_insert = align.picard_collectInsertSizeMetrics(global_config, sample_config,sorted_alignments_by_insert)
+    sorted_alignments_by_insert = align.picard_markDuplicates(global_config, sample_config,sorted_alignments_by_insert)
+
+#    sorted_libraries_by_insert =  common._align_reads(sample_config,  sorted_libraries_by_insert) # align reads
+#    sorted_alignments_by_insert = common._merge_bam_files(global_config, sample_config, sorted_libraries_by_insert) # merge alignments
     os.chdir("..")
     
     if "tools" in sample_config:
@@ -86,6 +95,7 @@ def _build_new_reference(sample_config):
                 new_ref_fd.write(fasta_header)
                 new_ref_fd.write(sequence)
     sample_config["reference"] = new_reference_name
+    os.chdir("..")
     return sample_config
 
 def _run_CEGMA(global_config, sample_config):
@@ -96,87 +106,6 @@ def _run_CEGMA(global_config, sample_config):
     cegma
 
 
-
-def _align_reads(sample_config, sorted_libraries_by_insert):
-    reference   = sample_config["reference"]
-    aligner     = "bwa"
-    function_to_call = "build_reference_{}".format(aligner)
-    command_fn = getattr(__import__("align"), function_to_call)
-    reference = command_fn(reference)
-
-    #now prepare for alignment
-    aligner     = "bwa_mem"
-    function_to_call = "align_{}".format(aligner)
-    command_fn = getattr(__import__("align"), function_to_call)
-    for library, libraryInfo in sorted_libraries_by_insert:
-        read1       = libraryInfo["pair1"]
-        read2       = libraryInfo["pair2"]
-        orientation = libraryInfo["orientation"]
-        insert      = libraryInfo["insert"]
-        std         = libraryInfo["std"]
-        threads     = 8
-        if "threads" in sample_config:
-            threads  = sample_config["threads"]
-        if orientation=="innie" or orientation=="none":
-            libraryInfo["alignment"] = command_fn(read1, read2, reference, threads)
-        else:
-            #TODO: can be multithreaded
-            read1 = libraryInfo["pair1"] = align.compl_rev(read1)
-            read2 = libraryInfo["pair2"] = align.compl_rev(read2)
-            libraryInfo["alignment"] = command_fn(read1, read2, reference, threads)
-    return sorted_libraries_by_insert
-
-def _merge_bam_files(global_config, sample_config, sorted_libraries_by_insert):
-    BAMfiles = {};
-    reference = sample_config["reference"]
-    
-    for library, libraryInfo in sorted_libraries_by_insert:
-        read1       = libraryInfo["pair1"]
-        read2       = libraryInfo["pair2"]
-        orientation = libraryInfo["orientation"]
-        insert      = libraryInfo["insert"]
-        std         = libraryInfo["std"]
-        alignment   = libraryInfo["alignment"]
-        if insert not in BAMfiles:
-            BAMfiles[insert] = [alignment]
-        else:
-            BAMfiles[insert].append(alignment)
-    
-    BAMfilesMerged = {}
-    for insert, insertGroup in BAMfiles.iteritems():
-        dir_insert = "lib_{}".format(insert)
-        if not os.path.exists(dir_insert):
-            os.makedirs(dir_insert)
-        os.chdir(dir_insert)
-        #check if file is already present
-        bamMerged = "lib_{}.bam".format(insert)
-        if os.path.exists(bamMerged):
-            BAMfilesMerged[insert] = os.path.abspath(bamMerged)
-            os.chdir("..")
-            continue # nothiing to be done for this insert
-
-        if len(insertGroup) == 1: # only one sample file for this insert length
-            cl = ["ln", "-s", insertGroup[0], bamMerged]
-            returnValue = subprocess.call(cl)
-            if  not returnValue == 0:
-                sys.exit("error, while soft linking {}".format(insertGroup[0]))
-        else:
-            samtools = (global_config["evaluete"]["samtools"]["bin"])
-            cl = [samtools, "merge"]
-            bamMerged = "lib_{}.bam".format(insert)
-            cl.append(bamMerged)
-            for bamfile in insertGroup:
-                cl.append(bamfile)
-            returnValue = subprocess.call(cl)
-            if  not returnValue == 0:
-                sys.exit("error, while merging files {}".format(insertGroup))
-        BAMfilesMerged[insert] = os.path.abspath(bamMerged)
-        os.chdir("..")
-    
-    sorted_alignments_by_insert = []
-    for key in sorted(BAMfilesMerged.iterkeys()):
-        sorted_alignments_by_insert.append([key, BAMfilesMerged[key]])
-    return sorted_alignments_by_insert
 
 def _run_FRC(global_config, sorted_alignments_by_insert, sample_config):
     genomeSize  = sample_config["genomeSize"]
@@ -202,12 +131,15 @@ def _run_FRC(global_config, sorted_alignments_by_insert, sample_config):
         mpInsert    = sorted_alignments_by_insert[1][0]
         mpMinInsert = int(mpInsert - mpInsert*0.40)
         mpMaxInsert = int(mpInsert + mpInsert*0.40)
-        cl  +=  ["--mp-sam", mpSam, "--mp-min-insert", "{}".format(mpMinInsert), "--mp-max-insert", "{}".format(mpMaxInsert), "--genome-size", "{}".format(genomeSize)]
+        cl  +=  ["--mp-sam", mpSam, "--mp-min-insert", "{}".format(mpMinInsert), "--mp-max-insert", "{}".format(mpMaxInsert)]
     
-    cl += ["--output", output]
+    cl += [ "--genome-size", "{}".format(genomeSize), "--output", output]
 
     print cl
-    returnValue = subprocess.call(cl)
+
+    stdOut = open("FRC.stdOut", "a")
+    stdErr = open("FRC.stdErr", "a")
+    returnValue = subprocess.call(cl , stdout=stdOut , stderr=stdErr)
     if not returnValue == 0:
         sys.exit("error, while running FRCurve:   {}".format(cl))
     ## now take care of pictures
@@ -247,7 +179,9 @@ def _run_qaTools(global_config, sorted_alignments_by_insert, sample_config):
 
     cl = ["{}/qaCompute".format(qaTools),  "-m",  "-q", "0", "-i",  BAMfile, "{}.cov".format(os.path.basename(BAMfile))]
     print cl
-    returnValue = subprocess.call(cl)
+    stdOut = open("QAtools.stdOut", "a")
+    stdErr = open("QAtools.stdErr", "a")
+    returnValue = subprocess.call(cl , stdout=stdOut , stderr=stdErr)
     if not returnValue == 0:
         sys.exit("error, while running QAtools: {}".format(cl))
     #now add GC content

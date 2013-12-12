@@ -47,7 +47,7 @@ def main(args):
         stream.close()
 
         command = "python  ~/DE_NOVO_PIPELINE/de_novo_scilife/script/deNovo_pipeline.py --global-config {} --sample-config {}_{}.yaml".format(global_config, outputName, assembler)
-        #subprocess.call(command, shell=True)
+        subprocess.call(command, shell=True)
         os.chdir("..")
     if processed == 0:
         for assembler in assemblers:
@@ -80,40 +80,44 @@ def main(args):
             os.makedirs(os.path.join("pictures", assembler))
     #directory structure created
     for assembler in assemblers:
-        latex_document = _new_section(latex_document, assembler)
-        Original_CoverageDistribution200 = os.path.join(validationDirectory, assembler, "QAstats", "Coverage_distribution_noOutliers.png")
-        Original_GC_vs_Coverage          = os.path.join(validationDirectory, assembler, "QAstats", "GC_vs_Coverage_noOutliers.png")
-        Original_GC_vs_CtgLength         = os.path.join(validationDirectory, assembler, "QAstats", "GC_vs_CtgLength.png")
-        Original_MedianCov_vs_CtgLength  = os.path.join(validationDirectory, assembler, "QAstats", "MedianCov_vs_CtgLength_noOutliers.png")
-        Copied_CoverageDistribution200   = os.path.join("pictures", assembler, "Coverage_distribution_noOutliers.png")
-        Copied_GC_vs_Coverage            = os.path.join("pictures", assembler, "GC_vs_Coverage_noOutliers.png")
-        Copied_GC_vs_CtgLength           = os.path.join("pictures", assembler, "GC_vs_CtgLength.png")
-        Copied_MedianCov_vs_CtgLength    = os.path.join("pictures", assembler, "MedianCov_vs_CtgLength_noOutliers.png")
-        sh.copy(Original_CoverageDistribution200, Copied_CoverageDistribution200)
-        sh.copy(Original_GC_vs_Coverage , Copied_GC_vs_Coverage )
-        sh.copy(Original_GC_vs_CtgLength , Copied_GC_vs_CtgLength )
-        sh.copy(Original_MedianCov_vs_CtgLength , Copied_MedianCov_vs_CtgLength )
+        if os.path.exists(os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName))):
+            latex_document = _new_section(latex_document, assembler)
+            Original_CoverageDistribution200 = os.path.join(validationDirectory, assembler, "QAstats", "Coverage_distribution_noOutliers.png")
+            Original_GC_vs_Coverage          = os.path.join(validationDirectory, assembler, "QAstats", "GC_vs_Coverage_noOutliers.png")
+            Original_GC_vs_CtgLength         = os.path.join(validationDirectory, assembler, "QAstats", "GC_vs_CtgLength.png")
+            Original_MedianCov_vs_CtgLength  = os.path.join(validationDirectory, assembler, "QAstats", "MedianCov_vs_CtgLength_noOutliers.png")
+            Copied_CoverageDistribution200   = os.path.join("pictures", assembler, "Coverage_distribution_noOutliers.png")
+            Copied_GC_vs_Coverage            = os.path.join("pictures", assembler, "GC_vs_Coverage_noOutliers.png")
+            Copied_GC_vs_CtgLength           = os.path.join("pictures", assembler, "GC_vs_CtgLength.png")
+            Copied_MedianCov_vs_CtgLength    = os.path.join("pictures", assembler, "MedianCov_vs_CtgLength_noOutliers.png")
+            sh.copy(Original_CoverageDistribution200, Copied_CoverageDistribution200)
+            sh.copy(Original_GC_vs_Coverage , Copied_GC_vs_Coverage )
+            sh.copy(Original_GC_vs_CtgLength , Copied_GC_vs_CtgLength )
+            sh.copy(Original_MedianCov_vs_CtgLength , Copied_MedianCov_vs_CtgLength )
         
-        pictures=[[Copied_CoverageDistribution200, "Contig coverage distribtion" ],\
+            pictures=[[Copied_CoverageDistribution200, "Contig coverage distribtion" ],\
                   [Copied_GC_vs_Coverage, "GC-content versus contig-coverage"],\
                   [Copied_GC_vs_CtgLength, "GC-content versus contig-Length"],\
                   [Copied_MedianCov_vs_CtgLength, "Median-coverage vs Contig-Length"]]
-        latex_document = _insert_QA_figure(latex_document,  pictures, "QA pictures")
+            latex_document = _insert_QA_figure(latex_document,  pictures, "QA pictures")
     # now FRCurve
     latex_document = _new_section(latex_document, "FRCurve")
     FRCurves = []
     for assembler in assemblers:
-        FRCurves.append([assembler, os.path.join(validationDirectory, assembler, "FRCurve", "{}_FRC.txt".format(outputName))])
+        if os.path.exists(os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName))):
+            FRCurves.append([assembler, os.path.join(validationDirectory, assembler, "FRCurve", "{}_FRC.txt".format(outputName))])
     FRCname = _plotFRCurve(outputName,FRCurves)
     latex_document = _new_figure(latex_document, FRCname, "Feature Response Curve compute on all Features")
     latex_document = _latexFooter(latex_document)
     latex_document = _latexFooter(latex_document)
-    with open("{0}.tex".format(outputName),'w') as f:
-        f.write(latex_document)
-    #command = ["pdflatex",  "{0}.tex".format(outputName)]
-    #latex_stdOut = open("latex.stdOut", "a")
-    #latex_stdErr = open("latex.stdErr", "a")
-    #subprocess.call(command, stdout=latex_stdOut , stderr=latex_stdErr)
+
+    if args.generatePDF == 1:
+        with open("{0}.tex".format(outputName),'w') as f:
+            f.write(latex_document)
+        command = ["pdflatex",  "{0}.tex".format(outputName)]
+        latex_stdOut = open("latex.stdOut", "a")
+        latex_stdErr = open("latex.stdErr", "a")
+        subprocess.call(command, stdout=latex_stdOut , stderr=latex_stdErr)
 
     os.chdir("..")
     # now prepare delivery folder
@@ -121,7 +125,8 @@ def main(args):
         os.makedirs("{}_delivery_report".format(outputName))
     os.chdir("{}_delivery_report".format(outputName))
     #copy pdf report
-    #sh.copy(os.path.join(validationDirectory, "LaTeX", "{}.pdf".format(outputName)), "{}.pdf".format(outputName))
+    if args.generatePDF == 1:
+        sh.copy(os.path.join(validationDirectory, "LaTeX", "{}.pdf".format(outputName)), "{}.pdf".format(outputName))
     #now copy QA tables
     for assembler in assemblers:
         if os.path.exists(os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName) )):
@@ -371,6 +376,7 @@ if __name__ == '__main__':
     parser.add_argument('--assemblers', action='append', nargs='+', help="List of assemblers to be evalueted")
     parser.add_argument('--sample-config', help="Sample config. reference field will be over-written", type=str)
     parser.add_argument('--global-config', help='foo help')
+    parser.add_argument('--generatePDF', default=0, type=int)
     args = parser.parse_args()
     
     main(args)
