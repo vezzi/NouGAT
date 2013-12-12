@@ -3,6 +3,7 @@ Pipelines:
  assemble
  evaluete
  align
+ MP
  user_define
 Tools:
  jellyfish:
@@ -12,7 +13,7 @@ Tools:
   bin: 
   options: [""]
  trimmomatic:
-  bin: 
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/Trimmomatic-0.32/trimmomatic-0.32.jar
   options: [""]
  masurca:
   bin: 

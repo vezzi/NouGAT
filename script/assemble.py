@@ -302,7 +302,7 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     
     assembler_stdOut = open("abyss.stdOut", "a")
     assembler_stdErr = open("abyss.stdErr", "a")
-    program=programBIN
+    program=os.path.join(programBIN, "abyss-pe")
 
     command = ""
     command += "{} ".format(program)
@@ -368,6 +368,7 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
 
     os.makedirs(os.path.join(assemblyDirectory, "runABySS"))
     os.chdir("runABySS")
+    print command
     returnValue = subprocess.call(command, stdout=assembler_stdOut, stderr=assembler_stdErr, shell=True)
 
     os.chdir("..")

@@ -1,5 +1,6 @@
 import sys, os, yaml, glob
 import subprocess
+import align
 
 def prepare_folder_structure(sorted_libraries_by_insert):
     mainDir = os.getcwd()
@@ -102,6 +103,8 @@ def _sort_libraries_by_insert(sample_config):
     else:
         sorted_libraries_by_insert = prepare_folder_structure(sorted_libraries_by_insert)
     return sorted_libraries_by_insert
+
+
 
 
 
