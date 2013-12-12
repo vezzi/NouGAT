@@ -76,17 +76,23 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
 
     #NOW RUN ALLPATHS FOR REAL
     #TODO: must check if path is correctly set
-    command = ["PrepareAllPathsInputs.pl" , "DATA_DIR=$PWD", "PLOIDY=1", "PICARD_TOOLS_DIR={}".format(global_config["Tools"]["picard"]["bin"])]
+    command = ["PrepareAllPathsInputs.pl" , "DATA_DIR=$PWD", "PLOIDY=1", "PICARD_TOOLS_DIR={}".format(global_config["Tools"]["picard"]["bin"]), "FORCE_PHRED=True", "PHRED_64=False"]
     print command
-    #returnValue = subprocess.call(command)
-
-    #TODO: check return value
-    #command = ["RunAllPathsLG", "PRE=.", "REFERENCE_NAME=.", "DATA_SUBDIR=.", "RUN=allpaths", "SUBDIR=run"]
-    #returnValue = subprocess.call(command)
-
-    #to do cehck the return value
-
+    returnValue = subprocess.call(command)
+    if returnValue == 0:
+        command = ["RunAllPathsLG", "PRE=.", "REFERENCE_NAME=.", "DATA_SUBDIR=.", "RUN=allpaths", "SUBDIR=run"]
+        returnValue = subprocess.call(command)
+        if returnValue != 0:
+            print "ALLPATHS RunAllPathsLG terminated with an error. Please check running folder for more informations"
+            oc.chdir("..")
+            return sample_config
+    else:
+        print "ALLPATHS PrepareAllPathInputs terminated with an error. Please check running folder for more informations"
+        oc.chdir("..")
+        return sample_config
+    os.chdir("..")
     return sample_config
+
 
 
 def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
