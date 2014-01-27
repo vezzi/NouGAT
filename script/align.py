@@ -4,6 +4,8 @@ import common
 import string
 import sys
 import gzip
+import pandas as pd
+
 
 
 def _align_reads(global_config, sample_config, sorted_libraries_by_insert):
@@ -233,7 +235,6 @@ def align_bwa_mem(global_config, read1, read2, reference, threads):
         os.chdir("..")
         return BAMsorted
 
-
     #if not os.path.exists(SAMMapped) and not os.path.exists(BAMunsorted):
     #    with open(SAMMapped, "w") as fh:
     #            stdErr = open("bwa.stdErr", "w")
@@ -250,7 +251,6 @@ def align_bwa_mem(global_config, read1, read2, reference, threads):
     
     bwa_mem_command       = [aligner, "mem", "-M", "-t", "{}".format(threads), reference, read1, read2]
     samtools_view_command = [samtools, "view", "-b", "-S",  "-u",  "-"]
-    print "aligning..."
 
     if not os.path.exists(BAMunsorted):
         command = "{} | {} > {}".format(" ".join(bwa_mem_command), " ".join(samtools_view_command), BAMunsorted)
@@ -375,3 +375,51 @@ def align_bwa(read1, read2, reference):
     BAMsorted = os.path.abspath(BAMsorted)
     os.chdir("..")
     return BAMsorted
+
+
+def _run_pileup(global_config, bamfile):
+    """
+    Perform samtools pileup on a .bam-file
+    """
+
+
+    if "samtools" in global_config["Tools"]:
+        samtools = global_config["Tools"]["samtools"]["bin"]
+    elif not common.which("samtools"):
+        sys.exit("error while trying to run samtools: samtools not present in the path and not in global config, please make sure to install samtools properly")
+
+    pileupfile = bamfile.replace('.bam', '_coverage.csv')
+    pileup_cmd = "{} mpileup {} | awk '{print $2, $4}' > {}".format(samtools, bamfile, pileupfile)
+    p1 = subprocess.Popen(pileup_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p1.wait()
+    if p1.returncode == 0:
+        return pileupfile
+    else:
+        print "Could not perform mpileup"
+        return 1
+
+
+def plot_coverage(pileupfile, samplename=None):
+    """
+    Plot coverage from samtools pileup output
+    """
+    if not samplename:
+        samplename = pileupfile.split('.')[0]
+
+    df = pd.io.parsers.read_csv(pileupfile, sep=' ', names=['pos', 'cov'])
+    pl = df.plot(x='pos', y='cov')
+    avg_cov = sum(df['cov'])/len(df)        #Calculate average coverage
+    pl2 = plt.plot(range(len(df)), [avg_cov]*len(df), 'r--', linewidth=2)
+    plt.xlim([0,len(df)])
+    plt.ylabel('Coverage')
+    plt.xlabel('Position')
+    plt.title(samplename)
+    plt.savefig(samplename)     #Save plot as .png
+    return 0
+
+
+
+
+
+
+

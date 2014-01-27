@@ -14,10 +14,13 @@ Tools:
   options: [--threads,  "16" ,  --outdir,  fastqc]
  trimmomatic:
   bin: /home/vezzi/DE_NOVO_PIPELINE/tools/Trimmomatic-0.30/trimmomatic-0.30.jar
-  options: [""]
+  options: []
  masurca:
   bin: /home/vezzi/DE_NOVO_PIPELINE/tools/MaSuRCA-2.0.4/
-  options: 
+  options: [""]
+ allpaths:
+  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/allpathslg-47918/bin/bin/
+  options: [""]
  abyss:
   bin: /sw/apps/bioinfo/abyss/1.3.5/milou/bin/
   options: ["k=54", "np=16"]
@@ -51,3 +54,6 @@ Tools:
  qaTools:
   bin: /home/vezzi/DE_NOVO_PIPELINE/tools/qaTools/
   options: ""
+ trinity:
+  bin: ~/DE_NOVO_PIPELINE/tools/trinityrnaseq_r20131110/
+  options: []

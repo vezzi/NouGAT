@@ -5,14 +5,8 @@ from matplotlib import pyplot as plt
 import common
 
 
-
 def run(global_config, sample_config):
-    sorted_libraries_by_insert = sorted(sample_config["libraries"].iteritems(), key=lambda (k,v): v["insert"])
-    if os.path.exists(os.path.join(os.getcwd(), "DATA")):
-        sorted_libraries_by_insert = common.update_sample_config(sorted_libraries_by_insert)
-    else:
-        sorted_libraries_by_insert = common.prepare_folder_structure(sorted_libraries_by_insert)
-
+    sorted_libraries_by_insert = common._sort_libraries_by_insert(sample_config)
     if "tools" in sample_config:
         #need to follow the commands listed here
         for command in sample_config["tools"]:
@@ -34,7 +28,7 @@ def _run_fastqc(global_config, sample_config, sorted_libraries_by_insert):
         os.makedirs(FastqcFolder)
     else:
         print "done (fastqc folder already present, assumed already run)"
-        return
+        return sample_config
     fastq_stdOut = open("fastqc.stdOut", "a")
     fastq_stdErr = open("fastqc.stdErr", "a")
     program=global_config["Tools"]["fastqc"]["bin"]
@@ -62,7 +56,10 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
         os.makedirs(ABySS_Kmer_Folder)
     else:
         print "done (ABySS_Kmer_Folder folder already present, assumed already run)"
-        #return
+        os.chdir(ABySS_Kmer_Folder)
+        _plotKmerPlot(1 , 50)
+        os.chdir("..")
+        return
    
     os.chdir(ABySS_Kmer_Folder)
     ABySS_Kmer_stdOut = open("ABySS_Kmer_Folder.stdOut", "a")
@@ -95,20 +92,20 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     print command
     subprocess.call(command, shell=True, stdout=ABySS_Kmer_stdOut, stderr=ABySS_Kmer_stdErr)
     subprocess.call(("rm", "preUnitgs.fa"))
-    _plotKmerPlot()
+    _plotKmerPlot(15,200)
 
     os.chdir("..")
     return
 
-def _plotKmerPlot():
+def _plotKmerPlot(min_limit, max_limit):
     Kmer_histogram = pd.io.parsers.read_csv("histogram.hist", sep='\t', header=None)
     Kmer_coverage  = Kmer_histogram[Kmer_histogram.columns[0]].tolist()
     Kmer_count     = Kmer_histogram[Kmer_histogram.columns[1]].tolist()
     Kmer_freq      = [Kmer_coverage[i]*Kmer_count[i] for i in range(len(Kmer_coverage))]
-    kmer_freq_peak = Kmer_freq.index(max(Kmer_freq[15:400]))	#coverage peak, disregarding initial peak
-    kmer_freq_peak_value=max(Kmer_freq[15:400])
+    kmer_freq_peak = Kmer_freq.index(max(Kmer_freq[min_limit:max_limit]))	#coverage peak, disregarding initial peak
+    kmer_freq_peak_value=max(Kmer_freq[min_limit:max_limit])
     
-    xmax = 200
+    xmax = max_limit
     ymax = kmer_freq_peak_value + (kmer_freq_peak_value*0.30)
     
     plt.plot(Kmer_coverage, Kmer_freq)

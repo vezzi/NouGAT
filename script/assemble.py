@@ -19,6 +19,111 @@ def run(global_config, sample_config):
         sample_config = _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert)
     
 
+def _run_trinity(global_config, sample_config, sorted_libraries_by_insert):
+    print "running trinity ..."
+    assembler = "trinity"
+    outputName = sample_config["output"]
+    currentDirectory  = os.getcwd()
+    assemblyDirectory = os.path.join(currentDirectory, assembler)
+    if common.directory_exists(assemblyDirectory):
+        return sample_config
+    os.chdir(assemblyDirectory) # now I am in the assembly directory
+    sorted_libraries_by_insert = common.prepare_folder_structure(sorted_libraries_by_insert)
+    programBIN      = global_config["Tools"][assembler]["bin"] + "Trinity.pl"  # in masurca case there is no exectuable as a make file must be created
+    program_options = global_config["Tools"][assembler]["options"]
+    if assembler in sample_config:
+        program_options=sample_config[assembler]
+    ########### HERE IT START THE SPECIFIC ASSEMBLER PART
+
+    command = [programBIN]
+    command.append("--seqType")
+    command.append("fq")
+    command.append("--JM")
+    command.append("50G")
+    for library, libraryInfo in sorted_libraries_by_insert:
+        read1       =libraryInfo["pair1"]
+        read2       =libraryInfo["pair2"]
+        orientation = libraryInfo["orientation"]
+        insert      = libraryInfo["insert"]
+        std         = libraryInfo["std"]
+        if read2 is None:
+            command.append("--single")
+            command.append("{}".format(read1))
+        elif orientation=="innie":
+            command.append("--left")
+            command.append("{}".format(read1))
+            command.append("--right")
+            command.append("{}".format(read2))
+        else:
+            print "trinity: somthing wrong or unexpected in the sample config file"
+            return sample_config
+    command.append("--output")
+    command.append("trinity")
+    assembler_stdOut = open("trinity.stdOut", "w")
+    assembler_stdErr = open("trinity.stdErr", "w")
+    print command
+
+    returnValue = subprocess.call(" ".join(command), stdout=assembler_stdOut, stderr=assembler_stdErr, shell=True)
+
+    # now align reads back to transcripts
+    os.chdir("trinity")
+    programBIN = global_config["Tools"][assembler]["bin"] + "util/alignReads.pl"
+    command = [programBIN]
+    command.append("--target")
+    command.append("Trinity.fasta")
+    command.append("--seqType")
+    command.append("fq")
+    for library, libraryInfo in sorted_libraries_by_insert:
+        read1       =libraryInfo["pair1"]
+        read2       =libraryInfo["pair2"]
+        orientation = libraryInfo["orientation"]
+        insert      = libraryInfo["insert"]
+        std         = libraryInfo["std"]
+        if read2 is not None and orientation == "innie":
+            command.append("--left")
+            command.append("{}".format(os.path.splitext(read1)[0]))
+            command.append("--right")
+            command.append("{}".format(os.path.splitext(read2)[0]))
+
+    command.append("--aligner")
+    command.append("bowtie")
+    command.append("--retain_intermediate_files")
+    print command
+    returnValue = subprocess.call(" ".join(command), stdout=assembler_stdOut, stderr=assembler_stdErr, shell=True)
+
+    # now quantify trnascripts
+    programBIN = global_config["Tools"][assembler]["bin"] + "util/RSEM_util/run_RSEM_align_n_estimate.pl"
+    command = [programBIN]
+    command.append("--transcripts")
+    command.append("Trinity.fasta")
+    command.append("--seqType")
+    command.append("fq")
+    for library, libraryInfo in sorted_libraries_by_insert:
+        read1       =libraryInfo["pair1"]
+        read2       =libraryInfo["pair2"]
+        orientation = libraryInfo["orientation"]
+        insert      = libraryInfo["insert"]
+        std         = libraryInfo["std"]
+        if read2 is not None and orientation == "innie":
+            command.append("--left")
+            command.append("{}".format(os.path.splitext(read1)[0]))
+            command.append("--right")
+            command.append("{}".format(os.path.splitext(read2)[0]))
+
+    print command
+    returnValue = subprocess.call(" ".join(command), stdout=assembler_stdOut, stderr=assembler_stdErr, shell=True)
+
+    #now copy results
+    os.chdir("..")
+    subprocess.call(["cp", "trinity/Trinity.fasta", "{}.fasta".format(outputName)])
+    subprocess.call(["cp", "trinity/RSEM.isoforms.results", "{}.isoforms.results".format(outputName)])
+    subprocess.call(["cp", "trinity/RSEM.genes.results", "{}.genes.results".format(outputName)])
+    os.chdir(currentDirectory)
+    return sample_config
+
+
+
+
 def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
     print "running allpaths ..."
     assembler = "allpaths"
@@ -42,7 +147,7 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
     
     librariesForInLibs     = []
     librariesForInLibsDict = {}
-    group_name              = 1;
+    group_name             = 1;
 
     for library, libraryInfo in sorted_libraries_by_insert:
         read1       =libraryInfo["pair1"]
@@ -157,6 +262,8 @@ def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
     #TODO : lots of missing options
     command = [programBIN , "all", "-s", "../configuration.txt", "-K", "{}".format(kmer), "-L", "500", "-o", "soapAssembly", threads[0] , threads[1] ]
     print command
+    
+
 
     returnValue = subprocess.call(command, stdout=assembler_stdOut, stderr=assembler_stdErr)
 

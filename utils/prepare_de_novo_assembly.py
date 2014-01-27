@@ -98,7 +98,7 @@ def submit_job(sample_config, global_config, sample_name, project, assembler):
     
     slurm_handle.write("\n\n");
     slurm_handle.write("module load abyss/1.3.5\n");
-    slurm_handle.write("python ~/assembly_pipeline/de_novo_scilife/script/deNovo_pipeline.py --global-config {} --sample-config {}\n\n".format(global_config,sample_config))
+    slurm_handle.write("python ~/DE_NOVO_PIPELINE/de_novo_scilife/script/deNovo_pipeline.py --global-config {} --sample-config {}\n\n".format(global_config,sample_config))
     slurm_handle.close()
     
     command=("sbatch", slurm_file)

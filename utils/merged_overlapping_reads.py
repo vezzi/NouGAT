@@ -7,35 +7,39 @@ def main(args):
     workingDir = os.getcwd()
     samples_data_dir = args.sample_data_dir
     for sample_dir_name in [dir for dir in os.listdir(samples_data_dir) if os.path.isdir(os.path.join(samples_data_dir, dir))]:
-        SampleQC_folder = os.path.join(os.getcwd(), sample_dir_name)
-        if not os.path.exists(SampleQC_folder):
-            os.makedirs(SampleQC_folder)
+        Sample_folder = os.path.join(os.getcwd(), sample_dir_name)
+        if not os.path.exists(Sample_folder):
+            os.makedirs(Sample_folder)
         else:
-            print "done ({} folder already present, assumed already run)".format(SampleQC_folder)
-        os.chdir(SampleQC_folder)
+            print "done ({} folder already present, assumed already run)".format(Sample_folder)
+        os.chdir(Sample_folder)
         
 
-        sample_YAML_name = os.path.join(SampleQC_folder, "{}_mergeOverlapping.yaml".format(sample_dir_name))
+        sample_YAML_name = os.path.join(Sample_folder, "{}_mergeOverlapping.yaml".format(sample_dir_name))
         sample_YAML = open(sample_YAML_name, 'w')
        
-        sample_YAML.write("operation:\n")
-        sample_YAML.write(" assemble:\n")
-        sample_YAML.write("  tool: abyss_mergePairs\n")
+        sample_YAML.write("pipeline:\n")
+        sample_YAML.write(" assemble\n")
+        sample_YAML.write("tools:\n")
+        sample_YAML.write(" [abyss_mergePairs]\n")
+        sample_YAML.write("output: {}\n".format(sample_dir_name))
+        sample_YAML.write("threads: 16\n")
         sample_YAML.write("genomeSize: {}\n".format(args.genomeSize))
         sample_YAML.write("kmer: {}\n".format(args.kmer))
         sample_YAML.write("libraries:\n")
         
         sample_data_dir = os.path.join(samples_data_dir,sample_dir_name)
+        
         sample_files = [ f for f in os.listdir(sample_data_dir) if os.path.isfile(os.path.join(sample_data_dir,f))]
-
+        
         sample_YAML.write(" lib1:\n")
         for file in sample_files:
             pair1_file = "";
             pair2_file = "";
-            if "_R1_" in file:
+            if "_R1_" in file or "_1.fastq" in file:
                 pair1_file = os.path.join(sample_data_dir,file)
                 sample_YAML.write("  pair1: {}\n".format(pair1_file))
-            elif "_R2_" in file:
+            elif "_R2_" in file or "_2.fastq" in file:
                 pair2_file = os.path.join(sample_data_dir,file)
                 sample_YAML.write("  pair2: {}\n".format(pair2_file))
             else:
@@ -59,7 +63,7 @@ def submit_job(sample_config, global_config, sample_name):
 
     slurm_handle.write("#! /bin/bash -l\n")
     slurm_handle.write("set -e\n")
-    slurm_handle.write("#SBATCH -A a2010002\n")
+    slurm_handle.write("#SBATCH -A b2013064\n")
     slurm_handle.write("#SBATCH -o {}_mergeOverlappin.out\n".format(sample_name))
     slurm_handle.write("#SBATCH -e {}_mergeOverlappin.err\n".format(sample_name))
     slurm_handle.write("#SBATCH -J {}_mergeOverlappin.job\n".format(sample_name))
@@ -69,14 +73,14 @@ def submit_job(sample_config, global_config, sample_name):
     slurm_handle.write("#SBATCH --mail-type=ALL\n")
     
     slurm_handle.write("\n\n");
-    slurm_handle.write("python ~/assembly_pipeline/de_novo_scilife/script/deNovo_pipeline.py --global-config {} --sample-config {}\n\n".format(global_config,sample_config))
+    slurm_handle.write("python ~/DE_NOVO_PIPELINE/de_novo_scilife/script/deNovo_pipeline.py --global-config {} --sample-config {}\n\n".format(global_config,sample_config))
     slurm_handle.write("mv abyss_mergePairs/lib1_PE_merged.fastq {}_merged.fastq \n".format(sample_name));
     slurm_handle.write("mv abyss_mergePairs/lib1_PE_reads_1.fastq {}_1.fastq \n".format(sample_name));
     slurm_handle.write("mv abyss_mergePairs/lib1_PE_reads_2.fastq {}_2.fastq \n".format(sample_name));
     slurm_handle.write("gzip {}_merged.fastq\n".format(sample_name))
     slurm_handle.write("gzip {}_1.fastq\n".format(sample_name))
     slurm_handle.write("gzip {}_2.fastq\n".format(sample_name))
-    slurm_handle.write("mv abyss_mergePairs/lib1_PE.txt {}.txt . \n".format(sample_name))
+    slurm_handle.write("mv abyss_mergePairs/lib1_PE.txt {}.txt \n".format(sample_name))
     slurm_handle.write("rm -r abyss_mergePairs DATA \n")
     
     slurm_handle.close()

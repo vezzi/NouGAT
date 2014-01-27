@@ -43,9 +43,9 @@ def main(args):
         pair1_file = "";
         pair2_file = "";
         for file in sample_files:
-            if "_R1_" in file:
+            if "_R1_" in file or "_1.fastq" in file:
                 pair1_file = os.path.join(sample_data_dir,file)
-            elif "_R2_" in file:
+            elif "_R2_" in file or "_2.fastq" in file:
                 pair2_file = os.path.join(sample_data_dir,file)
             else:
                 sys.exit("Error: file {} does not respect the paired end format".format(file))
@@ -55,6 +55,9 @@ def main(args):
         outputFile2P = "{}_2.fastq.gz".format(sample_dir_name)
         outputFile2U = "{}_2_unp.fastq.gz".format(sample_dir_name)
 
+        currentCommand.append("PE")
+        if args.phred33:
+            currentCommand.append("-phred33")
         currentCommand.append(pair1_file)
         currentCommand.append(pair2_file)
         currentCommand.append(outputFile1P)
@@ -73,6 +76,9 @@ def main(args):
 
         trimmomatic_stdOut = open("trimmomatic.stdOut", "a")
         trimmomatic_stdErr = open("trimmomatic.stdErr", "a")
+        print currentCommand
+
+
         subprocess.call(currentCommand, stdout=trimmomatic_stdOut, stderr=trimmomatic_stdErr)
 
 
@@ -94,12 +100,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Perform hard trimming and quality trimming. Best suited for high numebr of samples. By default it removes leading \
         bases with low coverage and perform quality trimming. Output is returned in gz format')
     parser.add_argument('--sample-data-dir', help="full path to directory containing one folder per sample. Each sample contains only one library (i.e., one PE lib)", type=str)
-    parser.add_argument('--hard-trim', help="perform only hard trim (--keep1 and keep2 must be specified)", action='store_true')
+    parser.add_argument('--hard-trim', help="perform only hard trim (--keep must be specified)", action='store_true')
     parser.add_argument('--keep', help="keeps only the first keep bases in read 1 and read 2. (defult is no hard trim).", type=int)
     parser.add_argument('--no-quality-trim', help="no quality trim is performed", action='store_true')
     parser.add_argument('--min-length', help="minimum length to output", default=36,  type=int)
     parser.add_argument('--global-config', help="global configuration file with path to programs and options")
-    parser.add_argument('--threads', help="Number of threads to use (overwrites global-config option) --> NOT WORKING")
+    parser.add_argument('--threads', help="Number of threads to use (overwrites global-config option) -- NOT WORKING")
+    parser.add_argument('--phred33', help="Force phred33 encoding in place of phred64", action='store_true')
     args = parser.parse_args()
 
     main(args)

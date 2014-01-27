@@ -21,10 +21,15 @@ def run(global_config, sample_config):
     if not os.path.exists("alignments"):
         os.makedirs("alignments")
     os.chdir("alignments")
+    print "1"
     sorted_libraries_by_insert =  align._align_reads(global_config, sample_config,  sorted_libraries_by_insert) # align reads
+    print "2"
     sorted_alignments_by_insert = align._merge_bam_files(global_config, sample_config, sorted_libraries_by_insert) # merge alignments
+    print "3"
     sorted_alignments_by_insert = align.picard_CGbias(global_config, sample_config,sorted_alignments_by_insert)
+    print "4"
     sorted_alignments_by_insert = align.picard_collectInsertSizeMetrics(global_config, sample_config,sorted_alignments_by_insert)
+    print "5"
     sorted_alignments_by_insert = align.picard_markDuplicates(global_config, sample_config,sorted_alignments_by_insert)
 
 #    sorted_libraries_by_insert =  common._align_reads(sample_config,  sorted_libraries_by_insert) # align reads
@@ -75,6 +80,7 @@ def _build_new_reference(sample_config):
     new_reference_name = os.path.abspath(os.path.basename(reference))
     if os.path.exists(new_reference_name):
         sample_config["reference"] = new_reference_name
+        os.chdir("..")
         return sample_config # already created the new reference
 
     with open(new_reference_name, "w") as new_ref_fd:
