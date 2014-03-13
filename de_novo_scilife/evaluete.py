@@ -57,6 +57,8 @@ def _check_libraries(sorted_libraries_by_insert):
             if current_insert != libraryInfo["insert"]:
                 current_insert    = libraryInfo["insert"]
                 different_inserts += 1
+        if libraryInfo["orientation"] == "outtie":
+            sys.exit("error: in valiadation only innie libraries can be used, please reverse complement your MP libs (N.B. if you employed MP module of this pipeline then the reverse complemented reads are already available). This is needed in order to run FRCurve, please complain with FRCurve author!!!!")
     if different_inserts > 2:
         sys.exit("error: in valiadation only two libraries are admitted (usually a PE and a MP, sometimes 2 PE)")
     return
@@ -183,7 +185,7 @@ def _run_qaTools(global_config, sorted_alignments_by_insert, sample_config):
     os.chdir("QAstats")
     BAMfile = sorted_alignments_by_insert[0][1]
 
-    cl = ["{}/qaCompute".format(qaTools),  "-m",  "-q", "0", "-i",  BAMfile, "{}.cov".format(os.path.basename(BAMfile))]
+    cl = ["{}".format(qaTools),  "-m",  "-q", "0", "-i",  BAMfile, "{}.cov".format(os.path.basename(BAMfile))]
     print cl
     stdOut = open("QAtools.stdOut", "a")
     stdErr = open("QAtools.stdErr", "a")

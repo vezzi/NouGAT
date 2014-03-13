@@ -1,6 +1,20 @@
 import sys, os, yaml, glob
 import subprocess
 import align
+import datetime
+import time
+import types
+
+
+# Header levels
+H1, H2, H3, H4, H5, H6 = 1, 2, 3, 4, 5, 6 
+
+# List styles
+UL, OL = 0, 1
+
+# Alignment
+CENTER, LEFT, RIGHT = 'CENTER', 'LEFT', 'RIGHT'
+
 
 def prepare_folder_structure(sorted_libraries_by_insert):
     mainDir = os.getcwd()
@@ -98,11 +112,66 @@ def which(program):
 
 def _sort_libraries_by_insert(sample_config):
     sorted_libraries_by_insert = sorted(sample_config["libraries"].iteritems(), key=lambda (k,v): v["insert"])
-    if os.path.exists(os.path.join(os.getcwd(), "DATA")):
-        sorted_libraries_by_insert = update_sample_config(sorted_libraries_by_insert)
-    else:
-        sorted_libraries_by_insert = prepare_folder_structure(sorted_libraries_by_insert)
+    #if os.path.exists(os.path.join(os.getcwd(), "DATA")):
+    #    sorted_libraries_by_insert = update_sample_config(sorted_libraries_by_insert)
+    #else:
+    #    sorted_libraries_by_insert = prepare_folder_structure(sorted_libraries_by_insert)
     return sorted_libraries_by_insert
+
+
+
+def check_dryrun(sample_config):
+    if "dryrun" in sample_config:
+        return 1
+    return 0
+
+def print_command(command):
+    """ prinnts in ahuman readable way a command stored in a list"""
+    ts = time.time()
+    st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+    print st
+    if type(command) is list:
+        print ' '.join(command)
+    else:
+        print command
+
+
+def _check_pipeline(sample_config, global_config):
+    """ check that user specified commands are supported by this pipeline"""
+    pipeline     = sample_config["pipeline"]
+    user_tools   = sample_config["tools"] #might be empty
+    global_tools = global_config["Pipelines"][pipeline]
+    """be sure that pipeline I am going to run tries to execute only supported programs"""
+    for tool in user_tools:
+        if tool not in global_tools:
+            print "tool {} not available in pipeline {}. Only these methods are available: {}".format(tool, pipeline, global_tools)
+            sys.exit("Error: invalid configuration file(s)")
+
+    """check that programs to be executed are supported"""
+    tools_to_check = []
+    if user_tools is not []: # check that the suer wants to run only some (or all) the programs
+        tools_to_check = user_tools
+    else:
+        tools_to_check = global_config["Pipelines"][pipeline] # otherwise check all the tools supported
+
+    for tool in tools_to_check:
+        if tool == "align":
+            tool = "bwa"
+        tool_bin = global_config["Tools"][tool]["bin"]
+        """this step is a case to case step as several special case are present"""
+        special_tools = ["abyss", "masurca", "cabog", "allpaths", "picard",  "trinity"]
+        if tool in special_tools:
+            if not os.path.isdir(tool_bin):
+                print "Error: tool {} requires bin directory in config file. Directory {} does not exists.\
+                (N.B., not the binary as that one is guessed at running time for this tools). Please modify the global config.\
+                If you are not planning to run this tool specify the list of to be run tools in the sample_config section.".format(tool, tool_bin)
+        else:
+            if not os.path.exists(tool_bin):
+                print "Error: tool {} requires full path to binaries in config file. Path {} does not exists.\
+                Please modify the global config.\
+                If you are not planning to run this tool specify the list of to be run tools in the sample_config section.".format(tool, tool_bin)
+
+
 
 
 

@@ -1,9 +1,11 @@
 import sys, os, yaml, glob
 import argparse
-import evaluete
-import QCcontrol
-import assemble
-import align
+from de_novo_scilife import evaluete
+from de_novo_scilife import MP
+from de_novo_scilife import assemble
+from de_novo_scilife import QCcontrol
+from de_novo_scilife import align
+from de_novo_scilife import common
 
 def main(args):
     with open(args.global_config) as in_handle:
@@ -13,18 +15,25 @@ def main(args):
         sample_config = yaml.load(sample_config_handle)
 
     check_consistency(global_config,sample_config)
-    
-    if sample_config["pipeline"] == "user_define":
-        sys.exit("user_define pipeline (i.e. a pipeline that execute one after the other the commands specified by the user is not yet supported)")
 
-    run_analys(global_config, sample_config)
-    
+
+    if common.check_dryrun(sample_config):
+        print "Option dryrun idenitfied: commands will only be printed, not executed"
+
+
+    if sample_config["pipeline"] in global_config["Pipelines"]:
+        run_analys(global_config, sample_config)
+    else:
+        sys.exit("Error: pipeline {} is not one of the supported ones:{}".format(sample_config["pipeline"], global_config["Pipelines"]))
+
+    return 0
 
 
 def run_analys(global_config, sample_config):
-    analysis = sample_config["pipeline"] # analysis to be executed
-    command = analysis
-    command_fn = getattr(__import__(command), "run")
+    """ check that user specified commands are supported by this pipeline and that all commands I am going to run are available either via PATH or via global config"""
+    common._check_pipeline(sample_config, global_config)
+    pipeline = sample_config["pipeline"] # pipeline/analysis to be executed
+    command_fn = getattr(globals()[pipeline], "run") # this stopped to --> workgetattr(__import__(command), "run")
     command_fn(global_config, sample_config)
     
 

@@ -181,6 +181,7 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
 
     #NOW RUN ALLPATHS FOR REAL
     #TODO: must check if path is correctly set
+    ### PrepareAllPathsInputs.pl DATA_DIR=$PWD PLOIDY=1 PICARD_TOOLS_DIR=/home/francesco.vezzi/DE_NOVO_PIPELINE/tools/picard-tools-1.103/ FORCE_PHRED=True PHRED_64=False
     command = ["PrepareAllPathsInputs.pl" , "DATA_DIR=$PWD", "PLOIDY=1", "PICARD_TOOLS_DIR={}".format(global_config["Tools"]["picard"]["bin"]), "FORCE_PHRED=True", "PHRED_64=False"]
     print command
     returnValue = subprocess.call(command)
@@ -404,7 +405,7 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     program_options = global_config["Tools"][assembler]["options"]
     if assembler in sample_config:
         program_options=sample_config[assembler]
-    
+
     ########### HERE IT START THE SPECIFIC ASSEMBLER PART
     
     assembler_stdOut = open("abyss.stdOut", "a")
@@ -417,9 +418,12 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     if "threads" in sample_config :
         threads = sample_config["threads"]
     command += "np={} ".format(threads)
-    for option in program_options:
-            command += "{} ".format(option)
-    
+
+    kmer = 54
+    if "kmer" in sample_config:
+        kmer = sample_config["kmer"]
+    command += "k={} ".format(kmer)
+
     libraries = {}
     for library, libraryInfo in sorted_libraries_by_insert:
         read1       = libraryInfo["pair1"]

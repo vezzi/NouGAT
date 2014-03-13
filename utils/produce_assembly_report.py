@@ -11,54 +11,18 @@ import shutil as sh
 def main(args):
     workingDir = os.getcwd()
     assemblers = sum(args.assemblers, [])
-    if not os.path.exists(args.sample_config):
-        sys.exit("Error: file {} does not exists".format(args.sample_config))
-    
-    with open(os.path.abspath(args.sample_config)) as sample_config_handle:
-        sample_config = yaml.load(sample_config_handle)
-    global_config = os.path.abspath(args.global_config)
+    if not os.path.exists(args.validation_dir):
+        sys.exit("Error: directory {} does not exists".format(args.validation_dir))
     if not os.path.exists(args.assemblies_dir):
-        sys.exit("Error: directory {} does not exists".format(assemblies_dir))
-    assemblies_dir = os.path.abspath(args.assemblies_dir)
+        sys.exit("Error: directory {} does not exists".format(args.assemblies_dir))
+   
+    validation_dir    = os.path.abspath(args.validation_dir) # save valiadation directory
+    assemblies_dir    = os.path.abspath(args.assemblies_dir) # save assemblies directory
+    outputName        = args.output
+    minContigLength   = args.minContigLength
+    genomeSize        = args.genomeSize
+    processed         = 0 # count how many assembler I am going to process
 
-    processed = 0
-
-    for assembler in assemblers:
-        assemblerValidationDir = os.path.join(workingDir, assembler)
-        if not os.path.exists(assemblerValidationDir):
-            os.makedirs(assemblerValidationDir)
-        os.chdir(assemblerValidationDir)
-        #I am in the assembler specific validation directory
-        if "output" not in sample_config:
-            sys.exit("Error: sample cofig must contain output field")
-        outputName          = sample_config["output"]
-        assemblerReference = os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName))
-        print assemblerReference
-        if not os.path.exists(assemblerReference):
-            print "for assembler {} no assembly is available, skypping this validation".format(assembler)
-            os.chdir("..")
-            continue
-        processed += 1
-        #otherwise I have everyhitng I need
-        sample_config["reference"] = assemblerReference
-
-        stream = file('{}_{}.yaml'.format(outputName, assembler), 'w')
-        yaml.dump(sample_config, stream)    # Write a YAML representation of data to 'document.yaml'.
-        stream.close()
-
-        command = "python  ~/DE_NOVO_PIPELINE/de_novo_scilife/script/deNovo_pipeline.py --global-config {} --sample-config {}_{}.yaml".format(global_config, outputName, assembler)
-        subprocess.call(command, shell=True)
-        os.chdir("..")
-    if processed == 0:
-        for assembler in assemblers:
-            command = ["rm", "-r", assembler]
-            subprocess.call(command)
-        sys.exit("Error: no assembly available, probably wrong path specification")
-
-
-
-    ##Now everything is done
-    validationDirectory = os.getcwd()
     if not os.path.exists("LaTeX"):
         os.makedirs("LaTeX")
     os.chdir("LaTeX")
@@ -67,29 +31,29 @@ def main(args):
     assemblyStats = []
     for assembler in assemblers:
         #compute assembly statistics
-        if os.path.exists(os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName))):
-            assemblySeq = os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName))
-            assemblyStats.append(computeAssemblyStats(assembler, assemblySeq, sample_config["minCtgLength"], sample_config["genomeSize"]))
+        assemblySeq = os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName))
+        if os.path.exists(assemblySeq):
+            assemblyStats.append(computeAssemblyStats(assembler, assemblySeq, minContigLength, genomeSize))
    
     latex_document = _insert_stat_table(latex_document, assemblyStats)
     #now copy QAstast
-    if not os.path.exists("pictures"):
-        os.makedirs("pictures")
+    if not os.path.exists("QA_pictures"):
+        os.makedirs("QA_pictures")
     for assembler in assemblers:
-        if not os.path.exists(os.path.join("pictures", assembler)):
-            os.makedirs(os.path.join("pictures", assembler))
+        if not os.path.exists(os.path.join("QA_pictures", assembler)):
+            os.makedirs(os.path.join("QA_pictures", assembler))
     #directory structure created
     for assembler in assemblers:
-        if os.path.exists(os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName))):
+        if os.path.exists(os.path.join(validation_dir, assembler, "reference", "{}.scf.fasta".format(outputName))):
             latex_document = _new_section(latex_document, assembler)
-            Original_CoverageDistribution200 = os.path.join(validationDirectory, assembler, "QAstats", "Coverage_distribution_noOutliers.png")
-            Original_GC_vs_Coverage          = os.path.join(validationDirectory, assembler, "QAstats", "GC_vs_Coverage_noOutliers.png")
-            Original_GC_vs_CtgLength         = os.path.join(validationDirectory, assembler, "QAstats", "GC_vs_CtgLength.png")
-            Original_MedianCov_vs_CtgLength  = os.path.join(validationDirectory, assembler, "QAstats", "MedianCov_vs_CtgLength_noOutliers.png")
-            Copied_CoverageDistribution200   = os.path.join("pictures", assembler, "Coverage_distribution_noOutliers.png")
-            Copied_GC_vs_Coverage            = os.path.join("pictures", assembler, "GC_vs_Coverage_noOutliers.png")
-            Copied_GC_vs_CtgLength           = os.path.join("pictures", assembler, "GC_vs_CtgLength.png")
-            Copied_MedianCov_vs_CtgLength    = os.path.join("pictures", assembler, "MedianCov_vs_CtgLength_noOutliers.png")
+            Original_CoverageDistribution200 = os.path.join(validation_dir, assembler, "QAstats", "Coverage_distribution_noOutliers.png")
+            Original_GC_vs_Coverage          = os.path.join(validation_dir, assembler, "QAstats", "GC_vs_Coverage_noOutliers.png")
+            Original_GC_vs_CtgLength         = os.path.join(validation_dir, assembler, "QAstats", "GC_vs_CtgLength.png")
+            Original_MedianCov_vs_CtgLength  = os.path.join(validation_dir, assembler, "QAstats", "MedianCov_vs_CtgLength_noOutliers.png")
+            Copied_CoverageDistribution200   = os.path.join("QA_pictures", assembler, "Coverage_distribution_noOutliers.png")
+            Copied_GC_vs_Coverage            = os.path.join("QA_pictures", assembler, "GC_vs_Coverage_noOutliers.png")
+            Copied_GC_vs_CtgLength           = os.path.join("QA_pictures", assembler, "GC_vs_CtgLength.png")
+            Copied_MedianCov_vs_CtgLength    = os.path.join("QA_pictures", assembler, "MedianCov_vs_CtgLength_noOutliers.png")
             sh.copy(Original_CoverageDistribution200, Copied_CoverageDistribution200)
             sh.copy(Original_GC_vs_Coverage , Copied_GC_vs_Coverage )
             sh.copy(Original_GC_vs_CtgLength , Copied_GC_vs_CtgLength )
@@ -102,52 +66,59 @@ def main(args):
             latex_document = _insert_QA_figure(latex_document,  pictures, "QA pictures")
     # now FRCurve
     latex_document = _new_section(latex_document, "FRCurve")
-    FRCurves = []
+
+    if not os.path.exists("FRCurves"):
+        os.makedirs("FRCurves")
+    os.chdir("FRCurves")
+    names = ["_FRC" , "COMPR_MP_FRC" , "COMPR_PE_FRC" , "HIGH_COV_PE_FRC" , "HIGH_NORM_COV_PE_FRC" ,"HIGH_OUTIE_MP_FRC" , "HIGH_OUTIE_PE_FRC" , "HIGH_SINGLE_MP_FRC" , "HIGH_SINGLE_PE_FRC" , "HIGH_SPAN_MP_FRC" , "HIGH_SPAN_PE_FRC" ,"LOW_COV_PE_FRC" , "LOW_NORM_COV_PE_FRC" , "STRECH_MP_FRC" , "STRECH_PE_FRC"]
+    for name in names:
+        FRCurves = []
+        for assembler in assemblers:
+            FRCurve_Orig_name = os.path.join(validation_dir, assembler, "FRCurve", "{}{}.txt".format(outputName, name))
+            FRCurves.append([assembler, FRCurve_Orig_name])
+        FRCname = _plotFRCurve("{}_{}".format(outputName, name),FRCurves)
+        FRCurves = []
+    #plot last FRCurve
     for assembler in assemblers:
-        if os.path.exists(os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName))):
-            FRCurves.append([assembler, os.path.join(validationDirectory, assembler, "FRCurve", "{}_FRC.txt".format(outputName))])
+        FRCurves.append([assembler, os.path.join(validation_dir, assembler, "FRCurve", "{}_FRC.txt".format(outputName))])
     FRCname = _plotFRCurve(outputName,FRCurves)
-    latex_document = _new_figure(latex_document, FRCname, "Feature Response Curve compute on all Features")
+    print FRCname
+    os.chdir("..")
+    latex_document = _new_figure(latex_document, "FRCurves/{}".format(FRCname), "Feature Response Curve compute on all Features")
     latex_document = _latexFooter(latex_document)
     latex_document = _latexFooter(latex_document)
 
-    if args.generatePDF == 1:
-        with open("{0}.tex".format(outputName),'w') as f:
-            f.write(latex_document)
-        command = ["pdflatex",  "{0}.tex".format(outputName)]
-        latex_stdOut = open("latex.stdOut", "a")
-        latex_stdErr = open("latex.stdErr", "a")
-        subprocess.call(command, stdout=latex_stdOut , stderr=latex_stdErr)
+    with open("{0}.tex".format(outputName),'w') as f:
+        f.write(latex_document)
 
     os.chdir("..")
     # now prepare delivery folder
     if not os.path.exists("{}_delivery_report".format(outputName)):
         os.makedirs("{}_delivery_report".format(outputName))
     os.chdir("{}_delivery_report".format(outputName))
-    #copy pdf report
-    if args.generatePDF == 1:
-        sh.copy(os.path.join(validationDirectory, "LaTeX", "{}.pdf".format(outputName)), "{}.pdf".format(outputName))
+
     #now copy QA tables
     for assembler in assemblers:
-        if os.path.exists(os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName) )):
+        if os.path.exists(os.path.join(assemblies_dir, assembler,  "{}.scf.fasta".format(outputName) )):
             if not os.path.exists(assembler):
                 os.makedirs(assembler)
             if not os.path.exists(os.path.join(assembler, "assembly")):
                 os.makedirs(os.path.join(assembler, "assembly"))
-            if os.path.exists(os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName))):
-                sh.copy(os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName)), os.path.join(assembler, "assembly",  "{}.scf.fasta".format(outputName)))
-            if os.path.exists(os.path.join(assemblies_dir, assembler, "{}.ctg.fasta".format(outputName))):
-                sh.copy(os.path.join(assemblies_dir, assembler, "{}.ctg.fasta".format(outputName)), os.path.join(assembler, "assembly",  "{}.ctg.fasta".format(outputName)))
+            
+            sh.copy(os.path.join(assemblies_dir, assembler, "{}.scf.fasta".format(outputName)), os.path.join(assembler, "assembly",  "{}.scf.fasta".format(outputName)))
+            sh.copy(os.path.join(assemblies_dir, assembler, "{}.ctg.fasta".format(outputName)), os.path.join(assembler, "assembly",  "{}.ctg.fasta".format(outputName)))
             if not os.path.exists(os.path.join(assembler, "QA_table")):
                 os.makedirs(os.path.join(assembler, "QA_table"))
-            sh.copy(os.path.join(validationDirectory, assembler, "QAstats", "Contigs_Cov_SeqLen_GC.csv"), os.path.join(assembler, "QA_table", "Contigs_Cov_SeqLen_GC.csv"))
+            sh.copy(os.path.join(validation_dir, assembler, "QAstats", "Contigs_Cov_SeqLen_GC.csv"), os.path.join(assembler, "QA_table", "Contigs_Cov_SeqLen_GC.csv"))
             if not os.path.exists(os.path.join(assembler, "FRCurves")):
                 os.makedirs(os.path.join(assembler, "FRCurves"))
             names = ["_FRC" , "COMPR_MP_FRC" , "COMPR_PE_FRC" , "HIGH_COV_PE_FRC" , "HIGH_NORM_COV_PE_FRC" ,"HIGH_OUTIE_MP_FRC" , "HIGH_OUTIE_PE_FRC" , "HIGH_SINGLE_MP_FRC" , "HIGH_SINGLE_PE_FRC" , "HIGH_SPAN_MP_FRC" , "HIGH_SPAN_PE_FRC" ,"LOW_COV_PE_FRC" , "LOW_NORM_COV_PE_FRC" , "STRECH_MP_FRC" , "STRECH_PE_FRC"]
             for name in names:
-                FRCurve_Orig_name = os.path.join(validationDirectory, assembler, "FRCurve", "{}{}.txt".format(outputName, name))
+                FRCurve_Orig_name = os.path.join(validation_dir, assembler, "FRCurve", "{}{}.txt".format(outputName, name))
                 FRCurve_Dest_name = os.path.join(assembler, "FRCurves", "{}{}.txt".format(outputName, name))
                 sh.copy(FRCurve_Orig_name,FRCurve_Dest_name)
+    # now copy FRCurve pictures
+    sh.copytree("../LaTeX/FRCurves", "FRCurves")
     os.chdir("..")
 
     return
@@ -372,11 +343,18 @@ The assembly or assemblies judged to be the best can be directly employed to ans
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--assemblies-dir', help="Directory where assemblies are stored (one per folder, e.g., assembler/NAME.scf.fasta)", type=str)
-    parser.add_argument('--assemblers', action='append', nargs='+', help="List of assemblers to be evalueted")
-    parser.add_argument('--sample-config', help="Sample config. reference field will be over-written", type=str)
-    parser.add_argument('--global-config', help='foo help')
-    parser.add_argument('--generatePDF', default=0, type=int)
+    parser.add_argument('--validation-dir', type=str, required=True, help="Directory where validation is stored (one assembler per folder)")
+    parser.add_argument('--assemblies-dir', type=str, required=True, help="Directory where assemblies are stored (one assembler per folder)")
+    parser.add_argument('--assemblers',     type=str, required=True, help="List of assemblers to be evalueted", action='append', nargs='+')
+    parser.add_argument('--sample-config',  type=str, help="sample config, it is needed to extract several informations")
+    parser.add_argument('--global-config',  type=str, help="global configuration file")
+    parser.add_argument('--output',         type=str, required=True, help="output header used to store all results (i.e., output.scf.fasta)")
+    parser.add_argument('--genomeSize',     type=int, required=True, help="expected genome size (same as specified in the validation phase)")
+    parser.add_argument('--minContigLength',type=int, default=2000, help="minimum contig length (usually the same used to validate assembly). Default value set to 2000")
     args = parser.parse_args()
     
     main(args)
+
+
+
+#python ~/DE_NOVO_PIPELINE/de_novo_scilife/utils/run_assembly_evaluation.py --assembues-dir /proj/b2013064/nobackup/vezzi/C.Wheat/03_ASSEMBLY/ --assemblers allpaths abyss soapdenovo
