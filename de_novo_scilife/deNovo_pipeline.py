@@ -10,16 +10,12 @@ from de_novo_scilife import common
 def main(args):
     with open(args.global_config) as in_handle:
         global_config = yaml.load(in_handle)
-
     with open(args.sample_config) as sample_config_handle:
         sample_config = yaml.load(sample_config_handle)
 
     check_consistency(global_config,sample_config)
-
-
     if common.check_dryrun(sample_config):
         print "Option dryrun idenitfied: commands will only be printed, not executed"
-
 
     if sample_config["pipeline"] in global_config["Pipelines"]:
         run_analys(global_config, sample_config)
@@ -31,7 +27,7 @@ def main(args):
 
 def run_analys(global_config, sample_config):
     """ check that user specified commands are supported by this pipeline and that all commands I am going to run are available either via PATH or via global config"""
-    common._check_pipeline(sample_config, global_config)
+    common._check_pipeline(sample_config, global_config) # check that what I am going to run is available on the path and on the global config
     pipeline = sample_config["pipeline"] # pipeline/analysis to be executed
     command_fn = getattr(globals()[pipeline], "run") # this stopped to --> workgetattr(__import__(command), "run")
     command_fn(global_config, sample_config)

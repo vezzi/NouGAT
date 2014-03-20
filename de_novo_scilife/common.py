@@ -138,6 +138,8 @@ def print_command(command):
 
 def _check_pipeline(sample_config, global_config):
     """ check that user specified commands are supported by this pipeline"""
+    print "checking tool consistency:"
+    
     pipeline     = sample_config["pipeline"]
     user_tools   = sample_config["tools"] #might be empty
     global_tools = global_config["Pipelines"][pipeline]
@@ -149,29 +151,63 @@ def _check_pipeline(sample_config, global_config):
 
     """check that programs to be executed are supported"""
     tools_to_check = []
-    if user_tools is not []: # check that the suer wants to run only some (or all) the programs
-        tools_to_check = user_tools
+    if user_tools is not []: # check that the user wants to run only some (or all) the programs
+        tools_to_check = [i for i in user_tools]
     else:
-        tools_to_check = global_config["Pipelines"][pipeline] # otherwise check all the tools supported
+        tools_to_check = [i for i in global_config["Pipelines"][pipeline]] # otherwise check all the tools supported
+    
+    if "align" in tools_to_check:
+        tools_to_check.remove("align")
+        tools_to_check.extend(["bwa", "samtools"])
+        picard_dir = ""
+        if os.environ.get('PICARD_HOME'):
+            picard_dir = os.environ.get('PICARD_HOME')
+        elif "picard" in global_config["Tools"]:
+            picard_dir = global_config["Tools"]["picard"]["bin"]
+        if not os.path.isdir(picard_dir):
+            sys.exit("align is part of the pipeline you want to run. PicardTools must be present in the enviorment or specified in global config\
+directory {} does not exists.".format(picard_dir))
+
 
     for tool in tools_to_check:
-        if tool == "align":
-            tool = "bwa"
+        if tool not in global_config["Tools"]:
+            sys.exit("Tool {} is not present as a valid entry in global configuration file. Please add it in order to execute the command.".format(tool))
+
         tool_bin = global_config["Tools"][tool]["bin"]
-        """this step is a case to case step as several special case are present"""
-        special_tools = ["abyss", "masurca", "cabog", "allpaths", "picard",  "trinity"]
+        print tool_bin
+        """this step is a case by case step as several special cases are present"""
+        special_tools = ["allpaths", "abyss", "cabog", "masurca",  "trinity", "trimmomatic"]
         if tool in special_tools:
-            if not os.path.isdir(tool_bin):
-                print "Error: tool {} requires bin directory in config file. Directory {} does not exists.\
-                (N.B., not the binary as that one is guessed at running time for this tools). Please modify the global config.\
-                If you are not planning to run this tool specify the list of to be run tools in the sample_config section.".format(tool, tool_bin)
+            binaries_to_check = []
+            if tool == "allpaths":
+                binaries_to_check.append("PrepareAllPathsInputs.pl")
+                binaries_to_check.append("RunAllPathsLG")
+            if tool == "abyss":
+                binaries_to_check.append(os.path.join(tool_bin, "abyss-pe"))
+            if tool == "cabog":
+                binaries_to_check.append(os.path.join(tool_bin,"runCA"))
+            if tool == "masurca":
+                binaries_to_check.append(os.path.join(tool_bin,"bin", "runSRCA.pl"))
+            if tool == "picard":
+                binaries_to_check.append(os.path.join(tool_bin,))
+            if tool == "trinity": ## check special tools
+                binaries_to_check.append(os.path.join(tool_bin, "Trinity.pl"))
+                binaries_to_check.append(os.path.join(tool_bin, "util", "alignReads.pl"))
+                binaries_to_check.append(os.path.join(tool_bin, "util" , "RSEM_util", "run_RSEM_align_n_estimate.pl"))
+            if tool == "trimmomatic":
+                if not os.path.exists(tool_bin):
+                    sys.exit("tool trimmomatic specified but file {} does not exists. If you are not planning to run this tool specify the list of to be run tools in the sample_config section.".format(tool_bin))
+            
+            for binary in binaries_to_check:
+                if not which(binary):
+                    sys.exit("tool {} requires availability of binary {} but pipeline did not find it. Please check the tool installation.\
+If you are not planning to run this tool specify the list of to be run tools in the sample_config section.".format(tool, binary))
         else:
-            if not os.path.exists(tool_bin):
-                print "Error: tool {} requires full path to binaries in config file. Path {} does not exists.\
-                Please modify the global config.\
-                If you are not planning to run this tool specify the list of to be run tools in the sample_config section.".format(tool, tool_bin)
-
-
+            if not which(tool_bin):
+                 sys.exit("Error: tool {} requires full path to binaries in config file. Path {} does not exists. Please modify the global config.\
+If you are not planning to run this tool specify the list of to be run tools in the sample_config section.".format(tool, tool_bin))
+    print "all tools the pipeline is going to use appear properly installed."
+    return
 
 
 

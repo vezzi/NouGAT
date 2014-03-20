@@ -14,8 +14,6 @@ from de_novo_scilife.pdf.theme import colors, DefaultTheme
 
 def run(global_config, sample_config):
     sorted_libraries_by_insert = common._sort_libraries_by_insert(sample_config)
-    
-    
     if "tools" in sample_config and len(sample_config["tools"]) > 0:
         """If so, execute them one after the other in the specified order (might not work)"""
         for command in sample_config["tools"]:
@@ -30,10 +28,8 @@ def run(global_config, sample_config):
         sample_config = _run_abyss(global_config, sample_config, sorted_libraries_by_insert)
         sample_config = _run_align(global_config, sample_config, sorted_libraries_by_insert)
     
-        #sample_config = _run_FindTranslocations(global_config, sample_config, sorted_libraries_by_insert)
     #now reverse complement
-    #sorted_libraries_by_insert = common._sort_libraries_by_insert(sample_config)
-    sample_config = _run_revcomp(global_config, sample_config, sorted_libraries_by_insert)
+    #sample_config = _run_revcomp(global_config, sample_config, sorted_libraries_by_insert)
     _run_report(global_config, sample_config,sorted_libraries_by_insert)
 
 def _run_fastqc(global_config, sample_config,sorted_libraries_by_insert):

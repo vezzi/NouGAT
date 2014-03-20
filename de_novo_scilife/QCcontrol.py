@@ -22,6 +22,8 @@ def run(global_config, sample_config):
 
 
 
+
+
 def _run_fastqc(global_config, sample_config, sorted_libraries_by_insert):
     mainDir = os.getcwd()
     FastqcFolder = os.path.join(os.getcwd(), "fastqc")
