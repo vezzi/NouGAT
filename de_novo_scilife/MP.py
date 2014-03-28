@@ -44,7 +44,7 @@ def _run_align(global_config, sample_config,sorted_libraries_by_insert):
     
     if "reference" not in sample_config:
         print "reference sequence not provided, skypping alignment step. Please provide a reference if you are intrested in aligning the reads against a reference"
-        return
+        return sample_config
     if not os.path.exists("alignments"):
         os.makedirs("alignments")
     os.chdir("alignments")
@@ -302,7 +302,7 @@ to remove the adaptor before use the reads in any downstream analysis.")
             doc.add_table(trimmomatic_table_part2, TABLE_WIDTH)
             
             
-        if tool == "fastqc":
+        if tool == "fastqc" and "fastqc" in sample_config:
             fastqc_dir = sample_config["fastqc"]
             for fastqc_run in [dir for dir in os.listdir(fastqc_dir) if os.path.isdir(os.path.join(fastqc_dir, dir))]:
                 doc.add_header("{} -- Per Base Quality".format(fastqc_run) , pdf.H3)
@@ -311,11 +311,12 @@ to remove the adaptor before use the reads in any downstream analysis.")
                 doc.add_header("{} -- Sequence Length Distribution".format(fastqc_run) , pdf.H3)
                 fastqc_run_dir = os.path.join(fastqc_dir, fastqc_run, "Images")
                 doc.add_image(os.path.join(fastqc_run_dir,"sequence_length_distribution.png"), 400, 180, pdf.CENTER)
-        if tool == "abyss":
+        if tool == "abyss" and "abyss" in sample_config:
             doc.add_paragraph("kmer profile with k={}.".format(sample_config["kmer"]))
+            doc.add_paragraph("A possible way to assess the complexity of a library even in absence of a reference sequence is to look at the kmer profile or the reads. The idea is to count all the kmers (i.e., sequence of length k) that occour in the reads. In this way it is possible to know how many kmers occur 1,2,..., N times and represent this as a plot. This plot tell us for each x, how many k-mers (y-axis) are present in the dataset in exactly x-copies. In an ideal world (no errors in sequencing, no bias, no repetive genome) by plotting) this plot should be as close as possible to a gaussian distribution. In reality we will always see a peack for x=1 (i.e., the erros) and another peack close to the expected coverage. If the genome is highly heterozygous a second peak at half of the coverage can be expected.")
             kmer_1_200 = os.path.join(sample_config["abyss"], "kmer_coverage_1_200.png")
             doc.add_image(kmer_1_200, 500, 300, pdf.CENTER)
-        if tool == "align":
+        if tool == "align" and "alignments" in sample_config:
             alignments       = sample_config["alignments"][0]
             alignment_path   = alignments[1]
             alignment_prefix = alignments[2]

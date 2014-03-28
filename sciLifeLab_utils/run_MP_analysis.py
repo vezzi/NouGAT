@@ -44,12 +44,14 @@ def main(args):
         for flowcell in flowcells_dirs:
             sample_files.extend([os.path.join(flowcell, f) for f in os.listdir(flowcell) if (os.path.isfile(os.path.join(flowcell,f)) and re.search('.gz$',f))])
         # now sample_files contains all the file sequenced for this sample
+        
 
         pair1_file = ""
         pair2_file = ""
         single     = ""
         library    = 1
-        for file in sample_files:
+        while len(sample_files) > 0:
+            file = sample_files[0]
             sample_YAML.write(" lib{}:\n".format(library))
             if "_1.fastq.gz" in file:
                 pair1_file = file
@@ -66,7 +68,7 @@ def main(args):
             sample_files.remove(pair1_file)
             sample_files.remove(pair2_file)
             library += 1
-
+        
         sample_YAML.close
         submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, args.env) # now I can submit the job to slurm
         os.chdir(projectFolder)
@@ -97,7 +99,7 @@ def submit_job(sample_config, global_config, output,  pipeline, env):
     
     command=("sbatch", slurm_file)
     print command
-    #subprocess.call(command)
+    subprocess.call(command)
     
 
 
