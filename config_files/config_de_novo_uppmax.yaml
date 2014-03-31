@@ -1,6 +1,5 @@
 Pipelines:
- QCcontrol: ["fastqc", "abyss", "trimmomatic"]
- MP: ["fastqc", "abyss", "trimmomatic", "align"]
+ QCcontrol: ["fastqc", "abyss", "trimmomatic", "align"]
  assemble: ["abyss", "allpaths", "cabog",  "masurca", "soapdenovo", "spades", "trinity"]
  evaluete: ["align", "qaTools", "FRC"]
  align: []

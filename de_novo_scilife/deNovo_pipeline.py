@@ -1,7 +1,6 @@
 import sys, os, yaml, glob
 import argparse
 from de_novo_scilife import evaluete
-from de_novo_scilife import MP
 from de_novo_scilife import assemble
 from de_novo_scilife import QCcontrol
 from de_novo_scilife import align
