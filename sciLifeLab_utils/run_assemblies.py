@@ -13,15 +13,11 @@ def main(args):
         if not os.path.exists(sample_folder):
             os.makedirs(sample_folder)
         os.chdir(sample_folder)
-        ## now I am in the folder, i can run at the same time QC and MP anlaysis
-
+        ## now I am in the folder
         pipeline = "assemble"
         tools    = args.assemblers
-        
-        
         sample_YAML_name = os.path.join(sample_folder,  "{}_{}.yaml".format(sample_dir_name, pipeline))
         sample_YAML      = open(sample_YAML_name, 'w')
-       
         sample_YAML.write("pipeline:\n")
         sample_YAML.write(" {}\n".format(pipeline))
         sample_YAML.write("tools:\n")
@@ -32,15 +28,19 @@ def main(args):
         sample_YAML.write("threads: 16\n")
         sample_YAML.write("genomeSize: {}\n".format(args.genomeSize))
         
-        
-        sample_data_dir = os.path.join(samples_data_dir,sample_dir_name)
-        flowcells_dirs  = [os.path.join(sample_data_dir,flowcell)  for flowcell in os.listdir(sample_data_dir) if os.path.isdir(os.path.join(sample_data_dir,flowcell))] # full path to flowcell
-
+        #I have to distinguish between afterQC and not
+        sample_data_dir = ""
         sample_files = []
-        for flowcell in flowcells_dirs:
-            sample_files.extend([os.path.join(flowcell, f) for f in os.listdir(flowcell) if (os.path.isfile(os.path.join(flowcell,f)) and re.search('.gz$',f))])
+        if args.afterQC:
+            sample_data_dir = os.path.join(samples_data_dir,sample_dir_name)
+            fastq_files     = os.path.join(sample_data_dir, "results", "fastq_trimmed")
+            sample_files    = [os.path.join(fastq_files, f) for f in os.listdir(fastq_files) if (os.path.isfile(os.path.join(fastq_files,f)) and re.search('[1|2].fastq.gz$',f))]
+        else:
+            sample_data_dir = os.path.join(samples_data_dir,sample_dir_name)
+            flowcells_dirs  = [os.path.join(sample_data_dir,flowcell)  for flowcell in os.listdir(sample_data_dir) if os.path.isdir(os.path.join(sample_data_dir,flowcell))] # full path to flowcell
+            for flowcell in flowcells_dirs:
+                sample_files.extend([os.path.join(flowcell, f) for f in os.listdir(flowcell) if (os.path.isfile(os.path.join(flowcell,f)) and re.search('.gz$',f))])
         # now sample_files contains all the file sequenced for this sample
-
         pair1_file = ""
         pair2_file = ""
         single     = ""
@@ -103,7 +103,7 @@ if __name__ == '__main__':
 with multiple libraries the user needs to prepare the sample_config file and run the deNovoPipeline manually. If multiple samples are present in the specified folder then one\
 assembly for each sample will be performed. If a sample is splitted across multiple runs all the data willl be used')
     parser.add_argument('--global-config'  , type=str, required=True, help="global configuration file")
-    parser.add_argument('--sample-data-dir', type=str, required=True, help="Path to directory (usually INBOX) containing the project (one dir per sample, scilife structure project/sample/flowcell/)")
+    parser.add_argument('--sample-data-dir', type=str, required=True, help="Path to directory (usually INBOX or QC output) containing the project (in INBOX case scilife structure project/sample/flowcell/ is assumed)")
     parser.add_argument('--orientation'    , type=str, required=True, help="orientation of the libraries")
     parser.add_argument('--insert'         , type=str, required=True, help="expected insert size of the libraries")
     parser.add_argument('--std'            , type=str, required=True, help="expected stdandard variation of the insert size of the libraries")
@@ -111,8 +111,9 @@ assembly for each sample will be performed. If a sample is splitted across multi
     parser.add_argument('--assemblers'     , type=str, required=True, action='append', nargs='+', help="List of assemblers to be employed on the datasets specified")
     parser.add_argument('--kmer'           , type=int, required=True, help="kmer size to employ when requested (i.e., some tools make a guess")
     parser.add_argument('--genomeSize'     , type=int, required=True,  help="Estimated genome size (make an educated guess)")
+    parser.add_argument('--afterQC'        , action='store_true', default = False,  help="To be specified if sample-data-dir is a QC output")
     args = parser.parse_args()
-
+    
     main(args)
 
 
