@@ -27,7 +27,6 @@ def main(args):
         sample_YAML.write("kmer: {}\n".format(args.kmer))
         sample_YAML.write("threads: 16\n")
         sample_YAML.write("genomeSize: {}\n".format(args.genomeSize))
-        
         #I have to distinguish between afterQC and not
         sample_data_dir = ""
         sample_files = []
@@ -63,17 +62,14 @@ def main(args):
             sample_files.remove(pair1_file)
             sample_files.remove(pair2_file)
             library += 1
-
         sample_YAML.close
         submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, args.env) # now I can submit the job to slurm
         os.chdir(projectFolder)
 
 def submit_job(sample_config, global_config, output,  pipeline, env):
-    
     workingDir = os.getcwd()
     slurm_file = os.path.join(workingDir, "{}_{}.slurm".format(output,pipeline))
     slurm_handle = open(slurm_file, "w")
-
     slurm_handle.write("#! /bin/bash -l\n")
     slurm_handle.write("set -e\n")
     slurm_handle.write("#SBATCH -A b2013064\n")
@@ -84,17 +80,15 @@ def submit_job(sample_config, global_config, output,  pipeline, env):
     slurm_handle.write("#SBATCH -t 1-00:00:00\n")
     slurm_handle.write("#SBATCH --mail-user francesco.vezzi@scilifelab.se\n")
     slurm_handle.write("#SBATCH --mail-type=ALL\n")
-    
     slurm_handle.write("\n\n")
     slurm_handle.write("source activate {}\n".format(env))
     slurm_handle.write("load_modules\n")
     slurm_handle.write("module load abyss/1.3.5\n")
     slurm_handle.write("deNovo_pipeline.py --global-config {} --sample-config {}\n\n".format(global_config,sample_config))
     slurm_handle.close()
-    
     command=("sbatch", slurm_file)
     print command
-    #subprocess.call(command)
+    subprocess.call(command)
 
 
 
@@ -113,7 +107,6 @@ assembly for each sample will be performed. If a sample is splitted across multi
     parser.add_argument('--genomeSize'     , type=int, required=True,  help="Estimated genome size (make an educated guess)")
     parser.add_argument('--afterQC'        , action='store_true', default = False,  help="To be specified if sample-data-dir is a QC output")
     args = parser.parse_args()
-    
     main(args)
 
 
