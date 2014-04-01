@@ -401,7 +401,7 @@ def _run_masurca(global_config, sample_config,sorted_libraries_by_insert):
     if returnValue == 0:
         if os.path.exists(os.path.join("runMASURCA","CA/10-gapclose/genome.scf.fasta")):
             subprocess.call(["cp", os.path.join("runMASURCA","CA/10-gapclose/genome.ctg.fasta"), "{}.ctg.fasta".format(outputName) ])
-            subprocess.call(["cp", os.path.join("runMASURCA","CA/10-gapclose/genome.scf.fasta"), "{}.scaf.fasta".format(outputName) ])
+            subprocess.call(["cp", os.path.join("runMASURCA","CA/10-gapclose/genome.scf.fasta"), "{}.scf.fasta".format(outputName) ])
             subprocess.call(["rm", "-r", "runMASURCA"])
         else:
             print "something wrong with MaSuRCA -> no contig file generated"

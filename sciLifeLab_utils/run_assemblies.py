@@ -8,6 +8,9 @@ def main(args):
     projectFolder    = os.getcwd()
     samples_data_dir = args.sample_data_dir
     projectName      = os.path.basename(os.path.normpath(samples_data_dir))
+    if args.afterQC:
+        projectName  = "TODO" # TODO: I need to use the sample sheet that must be present in the QC folder to extract the project name
+    
     for sample_dir_name in [dir for dir in os.listdir(samples_data_dir) if os.path.isdir(os.path.join(samples_data_dir, dir))]:
         sample_folder = os.path.join(os.getcwd(), sample_dir_name)
         if not os.path.exists(sample_folder):
@@ -22,7 +25,7 @@ def main(args):
         sample_YAML.write(" {}\n".format(pipeline))
         sample_YAML.write("tools:\n")
         sample_YAML.write(" {}\n".format(tools[0]))
-        sample_YAML.write("output: {}\n".format(sample_dir_name)) ##TODO: output must became sampleName
+        sample_YAML.write("output: {}\n".format(sample_dir_name))
         sample_YAML.write("projectName: {}\n".format(projectName))
         sample_YAML.write("kmer: {}\n".format(args.kmer))
         sample_YAML.write("threads: 16\n")
