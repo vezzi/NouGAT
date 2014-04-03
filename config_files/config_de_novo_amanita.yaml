@@ -1,25 +1,21 @@
 Pipelines:
- QCcontrol
- assemble
- evaluete
- align
- user_define
+ QCcontrol: ["fastqc", "abyss", "trimmomatic", "align"]
+ assemble: ["abyss", "allpaths", "cabog",  "masurca", "soapdenovo", "spades", "trinity"]
+ evaluete: ["align", "qaTools", "FRC"]
+ align: []
 Tools:
- jellyfish:
-  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/jellyfish-1.1.11/bin/jellyfish
-  options: ""
  fastqc:
   bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/FastQC/fastqc
   options: [--threads,  "20" ,  --outdir,  fastqc]
  trimmomatic:
-  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/Trimmomatic-0.32/trimmomatic-0.30.jar
-  options: ["PE", "-phred33", "-threads", "20"]
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/Trimmomatic-0.32/trimmomatic-0.32.jar
+  options: []
  abyss:
-  bin: /usr/local/abyss-1.3.6/bin/abyss-pe
-  options: ["k=54", "np=20"]
+  bin: /usr/local/abyss-1.3.6/bin/
+  options: []
  abyss_mergePairs:
   bin: /usr/local/abyss-1.3.6/bin/abyss-mergepairs
-  options: ["-m 20", "-1 230", "-2 230"]
+  options: []
  soapdenovo:
   bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/SOAPdenovo2/SOAPdenovo-63mer
   options: [""]
@@ -36,5 +32,5 @@ Tools:
   bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/samtools-0.1.18/samtools
   options: ""
  qaTools:
-  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/qaTools/
+  bin: /home/francesco.vezzi/DE_NOVO_PIPELINE/tools/qaTools/qaCompute
   options: ""
