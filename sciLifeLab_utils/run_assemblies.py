@@ -96,7 +96,7 @@ def submit_job(sample_config, global_config, output,  pipeline, env):
     slurm_handle.close()
     command=("sbatch", slurm_file)
     print command
-    #subprocess.call(command)
+    subprocess.call(command)
 
 
 
