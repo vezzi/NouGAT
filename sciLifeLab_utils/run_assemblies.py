@@ -7,16 +7,21 @@ import re
 def main(args):
     projectFolder    = os.getcwd()
     samples_data_dir = args.sample_data_dir
-    projectName      = os.path.basename(os.path.normpath(samples_data_dir))
-    if args.afterQC:
-        projectName  = "TODO" # TODO: I need to use the sample sheet that must be present in the QC folder to extract the project name
+    projectName      = os.path.basename(os.path.normpath(samples_data_dir)) #UPPMAX assumption
     
     for sample_dir_name in [dir for dir in os.listdir(samples_data_dir) if os.path.isdir(os.path.join(samples_data_dir, dir))]:
         sample_folder = os.path.join(os.getcwd(), sample_dir_name)
         if not os.path.exists(sample_folder):
             os.makedirs(sample_folder)
         os.chdir(sample_folder)
-        ## now I am in the folder
+        if args.afterQC: #if this is the case I need to retrive the project name from the yaml file
+            QC_YAML_file = os.path.join(samples_data_dir,sample_dir_name, "{}_QCcontrol.yaml".format(sample_dir_name))
+            if not os.path.exists(QC_YAML_file):
+                sys.exit("Error file {} must exists!".format(QC_YAML_file))
+            with open(QC_YAML_file) as QC_YAML_file_handle:
+                QC_sample_config = yaml.load(QC_YAML_file_handle)
+            projectName  = QC_sample_config["projectName"] # TODO: I need to use the sample sheet that must be present in the QC folder to extract the project name
+        #Now all the info is in place and I am in the correct folder
         pipeline = "assemble"
         tools    = args.assemblers
         sample_YAML_name = os.path.join(sample_folder,  "{}_{}.yaml".format(sample_dir_name, pipeline))
@@ -91,7 +96,7 @@ def submit_job(sample_config, global_config, output,  pipeline, env):
     slurm_handle.close()
     command=("sbatch", slurm_file)
     print command
-    subprocess.call(command)
+    #subprocess.call(command)
 
 
 

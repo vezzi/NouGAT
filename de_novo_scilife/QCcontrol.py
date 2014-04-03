@@ -263,7 +263,7 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
     doc.add_spacer()
 
     doc.add_header('NGI-Stockholm -- Science For Life Laboratory')
-    doc.add_header('Mate Pair Best Practice Analysis Report')
+    doc.add_header('best-practice-analysis for quality checking report')
     doc.add_header('{} -- {}'.format(projectName, sampleName))
     # give me some space
     #doc.add_spacer()
