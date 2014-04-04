@@ -6,9 +6,9 @@ import re
 
 def main(args):
     projectFolder = os.getcwd()
-    assembly_dir  = args.assembly_dir
-    for sample_dir_name in [dir for dir in os.listdir(assembly_dir) if os.path.isdir(os.path.join(assembly_dir, dir))]:
-        assemblies_folder   = os.path.join(assembly_dir, sample_dir_name) # in this folder I stored all the assemblies
+    assemblies_dir  = args.assembly_dir
+    for sample_dir_name in [dir for dir in os.listdir(assemblies_dir) if os.path.isdir(os.path.join(assemblies_dir, dir))]:
+        assemblies_folder   = os.path.join(assemblies_dir, sample_dir_name) # in this folder I stored all the assemblies
         validation_folder = os.path.join(os.getcwd(), sample_dir_name)  # in this folder I will compute the validation
         if not os.path.exists(validation_folder):
             os.makedirs(validation_folder)
@@ -50,7 +50,6 @@ def main(args):
             sample_YAML.close
             submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, args.env) # now I can submit the job to slurm
             os.chdir(validation_folder)
-
         os.chdir(projectFolder)
 
 def submit_job(sample_config, global_config, output,  pipeline, env):
