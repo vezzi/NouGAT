@@ -132,7 +132,7 @@ def _run_FRC(global_config, sample_config, sorted_libraries_by_insert):
     peInsert    = alignments[0][0]
     peMinInsert = int(peInsert - peInsert*0.30)
     peMaxInsert = int(peInsert + peInsert*0.30)
-    command = [program, "--pe-sam", peBam, "--pe-min-insert", "{}".format(peMinInsert) , "--pe-max-insert", "{}".format(peMaxInsert), "--CEstats-PE-min", "-5", "--CEstats-PE-max", "5"]
+    command = [program, "--pe-sam", peBam, "--pe-min-insert", "{}".format(peMinInsert) , "--pe-max-insert", "{}".format(peMaxInsert), "--CEstats-PE-min", "-4", "--CEstats-PE-max", "4"]
     if len(alignments) > 1:
         mpBam       = alignments[1][1]
         mpInsert    = alignments[1][0]

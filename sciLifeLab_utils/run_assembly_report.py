@@ -24,6 +24,7 @@ def main(args):
         if sample not in validation_samples_dirs:
             print "ATTENTION: sample {} is present in dir {} but absent in dir {}".format(sample, assemblies_dirs, validation_dirs)
         else: #otherwise I can proceed with analysis
+            os.chdir(workingDir)
             validation_sample_dir = os.path.join(validation_dirs, sample)
             assemblies_sample_dir = os.path.join(assemblies_dirs, sample)
             assemblers_validation = [assembler  for assembler in os.listdir(validation_sample_dir) if os.path.isdir(os.path.join(validation_sample_dir,assembler))]
@@ -94,9 +95,7 @@ def main(args):
             #### now I can produce the report
 
             write_report(sample_folder, sample, assemblies_sample_dir, assemblers_assemblies,  picturesQA, FRC_to_print, min_contig_length)
-            print "we are done..."
-            return 1
-            
+
     return 0
     
 from de_novo_scilife import pdf
@@ -234,12 +233,10 @@ def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,  pict
     
 
     doc.add_image(FRCname, 336, 220, pdf.CENTER)
-
     doc.render(PDFtitle)
 
+    return 0
 
-
-    return 1
 
 
 
@@ -258,7 +255,7 @@ def _plotFRCurve(outputName, FRCurves):
     maxXvalues.reverse()
     maxXvalue = maxXvalues[0]
     for i in range(1, len(maxXvalues)-1):
-        if maxXvalue > maxXvalues[i]*100:
+        if maxXvalue > maxXvalues[i]*2 and (maxXvalues[i-1] - maxXvalues[i] > 1000):
             maxXvalue = maxXvalues[i] + int(maxXvalues[i]*0.10)
 
     plt.ylim((-5,140))
