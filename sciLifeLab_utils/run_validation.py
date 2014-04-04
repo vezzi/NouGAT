@@ -48,20 +48,20 @@ def main(args):
                 sample_YAML.write("  std: {}\n".format(libraryData["std"]))
 
             sample_YAML.close
-            submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, args.env) # now I can submit the job to slurm
+            submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, assembler, args.env) # now I can submit the job to slurm
             os.chdir(validation_folder)
         os.chdir(projectFolder)
 
-def submit_job(sample_config, global_config, output,  pipeline, env):
+def submit_job(sample_config, global_config, output,  pipeline, assembler, env):
     workingDir = os.getcwd()
-    slurm_file = os.path.join(workingDir, "{}_{}.slurm".format(output,pipeline))
+    slurm_file = os.path.join(workingDir, "{}_{}_{}.slurm".format(output,pipeline, assembler))
     slurm_handle = open(slurm_file, "w")
     slurm_handle.write("#! /bin/bash -l\n")
     slurm_handle.write("set -e\n")
     slurm_handle.write("#SBATCH -A b2013064\n")
-    slurm_handle.write("#SBATCH -o {}_{}.out\n".format(output,pipeline))
-    slurm_handle.write("#SBATCH -e {}_{}.err\n".format(output,pipeline))
-    slurm_handle.write("#SBATCH -J {}_{}.job\n".format(output,pipeline))
+    slurm_handle.write("#SBATCH -o {}_{}_{}.out\n".format(output,pipeline,assembler))
+    slurm_handle.write("#SBATCH -e {}_{}_{}.err\n".format(output,pipeline,assembler))
+    slurm_handle.write("#SBATCH -J {}_{}_{}.job\n".format(output,pipeline,assembler))
     slurm_handle.write("#SBATCH -p node -n 16\n")
     slurm_handle.write("#SBATCH -t 1-00:00:00\n")
     slurm_handle.write("#SBATCH --mail-user francesco.vezzi@scilifelab.se\n")
