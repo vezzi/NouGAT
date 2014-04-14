@@ -130,14 +130,14 @@ def _run_FRC(global_config, sample_config, sorted_libraries_by_insert):
     
     peBam       = alignments[0][1]
     peInsert    = alignments[0][0]
-    peMinInsert = int(peInsert - peInsert*0.30)
-    peMaxInsert = int(peInsert + peInsert*0.30)
+    peMinInsert = int(peInsert - peInsert*0.60)
+    peMaxInsert = int(peInsert + peInsert*0.60)
     command = [program, "--pe-sam", peBam, "--pe-min-insert", "{}".format(peMinInsert) , "--pe-max-insert", "{}".format(peMaxInsert), "--CEstats-PE-min", "-4", "--CEstats-PE-max", "4"]
     if len(alignments) > 1:
         mpBam       = alignments[1][1]
         mpInsert    = alignments[1][0]
-        mpMinInsert = int(mpInsert - mpInsert*0.40)
-        mpMaxInsert = int(mpInsert + mpInsert*0.40)
+        mpMinInsert = int(mpInsert - mpInsert*0.50)
+        mpMaxInsert = int(mpInsert + mpInsert*0.50)
         command += ["--mp-sam", mpBam, "--mp-min-insert", "{}".format(mpMinInsert), "--mp-max-insert", "{}".format(mpMaxInsert)]
     command += [ "--genome-size", "{}".format(genomeSize), "--output", output]
     common.print_command(command)

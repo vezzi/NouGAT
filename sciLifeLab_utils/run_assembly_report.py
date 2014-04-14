@@ -9,7 +9,8 @@ import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 from de_novo_scilife import common
-
+from de_novo_scilife import pdf
+from de_novo_scilife.pdf.theme import colors, DefaultTheme
 
 
 def main(args):
@@ -20,86 +21,108 @@ def main(args):
     assemblies_samples_dirs = [sample for sample in os.listdir(assemblies_dirs) if os.path.isdir(os.path.join(assemblies_dirs,sample))] # store all samples folders
     validation_samples_dirs = [sample for sample in os.listdir(validation_dirs) if os.path.isdir(os.path.join(validation_dirs,sample))] # store all samples folders
     
-    for sample in assemblies_samples_dirs:
-        if sample not in validation_samples_dirs:
-            print "ATTENTION: sample {} is present in dir {} but absent in dir {}".format(sample, assemblies_dirs, validation_dirs)
-        else: #otherwise I can proceed with analysis
-            os.chdir(workingDir)
-            validation_sample_dir = os.path.join(validation_dirs, sample)
-            assemblies_sample_dir = os.path.join(assemblies_dirs, sample)
-            assemblers_validation = [assembler  for assembler in os.listdir(validation_sample_dir) if os.path.isdir(os.path.join(validation_sample_dir,assembler))]
-            assemblers_assemblies = [assembler  for assembler in os.listdir(assemblies_sample_dir) if os.path.isdir(os.path.join(assemblies_sample_dir,assembler))]
-            if set(assemblers_validation) != set(assemblers_assemblies):
-                sys.exit("Error: different assemblies in assemblies and validation folder: {} {}".format(assemblies_sample_dir,validation_sample_dir))
-            #It means that I have assembled with a set of assemblers and all of them have gone through validation... I can proceed
-            sample_folder = os.path.join(workingDir, sample)
-            if not os.path.exists(sample_folder):
-                os.makedirs(sample_folder)
-            os.chdir(sample_folder)
-            #now I am in the folder that will contain all the results
-            if not os.path.exists("assemblies"):
-                os.makedirs("assemblies")
-                for assembler in assemblers_assemblies:
-                    shutil.copytree(os.path.join(assemblies_sample_dir, assembler), os.path.join("assemblies", assembler))
-            ##copied original assemblies
-            if not os.path.exists("evaluation"):
-                os.makedirs("evaluation")
-            # let us start with QAcompute results
-            QA_pictures = os.path.join(sample_folder, "evaluation", "QA_pictures")
-            if not os.path.exists(QA_pictures):
-                os.makedirs(QA_pictures)
-            picturesQA = {}
-            for assembler in assemblers_assemblies:
-                cur_ass_dir = os.path.join(QA_pictures, assembler)
-                if not os.path.exists(cur_ass_dir):
-                    os.makedirs(cur_ass_dir)
-                ##QA pictures
-                Original_CoverageDistribution200 = os.path.join(validation_sample_dir, assembler, "QAstats", "Coverage_distribution_noOutliers.png")
-                Original_GC_vs_Coverage          = os.path.join(validation_sample_dir, assembler, "QAstats", "GC_vs_Coverage_noOutliers.png")
-                Original_GC_vs_CtgLength         = os.path.join(validation_sample_dir, assembler, "QAstats", "GC_vs_CtgLength.png")
-                Original_MedianCov_vs_CtgLength  = os.path.join(validation_sample_dir, assembler, "QAstats", "MedianCov_vs_CtgLength_noOutliers.png")
-                Original_QAstats_gc_result       = os.path.join(validation_sample_dir, assembler, "QAstats", "{}.bam.cov.gc".format(sample))
+    if args.no_uppmax:
+        
+        collect_results_and_report(validation_dirs, assemblies_dirs, "", args.sample_name, min_contig_length, args.no_uppmax)
+    else:
+        for sample in assemblies_samples_dirs:
+            if sample not in validation_samples_dirs:
+                system.exit("ATTENTION: sample {} is present in dir {} but absent in dir {}".format(sample, assemblies_dirs, validation_dirs))
+            else: #otherwise I have one or more sample folders
+                 #It means that I have assembled with a set of assemblers and all of them have gone through validation... I can proceed
+                os.chdir(workingDir)
+                validation_sample_dir = os.path.join(validation_dirs, sample)
+                assemblies_sample_dir = os.path.join(assemblies_dirs, sample)
+                sample_folder = os.path.join(workingDir, sample)
+                if not os.path.exists(sample_folder):
+                    os.makedirs(sample_folder)
+                os.chdir(sample_folder)
+                collect_results_and_report(validation_sample_dir, assemblies_sample_dir, sample_folder, sample, min_contig_length, args.no_uppmax)
 
-                Copied_CoverageDistribution200   = os.path.join(cur_ass_dir, "Coverage_distribution_noOutliers.png")
-                Copied_GC_vs_Coverage            = os.path.join(cur_ass_dir, "GC_vs_Coverage_noOutliers.png")
-                Copied_GC_vs_CtgLength           = os.path.join(cur_ass_dir, "GC_vs_CtgLength.png")
-                Copied_MedianCov_vs_CtgLength    = os.path.join(cur_ass_dir, "MedianCov_vs_CtgLength_noOutliers.png")
-                Copied_QAstats_gc_result         = os.path.join(cur_ass_dir, "{}.bam.cov.gc".format(sample))
 
-                shutil.copy(Original_CoverageDistribution200, Copied_CoverageDistribution200)
-                shutil.copy(Original_GC_vs_Coverage         , Copied_GC_vs_Coverage         )
-                shutil.copy(Original_GC_vs_CtgLength        , Copied_GC_vs_CtgLength        )
-                shutil.copy(Original_MedianCov_vs_CtgLength , Copied_MedianCov_vs_CtgLength )
-                shutil.copy(Original_QAstats_gc_result      , Copied_QAstats_gc_result      )
 
-                picturesQA[assembler] = [[Copied_CoverageDistribution200, "Contig coverage distribtion" ],\
-                  [Copied_GC_vs_Coverage, "GC-content versus contig-coverage"],\
-                  [Copied_GC_vs_CtgLength, "GC-content versus contig-Length"],\
-                  [Copied_MedianCov_vs_CtgLength, "Median-coverage vs Contig-Length"]]
-            # now FRCurve results
-            FRC_folder = os.path.join(sample_folder, "evaluation", "FRCurves")
-            if not os.path.exists(FRC_folder):
-                os.makedirs(FRC_folder)
-            Features = ["_FRC" , "COMPR_MP_FRC" , "COMPR_PE_FRC" , "HIGH_COV_PE_FRC" , "HIGH_NORM_COV_PE_FRC" ,"HIGH_OUTIE_MP_FRC" , "HIGH_OUTIE_PE_FRC" , "HIGH_SINGLE_MP_FRC" , "HIGH_SINGLE_PE_FRC" , "HIGH_SPAN_MP_FRC" , "HIGH_SPAN_PE_FRC" ,"LOW_COV_PE_FRC" , "LOW_NORM_COV_PE_FRC" , "STRECH_MP_FRC" , "STRECH_PE_FRC"]
+def collect_results_and_report(validation_sample_dir, assemblies_sample_dir, sample_folder, sample, min_contig_length, no_uppmax):
+    assemblers_validation = [assembler  for assembler in os.listdir(validation_sample_dir) if os.path.isdir(os.path.join(validation_sample_dir,assembler))]
+    assemblers_assemblies = [assembler  for assembler in os.listdir(assemblies_sample_dir) if os.path.isdir(os.path.join(assemblies_sample_dir,assembler))]
+    if set(assemblers_validation) != set(assemblers_assemblies):
+        sys.exit("Error: different assemblies in assemblies and validation folder: {} {}".format(assemblies_sample_dir,validation_sample_dir))
+    #now I am in the folder that will contain all the results
+    if not os.path.exists("assemblies"):
+        os.makedirs("assemblies")
+        for assembler in assemblers_assemblies:
+            shutil.copytree(os.path.join(assemblies_sample_dir, assembler), os.path.join("assemblies", assembler))
+    ##copied original assemblies
+    if not os.path.exists("evaluation"):
+        os.makedirs("evaluation")
+    # let us start with QAcompute results
+    QA_pictures = os.path.join(sample_folder, "evaluation", "QA_pictures")
+    if not os.path.exists(QA_pictures):
+        os.makedirs(QA_pictures)
+    picturesQA = {}
+    for assembler in assemblers_assemblies:
+        cur_ass_dir = os.path.join(QA_pictures, assembler)
+        if not os.path.exists(cur_ass_dir):
+            os.makedirs(cur_ass_dir)
+        ##QA pictures
+        Original_CoverageDistribution200 = os.path.join(validation_sample_dir, assembler, "QAstats", "Coverage_distribution_noOutliers.png")
+        Original_GC_vs_Coverage          = os.path.join(validation_sample_dir, assembler, "QAstats", "GC_vs_Coverage_noOutliers.png")
+        Original_GC_vs_CtgLength         = os.path.join(validation_sample_dir, assembler, "QAstats", "GC_vs_CtgLength.png")
+        Original_MedianCov_vs_CtgLength  = os.path.join(validation_sample_dir, assembler, "QAstats", "MedianCov_vs_CtgLength_noOutliers.png")
+        Original_QAstats_gc_result       = ""
+        QAstats_gc_result_file_name      = ""
+        if no_uppmax:
+            QAstats_gc_result_file_name = [name for name in os.listdir(os.path.join(validation_sample_dir, assembler, "QAstats"))  if name.endswith(".bam.cov.gc")][0]
+            Original_QAstats_gc_result   = os.path.join(validation_sample_dir, assembler, "QAstats", "{}".format(QAstats_gc_result_file_name))
+        else:
+            Original_QAstats_gc_result       = os.path.join(validation_sample_dir, assembler, "QAstats", "{}.bam.cov.gc".format(sample))
 
-            FRC_to_print = ""
-            for feature in Features:
-                FRCurves = []
-                for assembler in assemblers_assemblies:
-                    FRCurve_Orig_name = os.path.join(validation_sample_dir, assembler, "FRCurve", "{}{}.txt".format(sample, feature))
-                    FRCurves.append([assembler, FRCurve_Orig_name])
-                FRCname = _plotFRCurve(os.path.join(FRC_folder, "{}_{}".format(sample, feature)), FRCurves)
-                if feature == "_FRC":
-                    FRC_to_print = FRCname
-                FRCurves = []
-            #### now I can produce the report
 
-            write_report(sample_folder, sample, assemblies_sample_dir, assemblers_assemblies,  picturesQA, FRC_to_print, min_contig_length)
+        Copied_CoverageDistribution200   = os.path.join(cur_ass_dir, "Coverage_distribution_noOutliers.png")
+        Copied_GC_vs_Coverage            = os.path.join(cur_ass_dir, "GC_vs_Coverage_noOutliers.png")
+        Copied_GC_vs_CtgLength           = os.path.join(cur_ass_dir, "GC_vs_CtgLength.png")
+        Copied_MedianCov_vs_CtgLength    = os.path.join(cur_ass_dir, "MedianCov_vs_CtgLength_noOutliers.png")
+        if no_uppmax:
+            Copied_QAstats_gc_result         = os.path.join(cur_ass_dir, QAstats_gc_result_file_name)
+        else:
+            Copied_QAstats_gc_result         = os.path.join(cur_ass_dir, "{}.bam.cov.gc".format(sample))
+        
 
-    return 0
-    
-from de_novo_scilife import pdf
-from de_novo_scilife.pdf.theme import colors, DefaultTheme
+
+        shutil.copy(Original_CoverageDistribution200, Copied_CoverageDistribution200)
+        shutil.copy(Original_GC_vs_Coverage         , Copied_GC_vs_Coverage         )
+        shutil.copy(Original_GC_vs_CtgLength        , Copied_GC_vs_CtgLength        )
+        shutil.copy(Original_MedianCov_vs_CtgLength , Copied_MedianCov_vs_CtgLength )
+        shutil.copy(Original_QAstats_gc_result      , Copied_QAstats_gc_result      )
+
+        picturesQA[assembler] = [[Copied_CoverageDistribution200, "Contig coverage distribtion" ],\
+            [Copied_GC_vs_Coverage, "GC-content versus contig-coverage"],\
+            [Copied_GC_vs_CtgLength, "GC-content versus contig-Length"],\
+            [Copied_MedianCov_vs_CtgLength, "Median-coverage vs Contig-Length"]]
+    # now FRCurve results
+    FRC_folder = os.path.join(sample_folder, "evaluation", "FRCurves")
+    if not os.path.exists(FRC_folder):
+        os.makedirs(FRC_folder)
+    Features = ["_FRC" , "COMPR_MP_FRC" , "COMPR_PE_FRC" , "HIGH_COV_PE_FRC" , "HIGH_NORM_COV_PE_FRC" ,"HIGH_OUTIE_MP_FRC" , "HIGH_OUTIE_PE_FRC" , "HIGH_SINGLE_MP_FRC" , "HIGH_SINGLE_PE_FRC" , "HIGH_SPAN_MP_FRC" , "HIGH_SPAN_PE_FRC" ,"LOW_COV_PE_FRC" , "LOW_NORM_COV_PE_FRC" , "STRECH_MP_FRC" , "STRECH_PE_FRC"]
+
+
+
+    FRC_to_print = ""
+    for feature in Features:
+        FRCurves = []
+        for assembler in assemblers_assemblies:
+            FRCurve_Orig_name = os.path.join(validation_sample_dir, assembler, "FRCurve", "{}{}.txt".format(sample, feature))
+            FRCurves.append([assembler, FRCurve_Orig_name])
+        FRCname = _plotFRCurve(os.path.join(FRC_folder, "{}_{}".format(sample, feature)), FRCurves)
+        if feature == "_FRC":
+            FRC_to_print = FRCname
+        FRCurves = []
+    #### now I can produce the report
+
+    write_report(sample_folder, sample, assemblies_sample_dir, assemblers_assemblies,  picturesQA, FRC_to_print, min_contig_length)
+    return
+
+
+
 
 def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,  picturesQA, FRCname ,min_contig_length):
     """This function produces a pdf report """
@@ -337,6 +360,9 @@ if __name__ == '__main__':
     parser.add_argument('--assemblies-dirs', type=str, required=True, help="Directory where assemblies are stored for each sample  (one assembler per folder)")
     parser.add_argument('--min-contig-length', type=int, default=1000, help="minimum length that a contig must have to be considered long")
     parser.add_argument('--global-config',  type=str, help="global configuration file")
+    parser.add_argument('--no-uppmax'     , action='store_true', default = False,  help="if specified the validation-dir and the assemblies-dir is assumed to contain the assemblies"
+    " (and not samples) -- this is useful for large multi-library projects")
+    parser.add_argument('--sample-name'     , type=str,  help="It must be specifed when --no-uppmax is present, in this case you need to tell the porgram under which iouput name the validation has been saved (in the validation yaml file)")
     args = parser.parse_args()
     main(args)
 
