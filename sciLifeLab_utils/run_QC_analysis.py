@@ -15,9 +15,10 @@ def main(args):
         os.chdir(sample_folder)
         ## now I am in the folder, i can run at the same time QC and MP anlaysis
 
-        pipeline = "MP"
+        pipeline = "QCcontrol"
         tools    = ["trimmomatic", "fastqc", "abyss", "align"]
-        
+        if args.reference == "":
+            tools    = ["trimmomatic", "fastqc", "abyss"]
         
         sample_YAML_name = os.path.join(sample_folder,  "{}_{}.yaml".format(sample_dir_name, pipeline))
         sample_YAML      = open(sample_YAML_name, 'w')
@@ -44,12 +45,14 @@ def main(args):
         for flowcell in flowcells_dirs:
             sample_files.extend([os.path.join(flowcell, f) for f in os.listdir(flowcell) if (os.path.isfile(os.path.join(flowcell,f)) and re.search('.gz$',f))])
         # now sample_files contains all the file sequenced for this sample
+        
 
         pair1_file = ""
         pair2_file = ""
         single     = ""
         library    = 1
-        for file in sample_files:
+        while len(sample_files) > 0:
+            file = sample_files[0]
             sample_YAML.write(" lib{}:\n".format(library))
             if "_1.fastq.gz" in file:
                 pair1_file = file
@@ -66,7 +69,7 @@ def main(args):
             sample_files.remove(pair1_file)
             sample_files.remove(pair2_file)
             library += 1
-
+        
         sample_YAML.close
         submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, args.env) # now I can submit the job to slurm
         os.chdir(projectFolder)
@@ -90,14 +93,14 @@ def submit_job(sample_config, global_config, output,  pipeline, env):
     
     slurm_handle.write("\n\n")
     slurm_handle.write("source activate {}\n".format(env))
-    slurm_handle.write("module load abyss/1.3.5\n")
     slurm_handle.write("load_modules\n")
+    slurm_handle.write("module load abyss/1.3.5\n")
     slurm_handle.write("deNovo_pipeline.py --global-config {} --sample-config {}\n\n".format(global_config,sample_config))
     slurm_handle.close()
     
     command=("sbatch", slurm_file)
     print command
-    #subprocess.call(command)
+    subprocess.call(command)
     
 
 

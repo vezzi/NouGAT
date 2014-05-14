@@ -1,45 +1,17 @@
 Pipelines:
- QCcontrol: ["fastqc", "abyss", "trimmomatic"]
- MP: ["fastqc", "abyss", "trimmomatic", "align"]
- assemble: ["soapdenovo", "abyss"]
- evaluete: ["qaTools", "FRC"]
+ QCcontrol: ["fastqc", "abyss", "trimmomatic", "align"]
+ assemble: ["abyss", "allpaths", "cabog",  "masurca", "soapdenovo", "spades", "trinity"]
+ evaluete: ["align", "qaTools", "FRC"]
  align: []
 Tools:
- jellyfish:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/assembly_pipeline/tools/jellyfish-1.1.11/bin/jellyfish
-  options: ""
  fastqc:
   bin: /sw/apps/bioinfo/fastqc/0.10.1/milou/fastqc
   options: [--threads,  "16" ,  --outdir,  fastqc]
  trimmomatic:
   bin: /home/vezzi/DE_NOVO_PIPELINE/tools/Trimmomatic-0.30/trimmomatic-0.30.jar
   options: [""]
- masurca:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/MaSuRCA-2.0.4/
-  options: [""]
- allpaths:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/allpathslg-47918/bin/bin/
-  options: [""]
- abyss:
-  bin: /sw/apps/bioinfo/abyss/1.3.5/milou/bin/
-  options: [""]
- abyss_mergePairs:
-  bin: /sw/apps/bioinfo/abyss/1.3.5/milou/bin/abyss-mergepairs
-  options: ["-m 20", "-1 230", "-2 230"]
- soapdenovo:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/SOAPdenovo2-src-r240/SOAPdenovo-63mer
-  options: [""]
- spades:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/SPAdes-2.5.1-Linux/bin/spades.py
-  options: ["--careful", "-t 8"]
- cabog:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/wgs-7.0/Linux-amd64/bin/
-  options: [""]
  FRC:
   bin: /home/vezzi/DE_NOVO_PIPELINE/tools/FRC_align/src/FRC
-  options: ""
- CEGMA:
-  bin: /sw/apps/bioinfo/cegma/2.4.010312/milou/bin/cegma
   options: ""
  bwa:
   bin: /sw/apps/bioinfo/bwa/0.7.4/milou/bin/bwa
@@ -53,6 +25,27 @@ Tools:
  qaTools:
   bin: /home/vezzi/DE_NOVO_PIPELINE/tools/qaTools/qaCompute
   options: ""
+ abyss:
+  bin: /sw/apps/bioinfo/abyss/1.3.5/milou/bin/
+  options: [""]
+ abyss_mergePairs:
+  bin: /sw/apps/bioinfo/abyss/1.3.5/milou/bin/abyss-mergepairs
+  options: ["-m 20", "-1 230", "-2 230"]
+ allpaths:
+  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/allpathslg-47918/bin/bin/
+  options: ["PLOIDY=2"]
+ cabog:
+  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/wgs-7.0/Linux-amd64/bin/
+  options: [""]
+ masurca:
+  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/MaSuRCA-2.0.4/
+  options: [""]
+ soapdenovo:
+  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/SOAPdenovo2-src-r240/SOAPdenovo-63mer
+  options: [""]
+ spades:
+  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/SPAdes-2.5.1-Linux/bin/spades.py
+  options: ["--careful", "-t 8"]
  trinity:
-  bin: $HOME/DE_NOVO_PIPELINE/tools/trinityrnaseq_r20131110/
+  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/trinityrnaseq_r20131110/
   options: []

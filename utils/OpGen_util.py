@@ -12,11 +12,11 @@ def main(args):
     minCtgLength   = args.min_contig
     
     assembly        = _build_new_reference(assembly, minCtgLength)
-    if args.only_reference > 0:
+    if args.only_reference:
         return
     ## now generate stats
     (contigsLengthDict, contigsSequencesDict) = _compute_assembly_stats(assembly, args.genome_size)
-    if args.only_stats > 0:
+    if args.only_stats:
         return
 
     #problems = find_problems_in_maps(args.opgen_report, contigsLengthDict, contigsSequencesDict)
@@ -310,7 +310,6 @@ def _compute_assembly_stats(assembly, genomeSize):
     percentageNs = float(numNs)/totalLength
     contigsLength.sort()
     contigsLength.reverse()
-
     
     teoN50 = genomeSize * 0.5
     teoN80 = genomeSize * 0.8
@@ -373,13 +372,12 @@ def _build_new_reference(assembly, minCtgLength):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--assembly', help="assembly sequence", type=str)
-    parser.add_argument('--genome-size', help="expected genome size", default=0, type=int)
-    parser.add_argument('--min-contig', help="minimum contig length", default=2000, type=int)
-    parser.add_argument('--only-reference', help="generates only the new refernce (i.e., only scaffolds longer than min-contig)", default=0, type=int)
-    parser.add_argument('--only-stats', help="generates only assembly stats", default=0, type=int)
-
-    parser.add_argument('--opgen-report', help="op gen placment report", type=str)
+    parser.add_argument('--assembly',       help="assembly sequence", type=str)
+    parser.add_argument('--genome-size',    help="expected genome size", default=0, type=int)
+    parser.add_argument('--min-contig',     help="minimum contig length", default=2000, type=int)
+    parser.add_argument('--only-reference', action='store_true', default = False,  help="generates only the new refernce (i.e., only scaffolds longer than min-contig)")
+    parser.add_argument('--only-stats',     action='store_true', default = False,  help="generates only assembly stats")
+    parser.add_argument('--opgen-report',   help="op gen placment report", type=str)
     parser.add_argument('--find-problems-in-maps', help="generates only the new refernce (i.e., only scaffolds longer than min-contig)", default=0, type=int)
     parser.add_argument('--produce-consensus', help="generates only the new refernce (i.e., only scaffolds longer than min-contig)", default=0, type=int)
 

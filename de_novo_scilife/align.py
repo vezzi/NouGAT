@@ -62,7 +62,7 @@ def _merge_bam_files(global_config, sample_config, sorted_libraries_by_insert):
             bamMerged = "{}.bam".format(sample_config["output"])
         
         if os.path.exists(bamMerged):
-            BAMfilesMerged[insert] = os.path.abspath(bamMerged)
+            BAMfilesMerged[insert] = [os.path.abspath(bamMerged), dir_insert]
             os.chdir("..")
             continue # nothiing to be done for this insert
 
@@ -82,12 +82,12 @@ def _merge_bam_files(global_config, sample_config, sorted_libraries_by_insert):
                 returnValue = subprocess.call(command)
                 if  not returnValue == 0:
                     sys.exit("error, while merging files {}".format(insertGroup))
-        BAMfilesMerged[insert] = os.path.abspath(bamMerged)
+        BAMfilesMerged[insert] = [os.path.abspath(bamMerged), dir_insert]
         os.chdir("..")
     
     sorted_alignments_by_insert = []
     for key in sorted(BAMfilesMerged.iterkeys()):
-        sorted_alignments_by_insert.append([key, BAMfilesMerged[key], dir_insert]) # memorise insert length, bam file, folder
+        sorted_alignments_by_insert.append([key, BAMfilesMerged[key][0], BAMfilesMerged[key][1]]) # memorise insert length, bam file, folder
     return sorted_alignments_by_insert
 
 
