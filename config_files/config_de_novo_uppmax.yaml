@@ -8,7 +8,8 @@ Tools:
   bin: /sw/apps/bioinfo/fastqc/0.10.1/milou/fastqc
   options: [--threads,  "16" ,  --outdir,  fastqc]
  trimmomatic:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/Trimmomatic-0.30/trimmomatic-0.30.jar
+  #bin: /home/vezzi/DE_NOVO_PIPELINE/tools/Trimmomatic-0.30/trimmomatic-0.30.jar
+  bin: /proj/a2010002/sw/mf/bioinfo-tools/misc/trimmomatic/0.30/trimmomatic-0.30.jar
   options: [""]
  FRC:
   bin: /home/vezzi/DE_NOVO_PIPELINE/tools/FRC_align/src/FRC

@@ -1,0 +1,8 @@
+*.pyc
+*.idx
+de_novo_scilife.egg-info/
+build/
+.DS_Store
+.#*
+.ropeproject
+.env
