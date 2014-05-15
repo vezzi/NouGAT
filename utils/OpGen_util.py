@@ -10,7 +10,6 @@ def main(args):
     workingDir     = os.getcwd()
     assembly       = args.assembly
     minCtgLength   = args.min_contig
-    
     assembly        = _build_new_reference(assembly, minCtgLength)
     if args.only_reference:
         return

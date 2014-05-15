@@ -172,7 +172,7 @@ def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,  pict
         bollet_list.append("{}".format(assembler)) # TODO: add version
     doc.add_list(bollet_list)
     doc.add_spacer()
-    doc.add_paragraph("Each assembler has been evaluated by aligning back to it the same reads using in the de novo assembly process. Consequently statiscs on coverage, GC-content, contig length distribution have been computed. A global ranking with FRCurve is also performed.")
+    doc.add_paragraph("Each assembler has been evaluated by aligning a subset of Illumina reads back to the assembled sequence. Consequently statiscs on coverage, GC-content, contig length distribution have been computed. A global ranking with FRCurve is also performed.")
 
     doc.add_spacer()
     doc.add_paragraph("De novo assembly and de novo assembly evaluation are two difficult computational exercises. Currently there is no tool (i.e., de novo assembler) that is guarantee to always outperform the others. Many recent publications (e.g., GAGE, GAGE-B, Assemblathon 1 and 2) showed how the same assembler can have totally different performances on slightly different datasets. For these reasons, at NGI-Stockholm we do not limit our de novo analysis to a single tool, instead we employ several assemblers and we provide our users with a semi-automated evaluation in order to allow them to choose the best assembler based on their specific needs. The assembly or assemblies judged to be the best can be directly employed to answer important biological questions, or they can be used as a backbone for a specific user defined assembly pipeline (i.e., use of extra data, use of non supported tools, variation of parameters)")
@@ -180,20 +180,20 @@ def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,  pict
     doc.add_spacer()
     doc.add_paragraph("For each assembly the following information is provided")
     doc.add_list([
-    "Table with Standard Assembly Statistics: number of scaffolds, number of contigs/scaffold {}, N50, N80, length of the longest scaffold, total assembly length, and sum of contigs scaffolds > {}".format(min_contig_length,min_contig_length),
+    "Table with Standard Assembly Statistics: number of scaffolds, number of scaffold longer than {}, N50, N80, length of the longest scaffold, total assembly length, and sum of scaffolds scaffolds longer than {}".format(min_contig_length,min_contig_length),
     "For each individual assembler four plots are automatically generated: Contig-coverage distribution, GC-content versus Contig-Coverage, GC-content vs Contig-Length, and Contig Coverage vs Contig Length",
     "FRCurve plot: ROC-curve inspired method for assembly validation"
     ])
 
     doc.add_spacer()
-    doc.add_paragraph("Only contigs longer than {} are used in this validation. This is done in order to avoid problems with outliers points and to partially circumvent the fact that some assemblers output small contigs while others perform automatic trimming. Statiscs like N50, N80, etc. are computed on the expected genome length in order to normalise the numbers and allow a fair comparison among various tools.".format(min_contig_length))
+    doc.add_paragraph("Only contigs longer than {} are used during validation. This is done in order to avoid problems with outliers points and to partially circumvent the fact that some assemblers output small contigs while others perform automatic trimming. Statiscs like N50, N80, etc. are computed on the expected genome length in order to normalise the numbers and allow a fair comparison among various tools.".format(min_contig_length))
 
     doc.add_paragraph("Coverage information and FRCurve features are obtaind by aligning the same reads used in the assembling phase against the assembled sequences using bwa mem algorithm")
     
     doc.add_paragraph("This report is delivered both via e-mail and via Uppmax. In particular on Uppmax the following files are available for further result inspection:")
     doc.add_list([
         "the report saved in the folder report",
-        "all the assemblies (contigs and scaffolds) plus the standard error and standard output produced by the tools (to further result inspection)",
+        "all the assemblies (contigs and scaffolds)",
         "All the evalautions. For QA pictures the same pictures included in this report plus the original cov.gc table are present. For FRC the FRCurve for each invidual feature is plotted"
     ])
         
@@ -228,7 +228,7 @@ def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,  pict
 
     #Now QC pictures
     doc.add_header("QC plots", pdf.H2)
-    doc.add_paragraph("QC plots try to represent the relations between coverage, GC content, and scaffolds length in a visual way. The idea is to use the four plots to see if the assembly coincides with the expected results and to check the presence of biases. For each assemblers we aligned the same reads used for de novo assembly back to the assembly itself and we compute for each scaffold its coverage, its GC content, and its length. In this way the following plots can be plotted:")
+    doc.add_paragraph("QC plots try to represent the relations between coverage, GC content, and scaffolds length in a visual way. The idea is to use the four plots to see if the assembly coincides with the expected results and to check the presence of biases. For each assemblers we aligned the same reads used for de novo assembly back to the assembly itself and we compute for each scaffold its coverage, its GC content, and its length. In this way the following plots can be generated:")
     doc.add_list([
     "Contig Coverage Distribtion: this plot shows the scaffold coverage distribution. Ideally the picture should look like a gaussian distribution with the maximum around the expected coverage. If the assembly is highly connected (i.e., formed by only tens of scaffolds) this shape might be not visible. ",
     "GC-Content versus Contig-Coverage: this plot shows for each scaffold its GCs content on the x-axis and its coverage on the y-axis. Tipically scaffolds should cluster forming a cloud. The presence of two distict clouds might suggest the presence of contamination.",

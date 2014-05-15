@@ -61,8 +61,6 @@ def _check_libraries(sorted_libraries_by_insert):
             if current_insert != libraryInfo["insert"]:
                 current_insert    = libraryInfo["insert"]
                 different_inserts += 1
-        if libraryInfo["orientation"] == "outtie":
-            sys.exit("error: in valiadation only innie libraries can be used, please reverse complement your MP libs (N.B. if you employed MP module of this pipeline then the reverse complemented reads are already available). This is needed in order to run FRCurve, please complain with FRCurve author!!!!")
     if different_inserts > 2:
         sys.exit("error: in valiadation only two libraries are admitted (usually a PE and a MP, sometimes 2 PE)")
     return
@@ -132,13 +130,15 @@ def _run_FRC(global_config, sample_config, sorted_libraries_by_insert):
     peInsert    = alignments[0][0]
     peMinInsert = int(peInsert - peInsert*0.60)
     peMaxInsert = int(peInsert + peInsert*0.60)
-    command = [program, "--pe-sam", peBam, "--pe-min-insert", "{}".format(peMinInsert) , "--pe-max-insert", "{}".format(peMaxInsert), "--CEstats-PE-min", "-4", "--CEstats-PE-max", "4"]
+    #command = [program, "--pe-sam", peBam, "--pe-min-insert", "{}".format(peMinInsert) , "--pe-max-insert", "{}".format(peMaxInsert), "--CEstats-PE-min", "-4", "--CEstats-PE-max", "4"]
+    command = [program, "--pe-sam", peBam, "--pe-max-insert", "5000"]
     if len(alignments) > 1:
         mpBam       = alignments[1][1]
         mpInsert    = alignments[1][0]
         mpMinInsert = int(mpInsert - mpInsert*0.50)
         mpMaxInsert = int(mpInsert + mpInsert*0.50)
-        command += ["--mp-sam", mpBam, "--mp-min-insert", "{}".format(mpMinInsert), "--mp-max-insert", "{}".format(mpMaxInsert)]
+        #command += ["--mp-sam", mpBam, "--mp-min-insert", "{}".format(mpMinInsert), "--mp-max-insert", "{}".format(mpMaxInsert)]
+        command += ["--mp-sam", mpBam, "--mp-max-insert", "25000"]
     command += [ "--genome-size", "{}".format(genomeSize), "--output", output]
     common.print_command(command)
     if not common.check_dryrun(sample_config) and not os.path.exists("{}_FRC.png".format(output)):
