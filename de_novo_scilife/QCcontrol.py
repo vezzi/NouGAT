@@ -294,14 +294,16 @@ in the result delivery folder on Uppmax")
     for tool in tools:
         doc.add_header(tool , pdf.H2)
         if tool  == "trimmomatic":
-            doc.add_paragraph("As a result of the Illumina Nextera Mate Pair protocol many reads sequenced will contain the adapter sequence. Illumina reccomends\
-to remove the adaptor before use the reads in any downstream analysis.")
+            doc.add_paragraph("Reads (both paired and and mate pairs) can contain parts of the adapter sequence or, in the case of Mate Pairs, part of the Linker sequence. Illumina raccomends\
+to remove the adaptor before use the reads in any downstream analysis (this is mandatory for Mate Pairs).")
             doc.add_paragraph("Adapter sequences removed are:")
             adapter_file = sample_config["adapters"]
             adapters     = []
             with open(adapter_file) as file:
                 lines       = file.readlines()
-                adapters = [lines[1].rstrip(),lines[3].rstrip(),lines[5].rstrip()]
+                for index in xrange(1, len(lines), 2):
+                    #adapters = [lines[1].rstrip(),lines[3].rstrip(),lines[5].rstrip()]
+                    adapters.append(lines[index].rstrip())
             doc.add_list(adapters)
             doc.add_spacer()
 
