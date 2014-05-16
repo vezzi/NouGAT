@@ -84,7 +84,7 @@ def submit_job(sample_config, global_config, output,  pipeline, env, email=None)
 
     slurm_handle.write("#! /bin/bash -l\n")
     slurm_handle.write("set -e\n")
-    slurm_handle.write("#SBATCH -A b2013064\n")
+    slurm_handle.write("#SBATCH -A a2010002\n")
     slurm_handle.write("#SBATCH -o {}_{}.out\n".format(output,pipeline))
     slurm_handle.write("#SBATCH -e {}_{}.err\n".format(output,pipeline))
     slurm_handle.write("#SBATCH -J {}_{}.job\n".format(output,pipeline))
