@@ -71,23 +71,27 @@ def main(args):
             sample_files.remove(pair2_file)
             library += 1
         sample_YAML.close
-        submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, args.env) # now I can submit the job to slurm
+        if not hasattr(args, "email"):
+            args.email = None
+        submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, args.env, args.email) # now I can submit the job to slurm
+#        submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, args.env) # now I can submit the job to slurm
         os.chdir(projectFolder)
 
-def submit_job(sample_config, global_config, output,  pipeline, env):
+def submit_job(sample_config, global_config, output,  pipeline, env, email=None):
     workingDir = os.getcwd()
     slurm_file = os.path.join(workingDir, "{}_{}.slurm".format(output,pipeline))
     slurm_handle = open(slurm_file, "w")
     slurm_handle.write("#! /bin/bash -l\n")
     slurm_handle.write("set -e\n")
-    slurm_handle.write("#SBATCH -A b2013064\n")
+    slurm_handle.write("#SBATCH -A a2010002\n")
     slurm_handle.write("#SBATCH -o {}_{}.out\n".format(output,pipeline))
     slurm_handle.write("#SBATCH -e {}_{}.err\n".format(output,pipeline))
     slurm_handle.write("#SBATCH -J {}_{}.job\n".format(output,pipeline))
     slurm_handle.write("#SBATCH -p node -n 16\n")
     slurm_handle.write("#SBATCH -t 1-00:00:00\n")
-    slurm_handle.write("#SBATCH --mail-user francesco.vezzi@scilifelab.se\n")
-    slurm_handle.write("#SBATCH --mail-type=ALL\n")
+    if email:
+        slurm_handle.write("#SBATCH --mail-user {}\n".format(email))
+        slurm_handle.write("#SBATCH --mail-type=ALL\n")
     slurm_handle.write("\n\n")
     slurm_handle.write("source activate {}\n".format(env))
     slurm_handle.write("load_modules\n")
@@ -114,6 +118,8 @@ assembly for each sample will be performed. If a sample is splitted across multi
     parser.add_argument('--kmer'           , type=int, required=True, help="kmer size to employ when requested (i.e., some tools make a guess")
     parser.add_argument('--genomeSize'     , type=int, required=True,  help="Estimated genome size (make an educated guess)")
     parser.add_argument('--afterQC'        , action='store_true', default = False,  help="To be specified if sample-data-dir is a QC output")
+    parser.add_argument('--email'          , type=str, help="Send notifications/job status updates to this email address.")
+
     args = parser.parse_args()
     main(args)
 
