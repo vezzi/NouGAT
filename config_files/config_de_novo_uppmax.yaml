@@ -8,12 +8,8 @@ Tools:
   bin: /sw/apps/bioinfo/fastqc/0.10.1/milou/fastqc
   options: [--threads,  "16" ,  --outdir,  fastqc]
  trimmomatic:
-  #bin: /home/vezzi/DE_NOVO_PIPELINE/tools/Trimmomatic-0.30/trimmomatic-0.30.jar
   bin: /proj/a2010002/nobackup/sw/mf/bioinfo-tools/misc/trimmomatic/0.30/trimmomatic-0.30.jar
   options: [""]
- FRC:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/FRC_align/bin/FRC
-  options: ""
  bwa:
   bin: /sw/apps/bioinfo/bwa/0.7.4/milou/bin/bwa
   options: ""
@@ -23,9 +19,6 @@ Tools:
  samtools:
   bin: /sw/apps/bioinfo/samtools/0.1.19/milou/bin/samtools
   options: ""
- qaTools:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/qaTools/qaCompute
-  options: ""
  abyss:
   bin: /sw/apps/bioinfo/abyss/1.3.5/milou/bin/
   options: [""]
@@ -33,20 +26,26 @@ Tools:
   bin: /sw/apps/bioinfo/abyss/1.3.5/milou/bin/abyss-mergepairs
   options: ["-m 20", "-1 230", "-2 230"]
  allpaths:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/allpathslg-47918/bin/bin/
+  bin: /sw/apps/bioinfo/allpathslg/49618/milou/bin/
   options: ["PLOIDY=2"]
  cabog:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/wgs-7.0/Linux-amd64/bin/
+  bin: /sw/apps/bioinfo/cabog/8.1/Linux-amd64/bin/
   options: [""]
  masurca:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/MaSuRCA-2.0.4/
+  bin: /sw/apps/bioinfo/MaSuRCA/2.2.1/milou/
   options: [""]
  soapdenovo:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/SOAPdenovo2-src-r240/SOAPdenovo-63mer
+  bin: /sw/apps/bioinfo/SOAPdenovo/2.04-r240/milou/bin/SOAPdenovo-63mer
   options: [""]
  spades:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/SPAdes-2.5.1-Linux/bin/spades.py
+  bin: /sw/apps/bioinfo/spades/3.0.0/milou/bin/spades.py
   options: ["--careful", "-t 8"]
  trinity:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/trinityrnaseq_r20131110/
+  bin:
   options: []
+ FRC:
+  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/FRC_align/bin/FRC
+  options: ""
+ qaTools:
+  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/qaTools/qaCompute
+  options: ""

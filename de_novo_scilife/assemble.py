@@ -101,13 +101,16 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     command += "{} ".format(librariesPE)
     command += "{} ".format(librariesMP)
 
+
+    if common.check_dryrun(sample_config):
+        common.print_command(command)
+        os.chdir("..")
+        return sample_config
+
     os.makedirs(os.path.join(assemblyDirectory, "runABySS"))
     os.chdir("runABySS")
     returnValue = 0
-    common.print_command(command)
-    if not common.check_dryrun(sample_config):
-        returnValue = subprocess.call(command, stdout=assembler_stdOut, stderr=assembler_stdErr, shell=True)
-
+    returnValue = subprocess.call(command, stdout=assembler_stdOut, stderr=assembler_stdErr, shell=True)
     os.chdir("..")
     if returnValue == 0 and not common.check_dryrun(sample_config):
         if os.path.exists(os.path.join("runABySS","{}-contigs.fa".format(outputName))):
@@ -132,7 +135,7 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
     programBIN                 = global_config["Tools"][assembler]["bin"] # in abyss case there is no exectuable
     program_options            = global_config["Tools"][assembler]["options"]
     sorted_libraries_by_insert = common._sort_libraries_by_insert(sample_config)
-    if _prepare_folder_structure("abyss", assemblyDirectory) == 0:
+    if _prepare_folder_structure("allpaths", assemblyDirectory) == 0:
         os.chdir(assemblyDirectory)
     else:
         return sample_config
@@ -191,7 +194,8 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
         common.print_command(command)
         program = os.path.join(programBIN, "RunAllPathsLG")
         command = [program, "PRE=.", "REFERENCE_NAME=.", "DATA_SUBDIR=data_dir", "RUN=allpaths", "SUBDIR=run"]
-        ommon.print_command(command)
+        common.print_command(command)
+        os.chdir("..")
         return sample_config
     assembler_stdOut = open("allpaths_PrepareAllPathsInputs.stdOut", "w")
     assembler_stdErr = open("allpaths_PrepareAllPathsInputs.stdErr", "w")
@@ -324,13 +328,13 @@ def _run_masurca(global_config, sample_config,sorted_libraries_by_insert):
     ########### HERE IT START THE SPECIFIC ASSEMBLER PART
 
     masurca_config_file = open("configuration.txt", "w")
-    masurca_config_file.write("PATHS\n")
-    masurca_config_file.write("JELLYFISH_PATH=" + os.path.join("{}".format(programBIN), "bin" ) + "\n" )
-    masurca_config_file.write("SR_PATH=" +  os.path.join("{}".format(programBIN), "bin" ) + "\n" )
-    masurca_config_file.write("CA_PATH=" +  os.path.join("{}".format(programBIN), "CA/Linux-amd64/bin") + "\n")
-    masurca_config_file.write("END\n")
+    #masurca_config_file.write("PATHS\n")
+    #masurca_config_file.write("JELLYFISH_PATH=" + os.path.join("{}".format(programBIN), "bin" ) + "\n" )
+    #masurca_config_file.write("SR_PATH=" +  os.path.join("{}".format(programBIN), "bin" ) + "\n" )
+    #masurca_config_file.write("CA_PATH=" +  os.path.join("{}".format(programBIN), "CA/Linux-amd64/bin") + "\n")
+    #masurca_config_file.write("END\n")
     
-    masurca_config_file.write("\n")
+    #masurca_config_file.write("\n")
     
     masurca_config_file.write("DATA\n")
     allTheLetters = string.lowercase
@@ -363,16 +367,24 @@ def _run_masurca(global_config, sample_config,sorted_libraries_by_insert):
     masurca_config_file.write("GRAPH_KMER_SIZE=auto\n")
     #set this to 1 for Illumina-only assemblies and to 0 if you have 2x or more long (Sanger, 454) reads
     masurca_config_file.write("USE_LINKING_MATES=1\n")
-    #this parameter is useful if you have too many jumping library mates. Typically set it to 60 for bacteria and something large (300) for mammals
-    masurca_config_file.write("LIMIT_JUMP_COVERAGE = 60\n")
+    #this parameter is useful if you have too many jumping library mates. See manual for explanation about settings based on genome length
+    if sample_config["genomeSize"] > 10000000:
+        masurca_config_file.write("LIMIT_JUMP_COVERAGE = 1000\n")
+    else:
+        masurca_config_file.write("LIMIT_JUMP_COVERAGE = 60\n")
     #these are the additional parameters to Celera Assembler.  do not worry about performance, number or processors or batch sizes -- these are computed automatically. for mammals do not set cgwErrorRate above 0.15!!!
-    masurca_config_file.write("CA_PARAMETERS = ovlMerSize=30 cgwErrorRate=0.25 ovlMemory=4GB\n")
-    #minimum count k-mers used in error correction 1 means all k-mers are used.  one can increase to 2 if coverage >100
-    masurca_config_file.write("KMER_COUNT_THRESHOLD = 1\n")
+    if sample_config["genomeSize"] > 1500000000:
+        masurca_config_file.write("CA_PARAMETERS = ovlMerSize=30 cgwErrorRate=0.15 ovlMemory=4GB\n")
+    else:
+        masurca_config_file.write("CA_PARAMETERS = ovlMerSize=30 cgwErrorRate=0.25 ovlMemory=4GB\n")
     #auto-detected number of cpus to use
-    masurca_config_file.write("NUM_THREADS= 8\n")
-    #this is mandatory jellyfish hash size
-    masurca_config_file.write("JF_SIZE=1000000000\n")
+    threads = 8 # default for UPPMAX
+    if "threads" in sample_config :
+        threads = sample_config["threads"]
+    masurca_config_file.write("NUM_THREADS= {}\n".format(threads))
+    #this is mandatory jellyfish hash size ---- jellyfish hash size, set this to about 10x the genome size.
+    JF_SIZE = sample_config["genomeSize"] * 11
+    masurca_config_file.write("JF_SIZE={}\n".format(JF_SIZE))
     #this specifies if we do (1) or do not (0) want to trim long runs of homopolymers (e.g. GGGGGGGG) from 3' read ends, use it for high GC genomes
     masurca_config_file.write("DO_HOMOPOLYMER_TRIM=0\n")
     masurca_config_file.write("END\n")
@@ -380,17 +392,18 @@ def _run_masurca(global_config, sample_config,sorted_libraries_by_insert):
 
     masurca_config_file.close()
 
+    if common.check_dryrun(sample_config):
+        os.chdir("..")
+        return sample_config
+
     masurca_stdOut = open("masurca.stdOut", "w")
     masurca_stdErr = open("masurca.stdErr", "w")
     os.mkdir("runMASURCA")
     os.chdir("runMASURCA")
-    command = [os.path.join(programBIN,"bin/runSRCA.pl") , "../configuration.txt"]
+    command = [os.path.join(programBIN,"bin/masurca") , "../configuration.txt"]
     common.print_command(command)
 
-    if not common.check_dryrun(sample_config):
-        subprocess.call(command, stdout=masurca_stdOut, stderr=masurca_stdErr)
-    else:
-            return sample_config
+    subprocess.call(command, stdout=masurca_stdOut, stderr=masurca_stdErr)
     if not os.path.exists("assemble.sh"):
         print "MaSuRCA: assemble.sh not created. Unknown failure"
         return sample_config
@@ -475,6 +488,8 @@ def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
     if not common.check_dryrun(sample_config):
         subprocess.call(command, stdout=assembler_stdOut, stderr=assembler_stdErr)
     else:
+        os.chdir("..")
+        os.chdir("..")
         return sample_config
 
     os.chdir("..")

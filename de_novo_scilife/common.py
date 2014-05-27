@@ -180,8 +180,8 @@ directory {} does not exists.".format(picard_dir))
         if tool in special_tools:
             binaries_to_check = []
             if tool == "allpaths":
-                binaries_to_check.append("PrepareAllPathsInputs.pl")
-                binaries_to_check.append("RunAllPathsLG")
+                binaries_to_check.append(os.path.join(tool_bin,"PrepareAllPathsInputs.pl"))
+                binaries_to_check.append(os.path.join(tool_bin,"RunAllPathsLG"))
             if tool == "abyss":
                 binaries_to_check.append(os.path.join(tool_bin, "abyss-pe"))
             if tool == "cabog":
