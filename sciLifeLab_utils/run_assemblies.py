@@ -73,22 +73,22 @@ def main(args):
         sample_YAML.close
         if not hasattr(args, "email"):
             args.email = None
-        submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, args.env, args.email) # now I can submit the job to slurm
+        submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, args.env, args.email, args.time, args.project) # now I can submit the job to slurm
 #        submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, args.env) # now I can submit the job to slurm
         os.chdir(projectFolder)
 
-def submit_job(sample_config, global_config, output,  pipeline, env, email=None):
+def submit_job(sample_config, global_config, output,  pipeline, env, email=None, required_time='1-00:00:00', project='a2010002'):
     workingDir = os.getcwd()
     slurm_file = os.path.join(workingDir, "{}_{}.slurm".format(output,pipeline))
     slurm_handle = open(slurm_file, "w")
     slurm_handle.write("#! /bin/bash -l\n")
     slurm_handle.write("set -e\n")
-    slurm_handle.write("#SBATCH -A a2010002\n")
+    slurm_handle.write("#SBATCH -A {}\n".format(project))
     slurm_handle.write("#SBATCH -o {}_{}.out\n".format(output,pipeline))
     slurm_handle.write("#SBATCH -e {}_{}.err\n".format(output,pipeline))
     slurm_handle.write("#SBATCH -J {}_{}.job\n".format(output,pipeline))
     slurm_handle.write("#SBATCH -p node -n 16\n")
-    slurm_handle.write("#SBATCH -t 1-00:00:00\n")
+    slurm_handle.write("#SBATCH -t {}\n".format(required_time))
     if email:
         slurm_handle.write("#SBATCH --mail-user {}\n".format(email))
         slurm_handle.write("#SBATCH --mail-type=ALL\n")
@@ -119,7 +119,8 @@ assembly for each sample will be performed. If a sample is splitted across multi
     parser.add_argument('--genomeSize'     , type=int, required=True,  help="Estimated genome size (make an educated guess)")
     parser.add_argument('--afterQC'        , action='store_true', default = False,  help="To be specified if sample-data-dir is a QC output")
     parser.add_argument('--email'          , type=str, help="Send notifications/job status updates to this email address.")
-
+    parser.add_argument('--time'           , type=str, default="1-00:00:00", help="required time for the job (default is 1 day : 1-00:00:00)")
+    parser.add_argument('--project'        , type=str, default="a2010002", help="project name for slurm submission (default is a2010002)")
     args = parser.parse_args()
     main(args)
 
