@@ -85,7 +85,7 @@ assembly for each sample will be performed. If a sample is splitted across multi
     parser.add_argument('--global-config'  , type=str, required=True, help="global configuration file")
     parser.add_argument('--assembly-dir'   , type=str, required=True, help="Path to directory containg assemblies. All meta-deta is extracted from sample config file present in each sample folder")
     parser.add_argument('--env'            , type=str, default="DeNovoPipeline", help="name of the virtual enviorment (default is DeNovoPipeline)")
-    parser.add_argument('--email'	   , typde=str, default=None, help="email address to send the notifications to")
+    parser.add_argument('--email'	   , type=str, default=None, help="email address to send the notifications to")
     args = parser.parse_args()
     main(args)
 
