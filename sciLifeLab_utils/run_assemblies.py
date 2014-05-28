@@ -124,7 +124,7 @@ assembly for each sample will be performed. If a sample is splitted across multi
     parser.add_argument('--email'          , type=str, help="Send notifications/job status updates to this email address.")
     parser.add_argument('--time'           , type=str, default="1-00:00:00", help="required time for the job (default is 1 day : 1-00:00:00)")
     parser.add_argument('--project'        , type=str, default="a2010002", help="project name for slurm submission (default is a2010002)")
-    parser.add_argument('--threads'        , type=str, default="16", help="Number of thread the job will require")
+    parser.add_argument('--threads'        , type=int, default=16, help="Number of thread the job will require")
     args = parser.parse_args()
     main(args)
 
