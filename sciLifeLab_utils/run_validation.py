@@ -51,22 +51,22 @@ def main(args):
             if not hasattr(args, "email"):
                 args.email=None
 
-            submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, assembler, args.env, args.email) # now I can submit the job to slurm
+            submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, assembler, args.env, args.email, args.time, args.project) # now I can submit the job to slurm
             os.chdir(validation_folder)
         os.chdir(projectFolder)
 
-def submit_job(sample_config, global_config, output,  pipeline, assembler, env, email=None):
+def submit_job(sample_config, global_config, output,  pipeline, assembler, env, email=None, required_time='1-00:00:00', project='a2010002'):
     workingDir = os.getcwd()
     slurm_file = os.path.join(workingDir, "{}_{}_{}.slurm".format(output,pipeline, assembler))
     slurm_handle = open(slurm_file, "w")
     slurm_handle.write("#! /bin/bash -l\n")
     slurm_handle.write("set -e\n")
-    slurm_handle.write("#SBATCH -A b2013064\n")
+    slurm_handle.write("#SBATCH -A {}\n".format(project))
     slurm_handle.write("#SBATCH -o {}_{}_{}.out\n".format(output,pipeline,assembler))
     slurm_handle.write("#SBATCH -e {}_{}_{}.err\n".format(output,pipeline,assembler))
     slurm_handle.write("#SBATCH -J {}_{}_{}.job\n".format(output,pipeline,assembler))
     slurm_handle.write("#SBATCH -p node -n 16\n")
-    slurm_handle.write("#SBATCH -t 1-00:00:00\n")
+    slurm_handle.write("#SBATCH -t {}\n".format(required_time))
     if email :
         slurm_handle.write("#SBATCH --mail-user {}\n".format(email))
         slurm_handle.write("#SBATCH --mail-type=ALL\n")
@@ -91,6 +91,8 @@ assembly for each sample will be performed. If a sample is splitted across multi
     parser.add_argument('--assembly-dir'   , type=str, required=True, help="Path to directory containg assemblies. All meta-deta is extracted from sample config file present in each sample folder")
     parser.add_argument('--env'            , type=str, default="DeNovoPipeline", help="name of the virtual enviorment (default is DeNovoPipeline)")
     parser.add_argument('--email'	   , type=str, default=None, help="Send notifications/job status updates to this email address.")
+    parser.add_argument('--time'           , type=str, default="1-00:00:00", help="required time for the job (default is 1 day : 1-00:00:00)")
+    parser.add_argument('--project'        , type=str, default="a2010002", help="project name for slurm submission (default is a2010002)")
     args = parser.parse_args()
     main(args)
 
