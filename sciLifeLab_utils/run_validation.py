@@ -34,7 +34,7 @@ def main(args):
             sample_YAML.write("output: {}\n".format(sample_config_assembly["output"]))
             sample_YAML.write("projectName: {}_validate\n".format(sample_config_assembly["output"]))
             sample_YAML.write("kmer: \n")
-            sample_YAML.write("threads: 16\n")
+            sample_YAML.write("threads: {}\n".format(args.threads))
             sample_YAML.write("genomeSize: {}\n".format(sample_config_assembly["genomeSize"]))
             sample_YAML.write("minCrgLength: 1000\n")
             sample_YAML.write("reference: {}\n".format(assembly_name))
@@ -51,11 +51,11 @@ def main(args):
             if not hasattr(args, "email"):
                 args.email=None
 
-            submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, assembler, args.env, args.email, args.time, args.project) # now I can submit the job to slurm
+            submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, assembler, args.env, args.email, args.time, args.project, args.threads) # now I can submit the job to slurm
             os.chdir(validation_folder)
         os.chdir(projectFolder)
 
-def submit_job(sample_config, global_config, output,  pipeline, assembler, env, email=None, required_time='1-00:00:00', project='a2010002'):
+def submit_job(sample_config, global_config, output,  pipeline, assembler, env, email=None, required_time='1-00:00:00', project='a2010002', threads=16):
     workingDir = os.getcwd()
     slurm_file = os.path.join(workingDir, "{}_{}_{}.slurm".format(output,pipeline, assembler))
     slurm_handle = open(slurm_file, "w")
@@ -65,7 +65,10 @@ def submit_job(sample_config, global_config, output,  pipeline, assembler, env, 
     slurm_handle.write("#SBATCH -o {}_{}_{}.out\n".format(output,pipeline,assembler))
     slurm_handle.write("#SBATCH -e {}_{}_{}.err\n".format(output,pipeline,assembler))
     slurm_handle.write("#SBATCH -J {}_{}_{}.job\n".format(output,pipeline,assembler))
-    slurm_handle.write("#SBATCH -p node -n 16\n")
+    if threads<16 :
+        slurm_handle.write("#SBATCH -p core -n {}\n".format(threads))
+    else:
+         slurm_handle.write("#SBATCH -p node -n {}\n".format(threads))
     slurm_handle.write("#SBATCH -t {}\n".format(required_time))
     if email :
         slurm_handle.write("#SBATCH --mail-user {}\n".format(email))
@@ -93,6 +96,7 @@ assembly for each sample will be performed. If a sample is splitted across multi
     parser.add_argument('--email'	   , type=str, default=None, help="Send notifications/job status updates to this email address.")
     parser.add_argument('--time'           , type=str, default="1-00:00:00", help="required time for the job (default is 1 day : 1-00:00:00)")
     parser.add_argument('--project'        , type=str, default="a2010002", help="project name for slurm submission (default is a2010002)")
+    parser.add_argument('--threads'           , type=int, default=16, help="Number of thread the job will require")
     args = parser.parse_args()
     main(args)
 
