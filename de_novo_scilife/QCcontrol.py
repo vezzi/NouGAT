@@ -195,7 +195,7 @@ def _run_trimmomatic(global_config, sample_config, sorted_libraries_by_insert):
             output_read2_sing = os.path.join(trimmomaticDir,  "{}_u.fastq.gz".format(read2_baseName))
             command = ["java",  "-jar", program, "PE", "-threads", "{}".format(threads),  "-phred33",  read1, read2,  output_read1_pair ,output_read1_sing , output_read2_pair, output_read2_sing ,"ILLUMINACLIP:{}:2:30:10".format(adapterFile), "LEADING:3", "TRAILING:3", "SLIDINGWINDOW:4:15", "MINLEN:30" ]
             common.print_command(command)
-            if not common.check_dryrun(sample_config) and not os.path.exists("{}.fastq.gz".format(read1_baseName)): # do not execute is files have been already gennerated
+            if not common.check_dryrun(sample_config) and not os.path.exists(output_read1_pair): # do not execute is files have been already gennerated
                 stdOut = open("{}_trimmomatic.stdOut".format(read1_baseName), "w")
                 stdErr = open("{}_trimmomatic.stdErr".format(read1_baseName), "w")
                 returnValue = subprocess.call(command, stdout=stdOut, stderr=stdErr) # run the program
