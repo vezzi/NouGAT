@@ -104,8 +104,8 @@ def picard_CGbias(global_config, sample_config, sorted_alignments_by_insert):
         command= ["java", "-Xmx16g", "-XX:PermSize=2g", "-jar", os.path.join(picard, "CollectGcBiasMetrics.jar"),  "REFERENCE_SEQUENCE={}".format(sample_config["reference"]), "INPUT={}".format(BAMfile), \
         "OUTPUT={}.collectGcBias.txt".format(output_header), "CHART_OUTPUT={}.collectGcBias.pdf".format(output_header), "ASSUME_SORTED=true", "VALIDATION_STRINGENCY=LENIENT", "TMP_DIR=/scratch"]
         returnValue = 0;
+        common.print_command(command)
         if not os.path.exists("{}.collectGcBias.pdf".format(output_header)):
-            common.print_command(command)
             if not common.check_dryrun(sample_config):
                 stdOut = open("collectGcBias.stdOut", "w")
                 stdErr = open("collectGcBias.stdErr", "w")
@@ -130,8 +130,8 @@ def picard_collectInsertSizeMetrics(global_config, sample_config, sorted_alignme
         command= ["java", "-Xmx16g", "-XX:PermSize=2g", "-jar", os.path.join(picard, "CollectInsertSizeMetrics.jar"), "INPUT={}".format(BAMfile), "MINIMUM_PCT=0",
         "HISTOGRAM_FILE={}.collectInsertSize.pdf".format(output_header), "OUTPUT={}.collectInsertSize.txt".format(output_header), "HISTOGRAM_WIDTH={}".format(histWide), "VALIDATION_STRINGENCY=LENIENT", "TMP_DIR=/scratch"]
         returnValue = 0;
+        common.print_command(command)
         if not os.path.exists("{}.collectInsertSize.pdf".format(output_header)):
-            common.print_command(command)
             if not common.check_dryrun(sample_config):
                 stdOut = open("collectInsertSize.stdOut", "w")
                 stdErr = open("collectInsertSize.stdErr", "w")
@@ -154,8 +154,8 @@ def picard_markDuplicates(global_config, sample_config, sorted_alignments_by_ins
         command= ["java", "-Xmx16g", "-XX:PermSize=3g", "-jar", os.path.join(picard, "MarkDuplicates.jar"), "INPUT={}".format(BAMfile), "OUTPUT={}_noDup.bam".format(output_header), \
           "METRICS_FILE={0}.markDuplicates.txt".format(output_header), "ASSUME_SORTED=true", "VALIDATION_STRINGENCY=LENIENT", "TMP_DIR=/scratch"]
         returnValue = 0;
-        if not os.path.exists("{}_noDup.bam".format(output_header)):
-            common.print_command(command)
+        common.print_command(command)
+        if not os.path.exists("{}.markDuplicates.txt".format(output_header)):
             if not common.check_dryrun(sample_config):
                 stdOut = open("removeDup.stdOut", "w")
                 stdErr = open("removeDup.stdErr", "w")
@@ -374,17 +374,4 @@ def plot_coverage(pileupfile, samplename=None):
     df = pd.io.parsers.read_csv(pileupfile, sep=' ', names=['pos', 'cov'])
     pl = df.plot(x='pos', y='cov')
     avg_cov = sum(df['cov'])/len(df)        #Calculate average coverage
-    pl2 = plt.plot(range(len(df)), [avg_cov]*len(df), 'r--', linewidth=2)
-    plt.xlim([0,len(df)])
-    plt.ylabel('Coverage')
-    plt.xlabel('Position')
-    plt.title(samplename)
-    plt.savefig(samplename)     #Save plot as .png
-    return 0
-
-
-
-
-
-
-
+    pl2
