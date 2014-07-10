@@ -374,4 +374,13 @@ def plot_coverage(pileupfile, samplename=None):
     df = pd.io.parsers.read_csv(pileupfile, sep=' ', names=['pos', 'cov'])
     pl = df.plot(x='pos', y='cov')
     avg_cov = sum(df['cov'])/len(df)        #Calculate average coverage
-    pl2
+    pl2 = plt.plot(range(len(df)), [avg_cov]*len(df), 'r--', linewidth=2)
+    plt.xlim([0,len(df)])
+    plt.ylabel('Coverage')
+    plt.xlabel('Position')
+    plt.title(samplename)
+    plt.savefig(samplename)     #Save plot as .png
+    return 0
+
+ 
+ 
