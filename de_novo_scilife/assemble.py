@@ -101,9 +101,8 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     command += "{} ".format(librariesPE)
     command += "{} ".format(librariesMP)
 
-
+    common.print_command(command)
     if common.check_dryrun(sample_config):
-        common.print_command(command)
         os.chdir("..")
         return sample_config
 
