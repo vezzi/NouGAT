@@ -77,7 +77,7 @@ def submit_job(sample_config, global_config, output,  pipeline, assembler, env, 
         slurm_handle.write("#SBATCH --qos={}".format(qos))
     slurm_handle.write("\n\n")
     slurm_handle.write("source activate {}\n".format(env))
-    slurm_handle.write("load_modules\n")
+    slurm_handle.write("module load bioinfo-tools\n")
     slurm_handle.write("module load abyss/1.3.5\n")
     slurm_handle.write("deNovo_pipeline.py --global-config {} --sample-config {}\n\n".format(global_config,sample_config))
     slurm_handle.close()
