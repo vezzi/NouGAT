@@ -153,7 +153,13 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
         std         = libraryInfo["std"]
         if orientation=="innie":
             path,file=os.path.split(read1)
-            file = file.replace("_1.fastq", "_?.fastq")
+            if "_1.fastq" in file:
+                file = file.replace("_1.fastq", "_?.fastq")
+            elif "_R1_" in file:
+                file = file.replace("_R1_", "_R?_")
+            else:
+                print "error file format not supported {}".format(file)
+                return sample_config
             inGroups_file.write("PE{}, lib{}, {}\n".format(group_name, insert, os.path.join(path, file)))
             group_name += 1
             if insert not in librariesForInLibsDict:
@@ -161,7 +167,13 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
                 librariesForInLibs.append("lib{}, genome, genome, fragment, 1, {}, {}, , , inward, 0, 0\n".format(insert,insert, std))
         elif orientation=="outtie":
             path,file=os.path.split(read1)
-            file = file.replace("_1.fastq", "_?.fastq")
+            if "_1.fastq" in file:
+                file = file.replace("_1.fastq", "_?.fastq")
+            elif "_R1_" in file:
+                file = file.replace("_R1_", "_R?_")
+            else:
+                print "error file format not supported {}".format(file)
+                return sample_config
             inGroups_file.write("MP{}, lib{}, {}\n".format(group_name, insert, os.path.join(path, file)))
             group_name += 1
             if insert not in librariesForInLibsDict:
@@ -204,7 +216,7 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
     assembler_stdErr.close()
     if returnValue == 0:
         program = os.path.join(programBIN, "RunAllPathsLG")
-        command = [program, "PRE=.", "REFERENCE_NAME=.", "DATA_SUBDIR=data_dir", "RUN=allpaths", "SUBDIR=run"]
+        command = [program, "PRE=.", "REFERENCE_NAME=.", "DATA_SUBDIR=data_dir", "RUN=allpaths", "SUBDIR=run", "HAPLOIDIFY=True"]
         common.print_command(command)
         assembler_stdOut = open("allpaths_RunAllPathsLG.stdOut", "w")
         assembler_stdErr = open("allpaths_RunAllPathsLG.stdErr", "w")
