@@ -7,6 +7,12 @@ import re
 def main(args):
     projectFolder = os.getcwd()
     assemblies_dir  = args.assembly_dir
+    sample_config_assembly_file = args.local_config
+    if sample_config_assembly_file is not "":
+        with open(sample_config_assembly_file) as sample_config_handle:
+            sample_config_assembly = yaml.load(sample_config_handle)
+
+
     for sample_dir_name in [dir for dir in os.listdir(assemblies_dir) if os.path.isdir(os.path.join(assemblies_dir, dir))]:
         assemblies_folder   = os.path.join(assemblies_dir, sample_dir_name) # in this folder I stored all the assemblies
         validation_folder = os.path.join(os.getcwd(), sample_dir_name)  # in this folder I will compute the validation
@@ -14,9 +20,10 @@ def main(args):
             os.makedirs(validation_folder)
         os.chdir(validation_folder)
         ## Restore all information present in the sample yaml file present in the assembly folder
-        sample_config_assembly_file = os.path.join(assemblies_folder, "{}_assemble.yaml".format(sample_dir_name))
-        with open(sample_config_assembly_file) as sample_config_handle:
-            sample_config_assembly = yaml.load(sample_config_handle)
+        if args.local_config is not "":
+            sample_config_assembly_file = os.path.join(assemblies_folder, "{}_assemble.yaml".format(sample_dir_name))
+            with open(sample_config_assembly_file) as sample_config_handle:
+                sample_config_assembly = yaml.load(sample_config_handle)
         #prepare for each assembly employed a validation job --- do not check in sample sheet the asse,blies, run one validation per forder only (assumptions are done on assmebly name)
         for assembler in [dir for dir in os.listdir(assemblies_folder) if os.path.isdir(os.path.join(assemblies_folder, dir))]:
             if not os.path.exists(assembler):
@@ -91,7 +98,8 @@ if __name__ == '__main__':
 with multiple libraries the user needs to prepare the sample_config file and run the deNovoPipeline manually. If multiple samples are present in the specified folder then one\
 assembly for each sample will be performed. If a sample is splitted across multiple runs all the data willl be used')
     parser.add_argument('--global-config'  , type=str, required=True, help="global configuration file")
-    parser.add_argument('--assembly-dir'   , type=str, required=True, help="Path to directory containg assemblies. All meta-deta is extracted from sample config file present in each sample folder")
+    parser.add_argument('--assembly-dir'   , type=str, required=True, help="Path to directory containg assemblies. All meta-deta is extracted from sample config file present in each sample folder (this behaviour is over-written by --local-config)")
+    parser.add_argument('--local-config' , type=str, default="", required=False, help="extract metadata info about sample from here (do not check for specific assembler yaml)" )
     parser.add_argument('--env'            , type=str, default="DeNovoPipeline", help="name of the virtual enviorment (default is DeNovoPipeline)")
     parser.add_argument('--email'	   , type=str, default=None, help="Send notifications/job status updates to this email address.")
     parser.add_argument('--time'           , type=str, default="1-00:00:00", help="required time for the job (default is 1 day : 1-00:00:00)")
