@@ -7,6 +7,9 @@ import re
 def main(args):
     projectFolder = os.getcwd()
     assemblies_dir  = args.assembly_dir
+
+
+
     for sample_dir_name in [dir for dir in os.listdir(assemblies_dir) if os.path.isdir(os.path.join(assemblies_dir, dir))]:
         assemblies_folder   = os.path.join(assemblies_dir, sample_dir_name) # in this folder I stored all the assemblies
         validation_folder = os.path.join(os.getcwd(), sample_dir_name)  # in this folder I will compute the validation
@@ -78,6 +81,7 @@ def submit_job(sample_config, global_config, output,  pipeline, assembler, env, 
     slurm_handle.write("\n\n")
     slurm_handle.write("source activate {}\n".format(env))
     slurm_handle.write("module load bioinfo-tools\n")
+    slurm_handle.write("module load bwa\n")
     slurm_handle.write("module load abyss/1.3.5\n")
     slurm_handle.write("deNovo_pipeline.py --global-config {} --sample-config {}\n\n".format(global_config,sample_config))
     slurm_handle.close()
@@ -91,13 +95,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='This is a utility script to run assembly validation with sample sequenced with a single library. For samples sequenced\
 with multiple libraries the user needs to prepare the sample_config file and run the deNovoPipeline manually. If multiple samples are present in the specified folder then one\
 assembly for each sample will be performed. If a sample is splitted across multiple runs all the data willl be used')
-    parser.add_argument('--global-config'   , type=str, required=True, help="global configuration file")
-    parser.add_argument('--assembly-dir'    , type=str, required=True, help="Path to directory containg assemblies. All meta-deta is extracted from sample config file present in each sample folder")
-    parser.add_argument('--env'             , type=str, default="DeNovoPipeline", help="name of the virtual enviorment (default is DeNovoPipeline)")
-    parser.add_argument('--email'	        , type=str, default=None, help="Send notifications/job status updates to this email address.")
-    parser.add_argument('--time'            , type=str, default="1-00:00:00", help="required time for the job (default is 1 day : 1-00:00:00)")
-    parser.add_argument('--project'         , type=str, default="a2010002", help="project name for slurm submission (default is a2010002)")
-    parser.add_argument('--threads'         , type=int, default=16, help="Number of thread the job will require")
+    parser.add_argument('--global-config'  , type=str, required=True, help="global configuration file")
+    parser.add_argument('--assembly-dir'   , type=str, required=True, help="Path to directory containg assemblies. All meta-deta is extracted from sample config file present in each sample folder (this behaviour is over-written by --local-config)")
+    parser.add_argument('--env'            , type=str, default="DeNovoPipeline", help="name of the virtual enviorment (default is DeNovoPipeline)")
+    parser.add_argument('--email'	   , type=str, default=None, help="Send notifications/job status updates to this email address.")
+    parser.add_argument('--time'           , type=str, default="1-00:00:00", help="required time for the job (default is 1 day : 1-00:00:00)")
+    parser.add_argument('--project'        , type=str, default="a2010002", help="project name for slurm submission (default is a2010002)")
+    parser.add_argument('--threads'           , type=int, default=16, help="Number of thread the job will require")
+    parser.add_argument('--multiple-lib-proj'        , action='store_true', default = False,  help="To be specified if we are running a mulitple library assembly")
     parser.add_argument('--qos'             , type=str, default=None, help="Specify a quality of service preset for the job (eg. --qos short)")
     args = parser.parse_args()
     main(args)
