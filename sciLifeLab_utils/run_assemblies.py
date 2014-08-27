@@ -73,11 +73,11 @@ def main(args):
         sample_YAML.close
         if not hasattr(args, "email"):
             args.email = None
-        submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, args.env, args.email, args.time, args.project, args.threads) # now I can submit the job to slurm
+        submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, args.env, args.email, args.time, args.project, args.threads, args.qos) # now I can submit the job to slurm
 #        submit_job(sample_YAML_name, args.global_config, sample_dir_name , pipeline, args.env) # now I can submit the job to slurm
         os.chdir(projectFolder)
 
-def submit_job(sample_config, global_config, output,  pipeline, env, email=None, required_time='1-00:00:00', project='a2010002', threads=16 ):
+def submit_job(sample_config, global_config, output,  pipeline, env, email=None, required_time='1-00:00:00', project='a2010002', threads=16, qos=None):
     workingDir = os.getcwd()
     slurm_file = os.path.join(workingDir, "{}_{}.slurm".format(output,pipeline))
     slurm_handle = open(slurm_file, "w")
@@ -95,6 +95,8 @@ def submit_job(sample_config, global_config, output,  pipeline, env, email=None,
     if email:
         slurm_handle.write("#SBATCH --mail-user {}\n".format(email))
         slurm_handle.write("#SBATCH --mail-type=ALL\n")
+    if qos:
+        slurm_handle.write("#SBATCH --qos={}".format(qos))
     slurm_handle.write("\n\n")
     slurm_handle.write("source activate {}\n".format(env))
     slurm_handle.write("module load bioinfo-tools\n")
@@ -128,6 +130,7 @@ assembly for each sample will be performed. If a sample is splitted across multi
     parser.add_argument('--time'           , type=str, default="1-00:00:00", help="required time for the job (default is 1 day : 1-00:00:00)")
     parser.add_argument('--project'        , type=str, default="a2010002", help="project name for slurm submission (default is a2010002)")
     parser.add_argument('--threads'        , type=int, default=16, help="Number of thread the job will require")
+    parser.add_argument('--qos'            , type=str, default=None, help="Specify a quality of service preset for the job (eg. --qos short)")
     args = parser.parse_args()
     main(args)
 
