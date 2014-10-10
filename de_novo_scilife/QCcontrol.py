@@ -8,10 +8,9 @@ import shutil
 from matplotlib import pyplot as plt
 from de_novo_scilife import common
 from de_novo_scilife import align
-
-
 from de_novo_scilife import pdf
 from de_novo_scilife.pdf.theme import colors, DefaultTheme
+
 
 def run(global_config, sample_config):
     sorted_libraries_by_insert = common._sort_libraries_by_insert(sample_config)
@@ -28,9 +27,6 @@ def run(global_config, sample_config):
         sample_config = _run_abyss(global_config, sample_config, sorted_libraries_by_insert)
         sample_config = _run_trimmomatic(global_config, sample_config, sorted_libraries_by_insert)
     _run_report(global_config, sample_config,sorted_libraries_by_insert)
-
-
-
 
 
 def _run_align(global_config, sample_config,sorted_libraries_by_insert):
@@ -52,7 +48,6 @@ def _run_align(global_config, sample_config,sorted_libraries_by_insert):
     sample_config["alignments"] = sorted_alignments_by_insert
 
     return sample_config
-
 
 
 def _run_fastqc(global_config, sample_config, sorted_libraries_by_insert):
@@ -136,12 +131,13 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     sample_config["abyss"] = ABySS_Kmer_Folder
     return sample_config
 
+
 def _plotKmerPlot(min_limit, max_limit,kmer, output_name):
     Kmer_histogram = pd.io.parsers.read_csv("histogram.hist", sep='\t', header=None)
     Kmer_coverage  = Kmer_histogram[Kmer_histogram.columns[0]].tolist()
     Kmer_count     = Kmer_histogram[Kmer_histogram.columns[1]].tolist()
     Kmer_freq      = [Kmer_coverage[i]*Kmer_count[i] for i in range(len(Kmer_coverage))]
-    kmer_freq_peak = Kmer_freq.index(max(Kmer_freq[min_limit:max_limit]))	#coverage peak, disregarding initial peak
+    kmer_freq_peak = Kmer_freq.index(max(Kmer_freq[min_limit:max_limit]))   #coverage peak, disregarding initial peak
     kmer_freq_peak_value=max(Kmer_freq[min_limit:max_limit])
     
     xmax = max_limit
@@ -157,9 +153,6 @@ def _plotKmerPlot(min_limit, max_limit,kmer, output_name):
     plt.savefig(plotname)
     plt.clf()
     return 0
-
-
-
 
 
 def _run_trimmomatic(global_config, sample_config, sorted_libraries_by_insert):
@@ -208,8 +201,6 @@ def _run_trimmomatic(global_config, sample_config, sorted_libraries_by_insert):
     return sample_config
 
 
-
-
 def _run_report(global_config, sample_config, sorted_libraries_by_insert):
     """This function produces a pdf report and stores the important resutls in a single folder"""
    
@@ -221,7 +212,6 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
     if "projectName" in sample_config:
         projectName = sample_config["projectName"]
 
-
     currentDir  = os.getcwd()
     workingDir  = os.path.join(currentDir, "results")
     if not os.path.exists(workingDir):
@@ -231,7 +221,6 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
     reportDir   = os.path.join(workingDir, "report")
     if not os.path.exists(reportDir):
         os.makedirs(reportDir)
-
 
     PDFtitle = os.path.join(workingDir, "report", "{}.pdf".format(sample_config["output"]))
 
@@ -249,10 +238,8 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
     
     # now we apply our theme
     doc.set_theme(MyTheme)
-    
     # give me some space
     doc.add_spacer()
-    
     # this header defaults to H1
     scriptDirectory = os.path.split(os.path.abspath(__file__))[0]
     logo_path = os.path.join(scriptDirectory, '../pictures/SciLifeLab.jpeg')
@@ -266,9 +253,6 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
     doc.add_header('Best-practice analysis for quality checking report')
     doc.add_header('{} -- {}'.format(projectName, sampleName))
     # give me some space
-    #doc.add_spacer()
-    #doc.add_paragraph("NGI-Stockholm and Science For Life Laboratory bla bla bla [Mission statement]")
-
     doc.add_spacer()
     doc.add_paragraph("For sample {} belonging to the project {} NGI-Stockholm best-practice analysis for quality checking has been performed. For mate pair libraries produced with Nextera, best-practice analysis described at this address has been performed: http://res.illumina.com/documents/products/technotes/technote_nextera_matepair_data_processing.pdf".format(sampleName, projectName))
     doc.add_spacer()
@@ -290,9 +274,8 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
     doc.add_paragraph("The results from each tool is reported in the following sections. Moreover you will find all the results and commands that have been \
 run in the delivery folder on Uppmax")
 
-
     for tool in tools:
-        doc.add_header(tool , pdf.H2)
+        doc.add_header(tool.title() , pdf.H2)
         if tool  == "trimmomatic":
             doc.add_paragraph("Reads (both paired and mate pairs) can contain parts of the adapter sequence or, in the case of mate pairs, part of the linker sequence. Illumina recommends \
 to remove the adapter before use of the reads in any downstream analysis (this is mandatory for mate pairs).")
@@ -302,7 +285,6 @@ to remove the adapter before use of the reads in any downstream analysis (this i
             with open(adapter_file) as file:
                 lines       = file.readlines()
                 for index in xrange(1, len(lines), 2):
-                    #adapters = [lines[1].rstrip(),lines[3].rstrip(),lines[5].rstrip()]
                     adapters.append(lines[index].rstrip())
             doc.add_list(adapters)
             doc.add_spacer()
@@ -360,15 +342,14 @@ to remove the adapter before use of the reads in any downstream analysis (this i
                 dest = os.path.join("fastq_trimmed" , os.path.split(source)[1])
                 if not os.path.isfile(dest):
                     shutil.copyfile(source, dest)
+
         if tool == "fastqc" and "fastqc" in sample_config:
             fastqc_dir = sample_config["fastqc"]
             for fastqc_run in [dir for dir in os.listdir(fastqc_dir) if os.path.isdir(os.path.join(fastqc_dir, dir))]:
-                doc.add_header("{} -- Per Base Quality".format(fastqc_run) , pdf.H3)
                 fastqc_run_dir = os.path.join(fastqc_dir, fastqc_run, "Images")
-                doc.add_image(os.path.join(fastqc_run_dir,"per_base_quality.png"), 400, 180, pdf.CENTER)
-                doc.add_header("{} -- Sequence Length Distribution".format(fastqc_run) , pdf.H3)
+                doc.add_image(os.path.join(fastqc_run_dir,"per_base_quality.png"), 400, 180, pdf.CENTER, "{} -- Per Base Quality".format(fastqc_run))
                 fastqc_run_dir = os.path.join(fastqc_dir, fastqc_run, "Images")
-                doc.add_image(os.path.join(fastqc_run_dir,"sequence_length_distribution.png"), 400, 180, pdf.CENTER)
+                doc.add_image(os.path.join(fastqc_run_dir,"sequence_length_distribution.png"), 400, 180, pdf.CENTER, "{} -- Sequence Length Distribution".format(fastqc_run))
             #If I have not yet copied fastqc results do it
             if not os.path.exists("fastqc"):
                 dirsToBeCopied = [os.path.join(fastqc_dir, f) for f in os.listdir(fastqc_dir)  if os.path.isdir(os.path.join(fastqc_dir, f))]
@@ -376,11 +357,12 @@ to remove the adapter before use of the reads in any downstream analysis (this i
                     dest = os.path.join("fastqc", os.path.split(source)[1])
                     if not os.path.exists(dest):
                         shutil.copytree(source, dest)
+
         if tool == "abyss" and "abyss" in sample_config:
-            doc.add_paragraph("kmer profile with k={}.".format(sample_config["kmer"]))
+            #doc.add_paragraph("kmer profile with k={}.".format(sample_config["kmer"]))
             doc.add_paragraph("A possible way to assess the complexity of a library even in absence of a reference sequence is to look at the kmer profile of the reads. The idea is to count all the kmers (i.e., sequence of length k) that occur in the reads. In this way it is possible to know how many kmers occur 1,2,..., N times and represent this as a plot. This plot tell us for each x, how many k-mers (y-axis) are present in the dataset in exactly x-copies. In an ideal world (no errors in sequencing, no bias, no repeating regions) this plot should be as close as possible to a gaussian distribution. In reality we will always see a peak for x=1 (i.e., the errors) and another peak close to the expected coverage. If the genome is highly heterozygous a second peak at half of the coverage can be expected.")
             kmer_1_200 = os.path.join(sample_config["abyss"], "kmer_coverage_1_200.png")
-            doc.add_image(kmer_1_200, 500, 300, pdf.CENTER)
+            doc.add_image(kmer_1_200, 500, 300, pdf.CENTER, "kmer profile with k={}.".format(sample_config["kmer"]))
             #copy the results in resutls
             if not os.path.exists("kmer_analysis"):
                 os.mkdir("kmer_analysis")
@@ -391,6 +373,7 @@ to remove the adapter before use of the reads in any downstream analysis (this i
                 dest = os.path.join("kmer_analysis", os.path.split(source)[1])
                 if not os.path.exists(dest):
                     shutil.copyfile(source, dest)
+
         if tool == "align" and "alignments" in sample_config:
             alignments       = sample_config["alignments"][0]
             alignment_path   = alignments[1]
@@ -420,9 +403,9 @@ to remove the adapter before use of the reads in any downstream analysis (this i
                     duplication_table_part2 = [line[4:6]]  # this is the header row
                     duplication_table_part3 = [line[7:9]]  # this is the header row
                     line  = lines[7].rstrip().split("\t")
-                    duplication_table_part1.append(line[0:3])  #
-                    duplication_table_part2.append(line[4:6])  #
-                    duplication_table_part3.append(line[7:9])  #
+                    duplication_table_part1.append(line[0:3])
+                    duplication_table_part2.append(line[4:6])
+                    duplication_table_part3.append(line[7:9])
             doc.add_table(duplication_table_part1, TABLE_WIDTH)
             doc.add_spacer()
             doc.add_table(duplication_table_part2, TABLE_WIDTH)
@@ -440,13 +423,9 @@ to remove the adapter before use of the reads in any downstream analysis (this i
                 dest = os.path.join("alignments", os.path.split(source)[1])
                 if not os.path.exists(dest):
                     shutil.copyfile(source, dest)
-        doc.PageBreak()
+        doc.add_pagebreak()
     doc.render(PDFtitle)
 
     ##TODO: if trimmomatic not run needs to copy also original reads?
-
-
-
     os.chdir(currentDir)
-
 
