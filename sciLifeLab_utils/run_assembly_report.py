@@ -142,10 +142,8 @@ def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,  pict
     doc.add_spacer()
     # this header defaults to H1
     scriptDirectory = os.path.split(os.path.abspath(__file__))[0]
-    logo_path = os.path.join(scriptDirectory, '../pictures/SciLifeLab.jpeg')
-    doc.add_image(logo_path, 180, 67, pdf.CENTER)
-    logo_path = os.path.join(scriptDirectory, '../pictures/NGI.jpeg')
-    doc.add_image(logo_path, 180, 67, pdf.CENTER)
+    logo_path = os.path.join(scriptDirectory, '../pictures/ngi_scilife.png')
+    doc.add_image(logo_path, 540, 50, pdf.CENTER)
     # give me some space
     doc.add_spacer()
 
@@ -187,7 +185,7 @@ def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,  pict
     ])
         
     doc.add_paragraph("Please note that the pipeline generates all the plots automatically. The pipeline tries to eliminate outliers in order to visualize data in a meaningful and useful way (e.g., a single contig with extremely high coverage can jeopardize the visualization of all the other contigs). However, there might be situations where interesting points are discarded. We recommend to always inspect the original tables that are delivered on Uppmax altogether with this report.")
-
+    doc.add_pagebreak()
     doc.add_header("Standard Contiguity Metrics", pdf.H2)
     doc.add_paragraph("Contiguity measures give an idea of the connectivity of the assembly. For all the assemblies that have been generated we report:")
     doc.add_list([
@@ -237,7 +235,7 @@ def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,  pict
     doc.add_pagebreak()
     doc.add_header("FRCurves", pdf.H2)
     doc.add_paragraph("Inspired by the standard receiver operating characteristic (ROC) curve, the Feature-Response curve (FRCurve) characterizes the sensitivity (coverage) of the sequence assembler output (contigs) as a function of its discrimination threshold (number of features/errors). Generally speaking, FRCurve can be used to rank different assemblies: the sharper the curve is the better the assembly is (i.e., given a certain feature threshold, we prefer the assembler that reconstructs a higher portion of the genome with fewer features). FRCurve is one of the few tools able to evaluate de novo assemblies in absence of a reference sequence. Results are not always straightforward to interpret and must be always used in conjunction with other sources (e.g., quality plots and standard assembly statistics).")
-    doc.add_image(FRCname, 336, 220, pdf.CENTER)
+    doc.add_image(FRCname, 336, 220, pdf.CENTER, "Feature-Response curve. On x-axis is the number of features in total, on y-axis is coverage (based on estimated genome size).")
     doc.render(PDFtitle)
     return 0
 

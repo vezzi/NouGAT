@@ -242,10 +242,8 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
     doc.add_spacer()
     # this header defaults to H1
     scriptDirectory = os.path.split(os.path.abspath(__file__))[0]
-    logo_path = os.path.join(scriptDirectory, '../pictures/SciLifeLab.jpeg')
-    doc.add_image(logo_path, 180, 67, pdf.CENTER)
-    logo_path = os.path.join(scriptDirectory, '../pictures/NGI.jpeg')
-    doc.add_image(logo_path, 180, 67, pdf.CENTER)
+    logo_path = os.path.join(scriptDirectory, '../pictures/ngi_scilife.png')
+    doc.add_image(logo_path, 540, 50, pdf.CENTER)
     # give me some space
     doc.add_spacer()
 
@@ -275,6 +273,7 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
 run in the delivery folder on Uppmax")
 
     for tool in tools:
+	doc.add_pagebreak()
         doc.add_header(tool.title() , pdf.H2)
         if tool  == "trimmomatic":
             doc.add_paragraph("Reads (both paired and mate pairs) can contain parts of the adapter sequence or, in the case of mate pairs, part of the linker sequence. Illumina recommends \
@@ -359,7 +358,6 @@ to remove the adapter before use of the reads in any downstream analysis (this i
                         shutil.copytree(source, dest)
 
         if tool == "abyss" and "abyss" in sample_config:
-            #doc.add_paragraph("kmer profile with k={}.".format(sample_config["kmer"]))
             doc.add_paragraph("A possible way to assess the complexity of a library even in absence of a reference sequence is to look at the kmer profile of the reads. The idea is to count all the kmers (i.e., sequence of length k) that occur in the reads. In this way it is possible to know how many kmers occur 1,2,..., N times and represent this as a plot. This plot tell us for each x, how many k-mers (y-axis) are present in the dataset in exactly x-copies. In an ideal world (no errors in sequencing, no bias, no repeating regions) this plot should be as close as possible to a gaussian distribution. In reality we will always see a peak for x=1 (i.e., the errors) and another peak close to the expected coverage. If the genome is highly heterozygous a second peak at half of the coverage can be expected.")
             kmer_1_200 = os.path.join(sample_config["abyss"], "kmer_coverage_1_200.png")
             doc.add_image(kmer_1_200, 500, 300, pdf.CENTER, "kmer profile with k={}.".format(sample_config["kmer"]))
@@ -423,7 +421,7 @@ to remove the adapter before use of the reads in any downstream analysis (this i
                 dest = os.path.join("alignments", os.path.split(source)[1])
                 if not os.path.exists(dest):
                     shutil.copyfile(source, dest)
-        doc.add_pagebreak()
+
     doc.render(PDFtitle)
 
     ##TODO: if trimmomatic not run needs to copy also original reads?
