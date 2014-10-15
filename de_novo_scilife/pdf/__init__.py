@@ -6,7 +6,7 @@
 
 """
 
-import cStringIO
+from cStringIO import StringIO
 import urllib
 from reportlab.platypus.doctemplate import SimpleDocTemplate
 from reportlab.platypus.flowables import Image
@@ -15,10 +15,38 @@ from reportlab.lib import colors
 from reportlab.platypus.tables import Table, TableStyle
 from reportlab.platypus import ListFlowable, ListItem
 from reportlab.lib.styles import getSampleStyleSheet
-
+from reportlab.lib.units import mm
+from reportlab.rl_config import defaultPageSize
+from reportlab.pdfgen import canvas
 from theme import DefaultTheme
 from util import calc_table_col_widths
 from common import *
+
+# Adapted from http://code.activestate.com/recipes/576832/
+class NumberedCanvas(canvas.Canvas):
+    def __init__(self, *args, **kwargs):
+        canvas.Canvas.__init__(self, *args, **kwargs)
+        self._saved_page_states = []
+
+    def showPage(self):
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        """add page info to each page (page x of y)"""
+        num_pages = len(self._saved_page_states)
+        for state in self._saved_page_states:
+            self.__dict__.update(state)
+            self.draw_page_number(num_pages)
+            canvas.Canvas.showPage(self)
+        canvas.Canvas.save(self)
+
+    def draw_page_number(self, page_count):
+        self.setFont("Helvetica", 7)
+        filename = self._filename.split("/")[-1]
+        self.drawCentredString(110*mm, 15*mm,
+            "Page %d of %d -- %s" % (self._pageNumber, page_count, filename))
+
 
 class Pdf(object):
 
@@ -66,15 +94,29 @@ class Pdf(object):
         self.add(table) 
     
     def add_image(self, src, width, height, align=CENTER, caption=None):
-        img = Image(src, width, height)
+
+        if src.split(".")[-1] in ["png", "PNG"]:
+            try:
+                f = open(src)
+                data = StringIO(f.read())
+            except:
+                return
+            else:
+                img = Image(data, width, height)
+            finally:
+                f.close()
+        else:
+            img = Image(src, width, height)
+        
         img.hAlign = align
         if caption:
-            image_table = Table([[img], [caption]], width, hAlign=align)
+            caption_p = Paragraph(caption, self.theme.paragraph_centered)
+            image_table = Table([[img], [caption_p]], width)
             image_table.setStyle(TableStyle([('ALIGN',(-1,-1),(-1,-1),'CENTER')]))
             self.add(image_table)
         else:       
             self.add(img)
-        
+ 
     def add_qrcode(self, data, size=150, align=CENTER):
         "FIXME: ReportLib also supports QR-Codes. Check it out."
         
@@ -91,5 +133,5 @@ class Pdf(object):
         doc_template_args = self.theme.doc_template_args()
         doc = SimpleDocTemplate("{}".format(pdfTitle), title=self.title, author=self.author,
             **doc_template_args)
-        doc.build(self.story)
+        doc.build(self.story, canvasmaker=NumberedCanvas)
     
