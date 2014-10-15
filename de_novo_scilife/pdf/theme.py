@@ -9,7 +9,7 @@
 
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
-from reportlab.lib import colors
+from reportlab.lib import colors, enums
 
 from common import *
 
@@ -17,6 +17,7 @@ from common import *
 class DefaultTheme(object):
 
     _s = getSampleStyleSheet()
+    _s2 = getSampleStyleSheet()
     doc = {
         'leftMargin': None,
         'rightMargin': None,
@@ -32,6 +33,8 @@ class DefaultTheme(object):
          H6: _s['Heading6'],
          }
     paragraph = _s['Normal'] 
+    paragraph_centered = _s2['Normal']
+    paragraph_centered.alignment = enums.TA_CENTER
     spacer_height = 0.25 * inch
     table_style = [
         ('ALIGN', (0,0), (-1,-1), 'LEFT'),
