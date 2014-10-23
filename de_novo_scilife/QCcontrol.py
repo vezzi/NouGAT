@@ -253,7 +253,8 @@ def _run_kmergenie(global_config, sample_config, sorted_libraries_by_insert):
         cmd_list.append(option)
     if threads:
         cmd_list.append("-t {}".format(threads))
-    common.print_command(" ".join(cmd_list))
+    command = " ".join(cmd_list)
+    common.print_command(command)
     
     if not common.check_dryrun(sample_config):
         with open(kmer_input, "w") as f:
