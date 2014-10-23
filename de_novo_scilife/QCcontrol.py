@@ -201,6 +201,74 @@ def _run_trimmomatic(global_config, sample_config, sorted_libraries_by_insert):
     return sample_config
 
 
+def _kmergenie_plot(hist_file):
+    """Kmergenie outputs pdf plots. We want pngs without resorting to imagemagick
+       TODO: Abstract this to a common plotting function if possible"""
+    kgenie_hist = pd.io.parsers.read_csv(hist_file, sep=" ", header=0)
+    kmer_lengths = kgenie_hist[kgenie_hist.columns[0]].tolist()
+    genomic_kmers = kgenie_hist[kgenie_hist.columns[1]].tolist()
+    peak_value = max(genomic_kmers)
+    peak_idx = genomic_kmers.index(peak_value)
+    best_k = kmer_lengths[peak_idx]    
+
+    plt.plot(kmer_lengths, genomic_kmers)
+    plt.title("Best K-mer length: {}".format(best_k))
+    plt.xlabel("K-mer size")
+    plt.ylabel("Number of genomic k-mers")
+    y_margin = (min(genomic_kmers) + peak_value) / 2 * 0.01
+    y_min = min(genomic_kmers) - y_margin
+    y_max = peak_value + y_margin
+    plt.ylim(y_min, y_max)
+    plt.vlines(best_k, 0, peak_value, colors = "r", linestyles='--')
+    
+    plt.savefig(hist_file + ".png")
+    plt.clf()
+
+
+def _run_kmergenie(global_config, sample_config, sorted_libraries_by_insert):
+    """Runs kmergenie to establish a recommended kmer size for assembly"""
+
+    kmerdir = os.path.join(os.getcwd(), "kmergenie")
+    if not os.path.exists(kmerdir):
+        os.makedirs(kmerdir)
+    os.chdir(kmerdir)
+    
+    #Write a list of input fastq files for kmergenie
+    kmer_input = os.path.join(kmerdir,"{}kmerinput.txt".format(sample_config.get("output","")))
+
+    program = global_config["Tools"]["kmergenie"]["bin"]
+    program_options=global_config["Tools"]["abyss"]["options"]
+    # Could be useful to add --diploid if sample is highly heterozygous
+    if "kmergenie" in sample_config:
+        program_options=sample_config["kmergenie"]
+    
+    threads = "" # Kmergenie will spawn number_of_cores - 1 threads by default
+    if "threads" in sample_config :
+        threads = sample_config["threads"]
+
+    cmd_list = [program, kmer_input]
+    for option in filter(None, program_options):
+        cmd_list.append(option)
+    if threads:
+        cmd_list.append("-t {}".format(threads))
+    common.print_command(" ".join(cmd_list))
+    
+    if not common.check_dryrun(sample_config):
+        with open(kmer_input, "w") as f:
+            for lib, lib_info in sorted_libraries_by_insert:
+                f.write(lib_info["pair1"] + "\n")
+                f.write(lib_info["pair2"] + "\n")
+
+        stdOut = open("kmergenie.stdOut", "w")
+        stdErr = open("kmergenie.stdErr", "w")
+        returnValue = subprocess.call(cmd_list, stdout=stdOut, stderr=stdErr)
+        if returnValue != 0:
+            print "error while running command: {}".format(command)
+        else:
+            _kmergenie_plot("histograms.dat")
+    sample_config["kmergenie"] = kmerdir
+    return sample_config
+
 def _run_report(global_config, sample_config, sorted_libraries_by_insert):
     """This function produces a pdf report and stores the important resutls in a single folder"""
    
@@ -254,7 +322,7 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
     doc.add_spacer()
     doc.add_paragraph("For sample {} belonging to the project {} NGI-Stockholm best-practice analysis for quality checking has been performed. For mate pair libraries produced with Nextera, best-practice analysis described at this address has been performed: http://res.illumina.com/documents/products/technotes/technote_nextera_matepair_data_processing.pdf".format(sampleName, projectName))
     doc.add_spacer()
-    tools = ["trimmomatic", "fastqc", "abyss", "align"]
+    tools = ["trimmomatic", "fastqc", "abyss", "align", "kmergenie"]
     if "tools" in sample_config and len(sample_config["tools"]) > 0:
         tools = sample_config["tools"]
     doc.add_paragraph("The following tools have been employed (tools are listed in order of execution):")
@@ -422,6 +490,11 @@ to remove the adapter before use of the reads in any downstream analysis (this i
                 if not os.path.exists(dest):
                     shutil.copyfile(source, dest)
 
+        if tool == "kmergenie" and "kmergenie" in sample_config:
+            doc.add_paragraph("Assemblers using a de Bruijn graph strategy for contig construction (such as Velvet, ABySS and SOAPdenovo) fractures the reads into k-sized substrings (k-mers). The k-mer size is vital for the performance of these assemblers, and is usually selected considering several trade-offs between the size and accuracy of the produced contigs. Some assemblers choose the k-mer size automatically or builds several assemblies (using different k-mers) and / or relies on user input. Kmergenie is a lightweight program that suggests a best k-mer size based on their relative abundance in the genomic reads.")
+            kmerdir = sample_config["kmergenie"]
+            doc.add_image(os.path.join(kmerdir,"histograms.dat.png"), 400, 300, pdf.CENTER)
+           
     doc.render(PDFtitle)
 
     ##TODO: if trimmomatic not run needs to copy also original reads?
