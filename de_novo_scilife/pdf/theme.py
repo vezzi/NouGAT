@@ -42,8 +42,8 @@ class DefaultTheme(object):
         ('FONT', (0,0), (-1,0), 'Helvetica-Bold'),
         ('LINEBELOW', (0,0), (-1,0), 1, colors.black),
         ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#C0C0C0')),
-        ('ROWBACKGROUNDS', (0,1), (-1, -1), [colors.white, colors.HexColor('#E0E0E0')])
-        ]
+        ('ROWBACKGROUNDS', (0,1), (-1, -1), [colors.white,
+        colors.HexColor('#E0E0E0')])]
     
     @classmethod
     def doc_template_args(cls):

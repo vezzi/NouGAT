@@ -1,9 +1,12 @@
 Pipelines:
- QCcontrol: ["fastqc", "abyss", "trimmomatic", "align"]
+ QCcontrol: ["fastqc", "abyss", "trimmomatic", "kmergenie", "align"]
  assemble: ["abyss", "allpaths", "cabog",  "masurca", "soapdenovo", "spades", "trinity"]
  evaluete: ["align", "qaTools", "FRC"]
  align: []
 Tools:
+ kmergenie:
+  bin: /proj/a2010002/nobackup/sw/mf/bioinfo-tools/kmergenie/kmergenie-1.6741/kmergenie
+  options: [""]
  fastqc:
   bin: /sw/apps/bioinfo/fastqc/0.10.1/milou/fastqc
   options: [--threads,  "16" ,  --outdir,  fastqc]

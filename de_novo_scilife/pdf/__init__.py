@@ -69,7 +69,8 @@ class Pdf(object):
     
     def add_spacer(self, height_inch=None):
         height_inch = height_inch or self.theme.spacer_height
-        self.add(Spacer(1, height_inch)) # magic 1? no, first param not yet implemented by rLab guys
+        self.add(Spacer(1, height_inch)) 
+        # magic 1? no, first param not yet implemented by rLab guys
         
     def add_paragraph(self, text, style=None):
         style = style or self.theme.paragraph
@@ -88,9 +89,11 @@ class Pdf(object):
     def add_table(self, rows, width=None, col_widths=None, align=CENTER,
             extra_style=[]):
         style = self.theme.table_style + extra_style
-        if width and col_widths is None: # one cannot spec table width in rLab only col widths
-            col_widths = calc_table_col_widths(rows, width) # this helper calcs it for us
-        table = Table(rows, col_widths, style=style, hAlign=align)
+        if width and col_widths is None: 
+            # one cannot spec table width in rLab only col widths
+            # this helper calcs it for us
+            col_widths = calc_table_col_widths(rows, width) 
+            table = Table(rows, col_widths, style=style, hAlign=align)
         self.add(table) 
     
     def add_image(self, src, width, height, align=CENTER, caption=None):
@@ -112,7 +115,8 @@ class Pdf(object):
         if caption:
             caption_p = Paragraph(caption, self.theme.paragraph_centered)
             image_table = Table([[img], [caption_p]], width)
-            image_table.setStyle(TableStyle([('ALIGN',(-1,-1),(-1,-1),'CENTER')]))
+            image_table.setStyle(TableStyle([('ALIGN',(-1,-1),(-1,-1),
+                'CENTER')]))
             self.add(image_table)
         else:       
             self.add(img)
@@ -131,7 +135,7 @@ class Pdf(object):
 
     def render(self, pdfTitle):
         doc_template_args = self.theme.doc_template_args()
-        doc = SimpleDocTemplate("{}".format(pdfTitle), title=self.title, author=self.author,
-            **doc_template_args)
+        doc = SimpleDocTemplate("{}".format(pdfTitle), title=self.title, 
+                author=self.author, **doc_template_args)
         doc.build(self.story, canvasmaker=NumberedCanvas)
     
