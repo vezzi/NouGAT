@@ -219,6 +219,7 @@ def _kmergenie_plot(hist_file):
     y_min = min(genomic_kmers) - y_margin
     y_max = peak_value + y_margin
     plt.ylim(y_min, y_max)
+    plt.xlim(min(kmer_lengths) - 5, max(kmer_lengths) + 5)
     plt.vlines(best_k, 0, peak_value, colors = "r", linestyles='--')
     
     plt.savefig(hist_file + ".png")
@@ -227,8 +228,9 @@ def _kmergenie_plot(hist_file):
 
 def _run_kmergenie(global_config, sample_config, sorted_libraries_by_insert):
     """Runs kmergenie to establish a recommended kmer size for assembly"""
-
-    kmerdir = os.path.join(os.getcwd(), "kmergenie")
+    
+    maindir = os.getcwd()
+    kmerdir = os.path.join(maindir, "kmergenie")
     if not os.path.exists(kmerdir):
         os.makedirs(kmerdir)
     os.chdir(kmerdir)
@@ -267,6 +269,7 @@ def _run_kmergenie(global_config, sample_config, sorted_libraries_by_insert):
         else:
             _kmergenie_plot("histograms.dat")
     sample_config["kmergenie"] = kmerdir
+    os.chdir(maindir)
     return sample_config
 
 def _run_report(global_config, sample_config, sorted_libraries_by_insert):
@@ -494,7 +497,10 @@ to remove the adapter before use of the reads in any downstream analysis (this i
             doc.add_paragraph("Assemblers using a de Bruijn graph strategy for contig construction (such as Velvet, ABySS and SOAPdenovo) fractures the reads into k-sized substrings (k-mers). The k-mer size is vital for the performance of these assemblers, and is usually selected considering several trade-offs between the size and accuracy of the produced contigs. Some assemblers choose the k-mer size automatically or builds several assemblies (using different k-mers) and / or relies on user input. Kmergenie is a lightweight program that suggests a best k-mer size based on their relative abundance in the genomic reads.")
             kmerdir = sample_config["kmergenie"]
             doc.add_image(os.path.join(kmerdir,"histograms.dat.png"), 400, 300, pdf.CENTER)
-           
+            #copy everything to results
+            dest = os.path.join(os.getcwd(), "kmergenie")
+            if not os.path.exists(dest):
+                shutil.copytree(kmerdir, dest)
     doc.render(PDFtitle)
 
     ##TODO: if trimmomatic not run needs to copy also original reads?
