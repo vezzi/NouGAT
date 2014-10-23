@@ -497,7 +497,7 @@ to remove the adapter before use of the reads in any downstream analysis (this i
         if tool == "kmergenie" and "kmergenie" in sample_config:
             doc.add_paragraph("Assemblers using a de Bruijn graph strategy for contig construction (such as Velvet, ABySS and SOAPdenovo) fractures the reads into k-sized substrings (k-mers). The k-mer size is vital for the performance of these assemblers, and is usually selected considering several trade-offs between the size and accuracy of the produced contigs. Some assemblers choose the k-mer size automatically or builds several assemblies (using different k-mers) and / or relies on user input. Kmergenie is a lightweight program that suggests a best k-mer size based on their relative abundance in the genomic reads.")
             kmerdir = sample_config["kmergenie"]
-            doc.add_image(os.path.join(kmerdir,"histograms.dat.png"), 400, 300, pdf.CENTER)
+            doc.add_image(os.path.join(kmerdir,"histograms.dat.png"), 400, 300, pdf.CENTER, "The plot should be roughly concave and have a clear global maximum, if not the predicted best k is likely to be inaccurate")
             #copy everything to results
             dest = os.path.join(os.getcwd(), "kmergenie")
             if not os.path.exists(dest):
