@@ -239,7 +239,7 @@ def _run_kmergenie(global_config, sample_config, sorted_libraries_by_insert):
     kmer_input = os.path.join(kmerdir,"{}kmerinput.txt".format(sample_config.get("output","")))
 
     program = global_config["Tools"]["kmergenie"]["bin"]
-    program_options=global_config["Tools"]["abyss"]["options"]
+    program_options=global_config["Tools"]["kmergenie"]["options"]
     # Could be useful to add --diploid if sample is highly heterozygous
     if "kmergenie" in sample_config:
         program_options=sample_config["kmergenie"]
