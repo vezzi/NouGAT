@@ -5,6 +5,9 @@ Pipelines:
  align
  user_define
 Tools:
+ kmergenie:
+  bin:
+  options: [""]
  jellyfish:
   bin: 
   options: [""]
