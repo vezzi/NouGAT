@@ -20,11 +20,11 @@ def main(args):
         tools    = ["trimmomatic", "fastqc", "abyss", "align"]
         if args.reference == "":
             tools    = ["trimmomatic", "fastqc", "abyss"]
-        
+
         sample_YAML_name = os.path.join(sample_folder,  "{}_{}.yaml".format(
             sample_dir_name, pipeline))
         sample_YAML = open(sample_YAML_name, 'w')
-       
+
         sample_YAML.write("pipeline:\n")
         sample_YAML.write(" {}\n".format(pipeline))
         sample_YAML.write("tools:\n")
@@ -36,11 +36,11 @@ def main(args):
         sample_YAML.write("threads: {}\n".format(args.threads))
         sample_YAML.write("genomeSize: \n")
         sample_YAML.write("adapters: {}\n".format(args.adapter))
-            
+
         if args.reference is not "":
             sample_YAML.write("reference: {}\n".format(args.reference))
         sample_YAML.write("libraries:\n")
-        
+
         sample_data_dir = os.path.join(samples_data_dir,sample_dir_name)
         # full path to flowcell
         flowcells_dirs  = [os.path.join(sample_data_dir,flowcell) \
@@ -53,7 +53,7 @@ def main(args):
                     os.listdir(flowcell) \
                     if (os.path.isfile(os.path.join(flowcell,f)) \
                     and re.search('.gz$',f))])
-        # now sample_files contains all the file sequenced for this sample  
+        # now sample_files contains all the file sequenced for this sample
         pair1_file = ""
         pair2_file = ""
         single     = ""
@@ -85,20 +85,20 @@ def main(args):
             sample_files.remove(pair1_file)
             sample_files.remove(pair2_file)
             library += 1
-        
+
         sample_YAML.close
         if not hasattr(args, "email"):
             args.email = None
-        submit_job(sample_YAML_name, args.global_config, sample_dir_name , 
-                pipeline, args.env, args.email, args.time, args.project, 
+        submit_job(sample_YAML_name, args.global_config, sample_dir_name ,
+                pipeline, args.env, args.email, args.time, args.project,
                 args.threads, args.qos) # now I can submit the job to slurm
         os.chdir(projectFolder)
 
 
-def submit_job(sample_config, global_config, output,  pipeline, env, 
-        email=None, required_time='1-00:00:00', project='a2010002', 
+def submit_job(sample_config, global_config, output,  pipeline, env,
+        email=None, required_time='1-00:00:00', project='a2010002',
         threads=16, qos=None):
-    
+
     workingDir = os.getcwd()
     slurm_file = os.path.join(workingDir, "{}_{}.slurm".format(
         output,pipeline))
@@ -128,7 +128,7 @@ def submit_job(sample_config, global_config, output,  pipeline, env,
     slurm_handle.write("deNovo_pipeline.py --global-config {} \
             --sample-config {}\n\n".format(global_config,sample_config))
     slurm_handle.close()
-    
+
     command=("sbatch", slurm_file)
     print command
     subprocess.call(command) 
@@ -136,37 +136,37 @@ def submit_job(sample_config, global_config, output,  pipeline, env,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--reference'      , type=str, default="", 
+    parser.add_argument('--reference', type=str, default="",
             help="path to the reference file")
-    parser.add_argument('--adapter'        , type=str, required=True, 
+    parser.add_argument('--adapter', type=str, required=True,
             help="path to the file containing the adaptor sequence to be removed")
-    parser.add_argument('--global-config'  , type=str, required=True, 
+    parser.add_argument('--global-config', type=str, required=True,
             help="global configuration file")
-    parser.add_argument('--sample-data-dir', type=str, required=True, 
-            help="Path to directory (usually INBOX) containing the project \
-            (one dir per sample, scilife structure project/sample/flowcell/)")
-    parser.add_argument('--orientation'    , type=str, required=True, 
+    parser.add_argument('--sample-data-dir', type=str, required=True,
+            help=("Path to directory (usually INBOX) containing the project "
+            "(one dir per sample, scilife structure project/sample/flowcell/)"))
+    parser.add_argument('--orientation', type=str, required=True,
             help="orientation of the libraries")
-    parser.add_argument('--insert'         , type=str, required=True, 
+    parser.add_argument('--insert', type=str, required=True,
             help="expected insert size of the libraries")
-    parser.add_argument('--std'            , type=str, required=True, 
-            help="expected stdandard variation of the insert size of \
-            the libraries")
-    parser.add_argument('--env'            , type=str, 
-            default="DeNovoPipeline", help="name of the virtual enviorment \
-            (default is DeNovoPipeline)")
-    parser.add_argument('--email'          , type=str, 
-            help="Send notifications/job status updates to this email \
-            address.")
-    parser.add_argument('--time'           , type=str, default="1-00:00:00", 
+    parser.add_argument('--std', type=str, required=True,
+            help=("expected stdandard variation of the insert size of "
+            "the libraries"))
+    parser.add_argument('--env', type=str,
+            default="DeNovoPipeline", help=("name of the virtual enviorment "
+            "(default is DeNovoPipeline)"))
+    parser.add_argument('--email', type=str, 
+            help=("Send notifications/job status updates to this email "
+            "address."))
+    parser.add_argument('--time', type=str, default="1-00:00:00",
             help="required time for the job (default is 1 day : 1-00:00:00)")
-    parser.add_argument('--project'        , type=str, default="a2010002",
-            help="project name for slurm submission (default is a2010002)") 
-    parser.add_argument('--threads'        , type=int, default=16,
+    parser.add_argument('--project', type=str, default="a2010002",
+            help="project name for slurm submission (default is a2010002)")
+    parser.add_argument('--threads', type=int, default=16,
             help="Number of thread the job will require")
-    parser.add_argument('--qos'            , type=str, default=None,
-            help="Specify a quality of service preset for the job (eg. \
-            --qos short)")
+    parser.add_argument('--qos', type=str, default=None,
+            help=("Specify a quality of service preset for the job (eg. "
+            "--qos short)"))
     args = parser.parse_args()
 
     main(args)
