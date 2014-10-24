@@ -16,14 +16,14 @@ def run(global_config, sample_config):
     sorted_libraries_by_insert = common._sort_libraries_by_insert(
             sample_config)
     if "tools" in sample_config:
-        """If so, execute them one after the other in the specified order 
+        """If so, execute them one after the other in the specified order
         (might not work)"""
         for command in sample_config["tools"]:
-            """with this I pick up at run time the correct function in the 
+            """with this I pick up at run time the correct function in the
             current module"""
             command_fn = getattr(sys.modules[__name__],
                     "_run_{}".format(command))
-            """Update sample config, each command return sample_config and if 
+            """Update sample config, each command return sample_config and if
             necessary it modifies it"""
             sample_config = command_fn(global_config, sample_config,
                     sorted_libraries_by_insert)
@@ -39,16 +39,16 @@ def run(global_config, sample_config):
 
 
 def _run_align(global_config, sample_config,sorted_libraries_by_insert):
-    
+
     if "reference" not in sample_config:
-        print "reference sequence not provided, skypping alignment step. \
-        Please provide a reference if you are intrested in aligning the reads \
-        against a reference"
+        print "reference sequence not provided, skypping alignment step. "
+        "Please provide a reference if you are intrested in aligning the reads "
+        "against a reference"
         return sample_config
     if not os.path.exists("alignments"):
         os.makedirs("alignments")
     os.chdir("alignments")
-    
+
     sorted_libraries_by_insert =  align._align_reads(global_config,
             sample_config,  sorted_libraries_by_insert) # align reads
     sorted_alignments_by_insert = align._merge_bam_files(global_config,
@@ -103,11 +103,11 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     if "kmer" not in sample_config:
         sys.exit("error in _run_abyss QCcontrol: kmer must be present in \
                 sample_config.yaml")
-    
+
     kmer = sample_config["kmer"]
     if not os.path.exists(ABySS_Kmer_Folder):
         os.makedirs(ABySS_Kmer_Folder)
-    
+
     os.chdir(ABySS_Kmer_Folder)
 
     program = global_config["Tools"]["abyss"]["bin"]
@@ -115,7 +115,7 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     program_options=global_config["Tools"]["abyss"]["options"]
     if "abyss" in sample_config:
         program_options=sample_config["abyss"]
-    
+
     threads = 16 # default for UPPMAX
     if "threads" in sample_config :
         threads = sample_config["threads"]
@@ -156,24 +156,24 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
 
 
 def _plotKmerPlot(min_limit, max_limit,kmer, output_name):
-    Kmer_histogram = pd.io.parsers.read_csv("histogram.hist", sep='\t', 
+    Kmer_histogram = pd.io.parsers.read_csv("histogram.hist", sep='\t',
             header=None)
-    Kmer_coverage  = Kmer_histogram[Kmer_histogram.columns[0]].tolist()
-    Kmer_count     = Kmer_histogram[Kmer_histogram.columns[1]].tolist()
-    Kmer_freq      = [Kmer_coverage[i]*Kmer_count[i] for i in \
+    Kmer_coverage = Kmer_histogram[Kmer_histogram.columns[0]].tolist()
+    Kmer_count = Kmer_histogram[Kmer_histogram.columns[1]].tolist()
+    Kmer_freq = [Kmer_coverage[i]*Kmer_count[i] for i in \
             range(len(Kmer_coverage))]
     #coverage peak, disregarding initial peak
     kmer_freq_peak = Kmer_freq.index(max(Kmer_freq[min_limit:max_limit]))
     kmer_freq_peak_value=max(Kmer_freq[min_limit:max_limit])
-    
+
     xmax = max_limit
     ymax = kmer_freq_peak_value + (kmer_freq_peak_value*0.30)
-    
+
     plt.plot(Kmer_coverage, Kmer_freq)
     plt.title("K-mer length = {}".format(kmer))
     plt.xlim((0,xmax))
     plt.ylim((0,ymax))
-    plt.vlines(kmer_freq_peak, 0, kmer_freq_peak_value, colors='r', 
+    plt.vlines(kmer_freq_peak, 0, kmer_freq_peak_value, colors='r',
             linestyles='--')
     plt.text(kmer_freq_peak, kmer_freq_peak_value+2000, str(kmer_freq_peak))
     plotname = "{}".format(output_name)
@@ -186,16 +186,16 @@ def _run_trimmomatic(global_config, sample_config, sorted_libraries_by_insert):
     program        = global_config["Tools"]["trimmomatic"]["bin"]
     program_folder = os.path.dirname(program)
     if "adapters" not in sample_config:
-        sys.exit("running MP pipeline, adapters file to be used in trimming \
-                are needed for Trimmomatic. Please specify them \
-                in the sample configuration file and rerun")
+        sys.exit("running MP pipeline, adapters file to be used in trimming"
+                "are needed for Trimmomatic. Please specify them"
+                "in the sample configuration file and rerun")
     adapterFile    = sample_config["adapters"]
     if not os.path.exists(adapterFile):
-        sys.exit("Trimmomatic cannot be run as adapter file is not specified \
-                or points to unknown position: {}".format(adapterFile))
+        sys.exit("Trimmomatic cannot be run as adapter file is not specified"
+                "or points to unknown position: {}".format(adapterFile))
 
-    mainDirectory   = os.getcwd()
-    trimmomaticDir  = os.path.join(mainDirectory, "Trimmomatic")
+    mainDirectory = os.getcwd()
+    trimmomaticDir = os.path.join(mainDirectory, "Trimmomatic")
     if not os.path.exists(trimmomaticDir):
         os.makedirs(trimmomaticDir)
     os.chdir(trimmomaticDir)
@@ -217,30 +217,30 @@ def _run_trimmomatic(global_config, sample_config, sorted_libraries_by_insert):
                     "{}_u.fastq.gz".format(read1_baseName))
             output_read2_pair = os.path.join(trimmomaticDir,
                     "{}.fastq.gz".format(read2_baseName))
-            output_read2_sing = os.path.join(trimmomaticDir, 
+            output_read2_sing = os.path.join(trimmomaticDir,
                     "{}_u.fastq.gz".format(read2_baseName))
-            command = ["java",  "-jar", program, "PE", "-threads", 
-                    "{}".format(threads),  "-phred33",  read1, read2, 
-                    output_read1_pair, output_read1_sing, output_read2_pair, 
-                    output_read2_sing, \
-                    "ILLUMINACLIP:{}:2:30:10".format(adapterFile), 
-                    "LEADING:3", "TRAILING:3", "SLIDINGWINDOW:4:15", 
+            command = ["java",  "-jar", program, "PE", "-threads",
+                    "{}".format(threads),  "-phred33",  read1, read2,
+                    output_read1_pair, output_read1_sing, output_read2_pair,
+                    output_read2_sing,
+                    "ILLUMINACLIP:{}:2:30:10".format(adapterFile),
+                    "LEADING:3", "TRAILING:3", "SLIDINGWINDOW:4:15",
                     "MINLEN:30"]
             common.print_command(command)
             # do not execute is files have been already gennerated
             if not common.check_dryrun(sample_config) and not \
                     os.path.exists(output_read1_pair):
-                stdOut = open("{}_trimmomatic.stdOut".format(read1_baseName), 
+                stdOut = open("{}_trimmomatic.stdOut".format(read1_baseName),
                         "w")
-                stdErr = open("{}_trimmomatic.stdErr".format(read1_baseName), 
+                stdErr = open("{}_trimmomatic.stdErr".format(read1_baseName),
                         "w")
-                returnValue = subprocess.call(command, stdout=stdOut, 
+                returnValue = subprocess.call(command, stdout=stdOut,
                         stderr=stdErr) # run the program
                 if returnValue != 0:
                     print "error while running command: {}".format(command)
-            libraryInfo["pair1"]       = output_read1_pair
-            libraryInfo["pair2"]       = output_read2_pair
-            libraryInfo["trimmomatic"] = os.path.join(trimmomaticDir, 
+            libraryInfo["pair1"] = output_read1_pair
+            libraryInfo["pair2"] = output_read2_pair
+            libraryInfo["trimmomatic"] = os.path.join(trimmomaticDir,
                     "{}_trimmomatic.stdErr".format(read1_baseName))
     os.chdir(mainDirectory)
     return sample_config
@@ -255,7 +255,7 @@ def _kmergenie_plot(hist_file):
     genomic_kmers = kgenie_hist[kgenie_hist.columns[1]].tolist()
     peak_value = max(genomic_kmers)
     peak_idx = genomic_kmers.index(peak_value)
-    best_k = kmer_lengths[peak_idx]    
+    best_k = kmer_lengths[peak_idx]
 
     plt.plot(kmer_lengths, genomic_kmers)
     plt.title("Best K-mer length: {}".format(best_k))
@@ -267,22 +267,22 @@ def _kmergenie_plot(hist_file):
     plt.ylim(y_min, y_max)
     plt.xlim(min(kmer_lengths) - 5, max(kmer_lengths) + 5)
     plt.vlines(best_k, 0, peak_value, colors = "r", linestyles='--')
-    
+
     plt.savefig(hist_file + ".png")
     plt.clf()
 
 
 def _run_kmergenie(global_config, sample_config, sorted_libraries_by_insert):
     """Runs kmergenie to establish a recommended kmer size for assembly"""
-    
+
     maindir = os.getcwd()
     kmerdir = os.path.join(maindir, "kmergenie")
     if not os.path.exists(kmerdir):
         os.makedirs(kmerdir)
     os.chdir(kmerdir)
-    
+
     #Write a list of input fastq files for kmergenie
-    kmer_input = os.path.join(kmerdir, 
+    kmer_input = os.path.join(kmerdir,
             "{}kmerinput.txt".format(sample_config.get("output","")))
 
     program = global_config["Tools"]["kmergenie"]["bin"]
@@ -290,7 +290,7 @@ def _run_kmergenie(global_config, sample_config, sorted_libraries_by_insert):
     # Could be useful to add --diploid if sample is highly heterozygous
     if "kmergenie" in sample_config:
         program_options=sample_config["kmergenie"]
-    
+
     threads = "" # Kmergenie will spawn number_of_cores - 1 threads by default
     if "threads" in sample_config :
         threads = sample_config["threads"]
@@ -302,7 +302,7 @@ def _run_kmergenie(global_config, sample_config, sorted_libraries_by_insert):
         cmd_list.append("-t {}".format(threads))
     command = " ".join(cmd_list)
     common.print_command(command)
-    
+
     if not common.check_dryrun(sample_config):
         with open(kmer_input, "w") as f:
             for lib, lib_info in sorted_libraries_by_insert:
@@ -323,7 +323,7 @@ def _run_kmergenie(global_config, sample_config, sorted_libraries_by_insert):
 def _run_report(global_config, sample_config, sorted_libraries_by_insert):
     """This function produces a pdf report and stores the important \
             resutls in a single folder"""
-   
+
     ### retrive all info needed to write the report
     sampleName = "sample"
     if "output" in sample_config:
@@ -342,7 +342,7 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
     if not os.path.exists(reportDir):
         os.makedirs(reportDir)
 
-    PDFtitle = os.path.join(workingDir, "report", 
+    PDFtitle = os.path.join(workingDir, "report",
             "{}.pdf".format(sample_config["output"]))
 
     # this you cannot do in rLab which is why I wrote the helper initially
@@ -356,9 +356,9 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
             'allowSplitting': False
             }
     # let's create the doc and specify title and author
-    doc = pdf.Pdf('{} {}'.format(projectName, sampleName), 
+    doc = pdf.Pdf('{} {}'.format(projectName, sampleName),
             'NGI-Stockholm, Science for Life Laboratory')
-    
+
     # now we apply our theme
     doc.set_theme(MyTheme)
     # give me some space
@@ -375,12 +375,12 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
     doc.add_header('{} -- {}'.format(projectName, sampleName))
     # give me some space
     doc.add_spacer()
-    doc.add_paragraph("For sample {} belonging to the project {} \
-            NGI-Stockholm best-practice analysis for quality checking has \
-            been performed. For mate pair libraries produced with Nextera, \
-            best-practice analysis described at this address has been \
-            performed: http://res.illumina.com/documents/products/technotes/\
-            technote_nextera_matepair_data_processing.pdf".format(sampleName, 
+    doc.add_paragraph("For sample {} belonging to the project {} "
+            "NGI-Stockholm best-practice analysis for quality checking has "
+            "been performed. For mate pair libraries produced with Nextera, "
+            "best-practice analysis described at this address has been "
+            "performed: http://res.illumina.com/documents/products/technotes/"
+            "technote_nextera_matepair_data_processing.pdf".format(sampleName,
             projectName))
     doc.add_spacer()
     tools = ["trimmomatic", "fastqc", "abyss", "align", "kmergenie"]
@@ -402,20 +402,20 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
                     global_config["Tools"]["picard"]["bin"]))
     doc.add_list(bollet_list)
     doc.add_spacer()
-    doc.add_paragraph("The results from each tool is reported in the \
-            following sections. Moreover you will find all the results and \
-            commands that have been run in the delivery folder on Uppmax")
+    doc.add_paragraph("The results from each tool is reported in the "
+            "following sections. Moreover you will find all the results and "
+            "commands that have been run in the delivery folder on Uppmax")
 
     for tool in tools:
 	doc.add_pagebreak()
         doc.add_header(tool.title() , pdf.H2)
         if tool  == "trimmomatic":
-            doc.add_paragraph("Reads (both paired and mate pairs) can \
-                    contain parts of the adapter sequence or, in the case of \
-                    mate pairs, part of the linker sequence. Illumina \
-                    recommends to remove the adapter before use of the reads \
-                    in any downstream analysis (this is mandatory for mate \
-                    pairs).")
+            doc.add_paragraph("Reads (both paired and mate pairs) can "
+                    "contain parts of the adapter sequence or, in the case of "
+                    "mate pairs, part of the linker sequence. Illumina "
+                    "recommends to remove the adapter before use of the reads "
+                    "in any downstream analysis (this is mandatory for mate "
+                    "pairs).")
             doc.add_paragraph("Adapter sequences removed are:")
             adapter_file = sample_config["adapters"]
             adapters     = []
@@ -426,27 +426,27 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
             doc.add_list(adapters)
             doc.add_spacer()
 
-            trimmomatic_table_part1 = [[sampleName, "#orig_pairs", 
+            trimmomatic_table_part1 = [[sampleName, "#orig_pairs",
                     "#survived_pairs"]] # this is the header row
-            trimmomatic_table_part2 = [[sampleName,"#survived_fw_only", 
+            trimmomatic_table_part2 = [[sampleName,"#survived_fw_only",
                     "#survived_rv_only", "#discarded"]]
-            
-            total_orig_pairs       = 0
-            total_survived_pairs   = 0
+
+            total_orig_pairs = 0
+            total_survived_pairs = 0
             total_survived_fw_only = 0
             total_survived_rv_only = 0
-            total_discarded        = 0
-            
+            total_discarded = 0
+
             for library, libraryInfo in sorted_libraries_by_insert:
                 runName = os.path.basename(libraryInfo["trimmomatic"]).split(
                         "_1_trimmomatic.stdErr")[0]
                 with open(libraryInfo["trimmomatic"]) as trimmomatic_output:
                     lines       = trimmomatic_output.readlines()
                     result_line = lines[-2].rstrip()
-                    match_string = re.compile('Input Read Pairs: (\d+) Both \
-                            Surviving: (\d+) \(.+\) Forward Only Surviving: \
-                            (\d+) \(.+\) Reverse Only Surviving: (\d+) \(.+\) \
-                            Dropped: (\d+) \(.+\)')
+                    match_string = re.compile("Input Read Pairs: (\d+) Both "
+                            "Surviving: (\d+) \(.+\) Forward Only Surviving: "
+                            "(\d+) \(.+\) Reverse Only Surviving: (\d+) \(.+\) "
+                            "Dropped: (\d+) \(.+\)")
                     read_pairs = int(match_string.match(result_line).group(1))
                     survived_pairs = int(match_string.match(
                         result_line).group(2))
@@ -465,17 +465,17 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
                     survived_discarded_perc = "({0:.0f}%)".format(
                             (float(discarded)/read_pairs) * 100)
 
-                    total_orig_pairs       += read_pairs
-                    total_survived_pairs   += survived_pairs
+                    total_orig_pairs += read_pairs
+                    total_survived_pairs += survived_pairs
                     total_survived_fw_only += survived_fw_only
                     total_survived_rv_only += survived_rv_only
-                    total_discarded        += discarded
+                    total_discarded += discarded
                 # these are the other rows
-                trimmomatic_table_part1.append([runName,read_pairs, 
+                trimmomatic_table_part1.append([runName,read_pairs,
                     "{} {}".format(survived_pairs, read_pairs_perc)])
-                trimmomatic_table_part2.append([runName, 
+                trimmomatic_table_part2.append([runName,
                     "{} {}".format(survived_fw_only, survived_fw_only_perc),
-                    "{} {}".format(survived_rv_only, survived_rv_only_perc),  
+                    "{} {}".format(survived_rv_only, survived_rv_only_perc),
                     "{} {}".format(discarded, survived_discarded_perc)])
             survived_pairs_perc =  "({0:.0f}%)".format(
                     (float(total_survived_pairs)/total_orig_pairs) * 100)
@@ -485,12 +485,12 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
                     (float(total_survived_rv_only)/total_orig_pairs) * 100)
             survived_discarded_perc =  "({0:.0f}%)".format(
                     (float(total_discarded)/total_orig_pairs) * 100)
-            trimmomatic_table_part1.append(["total", total_orig_pairs, 
+            trimmomatic_table_part1.append(["total", total_orig_pairs,
                 "{} {}".format(total_survived_pairs, survived_pairs_perc)])
             # last row is the sum
             trimmomatic_table_part2.append(["total", "{} {}".format(
                 survived_fw_only, survived_fw_only_perc),
-                "{} {}".format(survived_rv_only, survived_rv_only_perc),  
+                "{} {}".format(survived_rv_only, survived_rv_only_perc),
                 "{} {}".format(discarded, survived_discarded_perc)])
             doc.add_table(trimmomatic_table_part1, TABLE_WIDTH)
             doc.add_spacer()
@@ -515,11 +515,11 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
                     if os.path.isdir(os.path.join(fastqc_dir, dir))]:
                 fastqc_run_dir = os.path.join(fastqc_dir, fastqc_run, "Images")
                 doc.add_image(os.path.join(fastqc_run_dir,
-                    "per_base_quality.png"), 400, 180, pdf.CENTER, 
+                    "per_base_quality.png"), 400, 180, pdf.CENTER,
                     "{} -- Per Base Quality".format(fastqc_run))
                 fastqc_run_dir = os.path.join(fastqc_dir, fastqc_run, "Images")
-                doc.add_image(os.path.join(fastqc_run_dir, 
-                    "sequence_length_distribution.png"), 400, 180, pdf.CENTER, 
+                doc.add_image(os.path.join(fastqc_run_dir,
+                    "sequence_length_distribution.png"), 400, 180, pdf.CENTER,
                     "{} -- Sequence Length Distribution".format(fastqc_run))
             #If I have not yet copied fastqc results do it
             if not os.path.exists("fastqc"):
@@ -532,24 +532,24 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
                         shutil.copytree(source, dest)
 
         if tool == "abyss" and "abyss" in sample_config:
-            doc.add_paragraph("A possible way to assess the complexity of a \
-                    library even in absence of a reference sequence is to \
-                    look at the kmer profile of the reads. The idea is to count\
-                    all the kmers (i.e., sequence of length k) that occur in \
-                    the reads. In this way it is possible to know how many \
-                    kmers occur 1,2,..., N times and represent this as a \
-                    plot. This plot tell us for each x, how many k-mers \
-                    (y-axis) are present in the dataset in exactly x-copies. \
-                    In an ideal world (no errors in sequencing, no bias, no \
-                    repeating regions) this plot should be as close as \
-                    possible to a gaussian distribution. In reality we will \
-                    always see a peak for x=1 (i.e., the errors) and another \
-                    peak close to the expected coverage. If the genome is \
-                    highly heterozygous a second peak at half of the coverage \
-                    can be expected.")
-            kmer_1_200 = os.path.join(sample_config["abyss"], 
+            doc.add_paragraph("A possible way to assess the complexity of a "
+                    "library even in absence of a reference sequence is to "
+                    "look at the kmer profile of the reads. The idea is to "
+                    "count all the kmers (i.e., sequence of length k) that occur "
+                    "in the reads. In this way it is possible to know how many "
+                    "kmers occur 1,2,..., N times and represent this as a "
+                    "plot. This plot tell us for each x, how many k-mers "
+                    "(y-axis) are present in the dataset in exactly x-copies. "
+                    "In an ideal world (no errors in sequencing, no bias, no "
+                    "repeating regions) this plot should be as close as "
+                    "possible to a gaussian distribution. In reality we will "
+                    "always see a peak for x=1 (i.e., the errors) and another "
+                    "peak close to the expected coverage. If the genome is "
+                    "highly heterozygous a second peak at half of the coverage "
+                    "can be expected.")
+            kmer_1_200 = os.path.join(sample_config["abyss"],
                     "kmer_coverage_1_200.png")
-            doc.add_image(kmer_1_200, 500, 300, pdf.CENTER, 
+            doc.add_image(kmer_1_200, 500, 300, pdf.CENTER,
                     "kmer profile with k={}.".format(sample_config["kmer"]))
             #copy the results in resutls
             if not os.path.exists("kmer_analysis"):
@@ -566,13 +566,13 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
                     shutil.copyfile(source, dest)
 
         if tool == "align" and "alignments" in sample_config:
-            alignments       = sample_config["alignments"][0]
-            alignment_path   = alignments[1]
+            alignments = sample_config["alignments"][0]
+            alignment_path = alignments[1]
             alignment_prefix = alignments[2]
-            align_dir        = os.path.split(alignment_path)[0]
+            align_dir = os.path.split(alignment_path)[0]
             doc.add_header("{} -- Collect Insert Size Metrics".format(
                 sampleName) , pdf.H3)
-            with open(os.path.join(align_dir, 
+            with open(os.path.join(align_dir,
                 "{}.collectInsertSize.txt".format(alignment_prefix))) \
                 as collectInsertSize:
                     lines  = collectInsertSize.readlines()
@@ -581,27 +581,27 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
                     insertSize_table = [[line[7], line[6], line[4], line[5]]]
                     line  = lines[7].rstrip().split("\t")
                      # this is the header row
-                    insertSize_table.append([line[7], line[6], line[4], 
+                    insertSize_table.append([line[7], line[6], line[4],
                         line[5]])
                     line  = lines[8].rstrip().split("\t")
                      # this is the header row
-                    insertSize_table.append([line[7], line[6], line[4], 
+                    insertSize_table.append([line[7], line[6], line[4],
                         line[5]])
                     line  = lines[9].rstrip().split("\t")
                      # this is the header row
-                    insertSize_table.append([line[7], line[6], line[4], 
+                    insertSize_table.append([line[7], line[6], line[4],
                         line[5]])
                     doc.add_table(insertSize_table, TABLE_WIDTH)
             doc.add_spacer()
-            full_path_to_pdf =  os.path.join(align_dir, 
+            full_path_to_pdf =  os.path.join(align_dir,
                     "{}.collectInsertSize.pdf".format(alignment_prefix))
             doc.add_paragraph("Insert size plot can be found in the result \
-                    directory: {}".format(os.path.join("alignments", 
+                    directory: {}".format(os.path.join("alignments",
                     "{}.collectInsertSize.pdf".format(alignment_prefix))))
             doc.add_spacer()
-            doc.add_header("{} -- Duplicate Metrics".format(sampleName), 
+            doc.add_header("{} -- Duplicate Metrics".format(sampleName),
                     pdf.H3)
-            with open(os.path.join(align_dir, 
+            with open(os.path.join(align_dir,
                 "{}.markDuplicates.txt".format(alignment_prefix))) as \
                 collectInsertSize:
                     lines  = collectInsertSize.readlines()
@@ -620,10 +620,10 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
             doc.add_spacer()
             doc.add_table(duplication_table_part3, TABLE_WIDTH)
             doc.add_spacer()
-            full_path_to_bam =  os.path.join(align_dir, 
+            full_path_to_bam =  os.path.join(align_dir,
                     "{}_noDup.bam".format(alignment_prefix))
             doc.add_paragraph("Bam file with marked duplicate reads can be \
-                    found at: {}".format(os.path.join("alignments", 
+                    found at: {}".format(os.path.join("alignments",
                     "{}_noDup.bam".format(alignment_prefix))))
             doc.add_spacer()
             #copy the results in resutls
@@ -639,23 +639,23 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
                     shutil.copyfile(source, dest)
 
         if tool == "kmergenie" and "kmergenie" in sample_config:
-            doc.add_paragraph("Assemblers using a de Bruijn graph strategy \
-                    for contig construction (such as Velvet, ABySS and \
-                    SOAPdenovo) fractures the reads into k-sized substrings \
-                    (k-mers). The k-mer size is vital for the performance of \
-                    these assemblers, and is usually selected considering \
-                    several trade-offs between the size and accuracy of the \
-                    produced contigs. Some assemblers choose the k-mer size \
-                    automatically or builds several assemblies (using \
-                    different k-mers) and / or relies on user input. \
-                    Kmergenie is a lightweight program that suggests a best \
-                    k-mer size based on their relative abundance in the \
-                    genomic reads.")
+            doc.add_paragraph("Assemblers using a de Bruijn graph strategy "
+                    "for contig construction (such as Velvet, ABySS and "
+                    "SOAPdenovo) fractures the reads into k-sized substrings "
+                    "(k-mers). The k-mer size is vital for the performance of "
+                    "these assemblers, and is usually selected considering "
+                    "several trade-offs between the size and accuracy of the "
+                    "produced contigs. Some assemblers choose the k-mer size "
+                    "automatically or builds several assemblies (using "
+                    "different k-mers) and / or relies on user input. "
+                    "Kmergenie is a lightweight program that suggests a best "
+                    "k-mer size based on their relative abundance in the "
+                    "genomic reads.")
             kmerdir = sample_config["kmergenie"]
             doc.add_image(os.path.join(kmerdir,"histograms.dat.png"), 400, 300, 
-                    pdf.CENTER, "The plot should be roughly concave and have \
-                            a clear global maximum, if not the predicted best \
-                            k is likely to be inaccurate")
+                    pdf.CENTER, ("The plot should be roughly concave and have "
+                            "a clear global maximum, if not the predicted best "
+                            "k is likely to be inaccurate"))
             #copy everything to results
             dest = os.path.join(os.getcwd(), "kmergenie")
             if not os.path.exists(dest):
