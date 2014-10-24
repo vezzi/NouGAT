@@ -5,8 +5,6 @@ import sys
 import common
 
 
-
-
 def run(global_config, sample_config):
     sorted_libraries_by_insert = common._sort_libraries_by_insert(sample_config)
     #Check if the user has specified tools, if not select default list of tools
@@ -14,11 +12,10 @@ def run(global_config, sample_config):
         sample_config["tools"] = ["soapdenovo"]
     #Execute the commands now
     for command in sample_config["tools"]:
-        command_fn = getattr( sys.modules[__name__] , 
+        command_fn = getattr( sys.modules[__name__] ,
                 "_run_{}".format(command))
-        sample_config = command_fn(global_config, sample_config, 
+        sample_config = command_fn(global_config, sample_config,
                 sorted_libraries_by_insert)
-
 
 
 def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
@@ -53,11 +50,11 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
 
     libraries = {}
     for library, libraryInfo in sorted_libraries_by_insert:
-        read1       = libraryInfo["pair1"]
-        read2       = libraryInfo["pair2"]
+        read1 = libraryInfo["pair1"]
+        read2 = libraryInfo["pair2"]
         orientation = libraryInfo["orientation"]
-        insert      = libraryInfo["insert"]
-        std         = libraryInfo["std"]
+        insert = libraryInfo["insert"]
+        std = libraryInfo["std"]
         if orientation=="innie" or orientation=="none":
             if read2 is None:
                 # check if this is the first time I insert a se file
@@ -80,9 +77,9 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
             libraries["mp"][libName] +=  "{} {} ".format(read1, read2)
     #now create the command
     command += "name={} ".format(outputName)
-    librariesSE       = ""
-    librariesPE       = ""
-    librariesMP       = ""
+    librariesSE = ""
+    librariesPE = ""
+    librariesMP = ""
     if "se" in libraries:
         libraries["se"] = libraries["se"] + "\'"
         librariesSE = libraries["se"]
@@ -113,7 +110,7 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     os.makedirs(os.path.join(assemblyDirectory, "runABySS"))
     os.chdir("runABySS")
     returnValue = 0
-    returnValue = subprocess.call(command, stdout=assembler_stdOut, 
+    returnValue = subprocess.call(command, stdout=assembler_stdOut,
             stderr=assembler_stdErr, shell=True)
     os.chdir("..")
     if returnValue == 0 and not common.check_dryrun(sample_config):
@@ -130,8 +127,8 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
             print "something wrong with ABySS -> no contig file generated"
             return sample_config
     else:
-        print "ABySS terminated with an error. Please check running folder \
-                for more informations"
+        print("ABySS terminated with an error. Please check running folder "
+                "for more informations")
     os.chdir("..")
     return sample_config
 
@@ -153,9 +150,9 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
     inGroups_file = open("in_groups.csv", "w")
     inLibs_file   = open("in_libs.csv", "w")
     inGroups_file.write("group_name, library_name, file_name\n")
-    inLibs_file.write("library_name, project_name, organism_name, type, \
-            paired, frag_size, frag_stddev, insert_size, insert_stddev, \
-            read_orientation,genomic_start, genomic_end\n")
+    inLibs_file.write("library_name, project_name, organism_name, type, "
+            "paired, frag_size, frag_stddev, insert_size, insert_stddev, "
+            "read_orientation,genomic_start, genomic_end\n")
     librariesForInLibs     = []
     librariesForInLibsDict = {}
     group_name             = 1;
@@ -172,15 +169,15 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
             elif "_R1_" in file:
                 file = file.replace("_R1_", "_R?_")
             else:
-                print "error file format not supported {}".format(file)
+                print("error file format not supported {}".format(file))
                 return sample_config
             inGroups_file.write("PE{}, lib{}, {}\n".format(group_name, insert,
                 os.path.join(path, file)))
             group_name += 1
             if insert not in librariesForInLibsDict:
                 librariesForInLibsDict[insert] = insert
-                librariesForInLibs.append("lib{}, genome, genome, fragment, 1, \
-                        {}, {}, , , inward, 0, 0\n".format(insert,insert, std))
+                librariesForInLibs.append("lib{}, genome, genome, fragment, 1, "
+                        "{}, {}, , , inward, 0, 0\n".format(insert,insert, std))
         elif orientation=="outtie":
             path,file=os.path.split(read1)
             if "_1.fastq" in file:
@@ -195,10 +192,10 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
             group_name += 1
             if insert not in librariesForInLibsDict:
                 librariesForInLibsDict[insert] = insert
-                librariesForInLibs.append("lib{}, genome, genome, fragment, 1, \
-                        , , {}, {}, outward, 0, 0\n".format(insert,insert, std))
+                librariesForInLibs.append("lib{}, genome, genome, fragment, 1, "
+                        ", , {}, {}, outward, 0, 0\n".format(insert,insert, std))
         else:
-            print "all paths support only innies and outties"
+            print("all paths support only innies and outties")
     inGroups_file.close()
     for lib in librariesForInLibs:
         inLibs_file.write(lib)
@@ -210,14 +207,14 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
     ploidy = "PLOIDY=1"
     if len(program_options) > 0:
         if len(program_options) >1:
-            print "Running ALlpaths only one parameter accepted as option \
-                    here: PLOIDY=2"
+            print("Running ALlpaths only one parameter accepted as option "
+                    "here: PLOIDY=2")
             return sample_config
         if program_options[0] == "PLOIDY=2":
             ploidy = "PLOIDY=2"
         else:
-            print "Running ALlpaths only one parameter accepted as option \
-                    here: PLOIDY=2"
+            print("Running ALlpaths only one parameter accepted as option "
+                    "here: PLOIDY=2")
             return sample_config
 
     command = [program , "DATA_DIR={}".format(data_dir), ploidy, 
@@ -254,38 +251,36 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
             os.chdir("..")
             return sample_config
         else: # save results
-            assembly_dir = os.path.join("data_dir", "allpaths", "ASSEMBLIES", 
+            assembly_dir = os.path.join("data_dir", "allpaths", "ASSEMBLIES",
                     "run")
-            if os.path.exists(os.path.join(assembly_dir, 
+            if os.path.exists(os.path.join(assembly_dir,
                 "final.assembly.fasta")):
-                subprocess.call(["cp", os.path.join(assembly_dir, 
+                subprocess.call(["cp", os.path.join(assembly_dir,
                     "final.contigs.fasta"), "{}.ctg.fasta".format(outputName)])
-                subprocess.call(["cp", os.path.join(assembly_dir, 
+                subprocess.call(["cp", os.path.join(assembly_dir,
                     "final.assembly.fasta"), "{}.scf.fasta".format(outputName)])
             else:
-                print "something wrong with Allpaths > no contig file generated"
+                print("something wrong with Allpaths > no contig file generated")
                 oc.chdir("..")
                 return sample_config
     else:
-        print "ALLPATHS PrepareAllPathInputs terminated with an error. \
-                Please check running folder for more informations"
+        print("ALLPATHS PrepareAllPathInputs terminated with an error. "
+                "Please check running folder for more informations")
         oc.chdir("..")
         return sample_config
     os.chdir("..")
     return sample_config
 
 
-
-
 def _run_cabog(global_config, sample_config, sorted_libraries_by_insert):
     ########## ACQUIRE ALL THE INFO AND CREATE THE ASSEMBLY FOLDER
-    assembler                  = "cabog"
-    outputName                 = sample_config["output"]
-    currentDirectory           = os.getcwd()
-    assemblyDirectory          = os.path.join(currentDirectory, assembler)
+    assembler = "cabog"
+    outputName = sample_config["output"]
+    currentDirectory = os.getcwd()
+    assemblyDirectory = os.path.join(currentDirectory, assembler)
     # in cabog case there is no exectuable
-    programBIN                 = global_config["Tools"][assembler]["bin"]
-    program_options            = global_config["Tools"][assembler]["options"]
+    programBIN = global_config["Tools"][assembler]["bin"]
+    program_options = global_config["Tools"][assembler]["options"]
     sorted_libraries_by_insert = common._sort_libraries_by_insert(sample_config)
     if _prepare_folder_structure(assembler, assemblyDirectory) == 0:
         os.chdir(assemblyDirectory)
@@ -299,31 +294,31 @@ def _run_cabog(global_config, sample_config, sorted_libraries_by_insert):
         read1=libraryInfo["pair1"]
         read2=libraryInfo["pair2"]
         orientation = libraryInfo["orientation"]
-        insert      = libraryInfo["insert"]
-        std         = libraryInfo["std"]
-        command_fastqToCA  += " -libraryname "
-        command_fastqToCA  += " {}_{}".format(outputName, libraries)
-        command_fastqToCA  += " -insertsize "
-        command_fastqToCA  += " {} {} ".format(insert,std)
-        command_fastqToCA  += " -technology "
-        command_fastqToCA  += " illumina "
-        command_fastqToCA  += " -type "
-        command_fastqToCA  += " illumina "
+        insert = libraryInfo["insert"]
+        std = libraryInfo["std"]
+        command_fastqToCA += " -libraryname "
+        command_fastqToCA += " {}_{}".format(outputName, libraries)
+        command_fastqToCA += " -insertsize "
+        command_fastqToCA += " {} {} ".format(insert,std)
+        command_fastqToCA += " -technology "
+        command_fastqToCA += " illumina "
+        command_fastqToCA += " -type "
+        command_fastqToCA += " illumina "
         if orientation=="innie" or orientation=="none" :
-            command_fastqToCA  += " -innie "
+            command_fastqToCA += " -innie "
             if read2 is None:
-                command_fastqToCA  += " -reads "
-                command_fastqToCA  += " {} ".format(read1)
+                command_fastqToCA += " -reads "
+                command_fastqToCA += " {} ".format(read1)
             else:
-                command_fastqToCA  += " -mates "
-                command_fastqToCA  += " {},{} ".format(read1, read2)
+                command_fastqToCA += " -mates "
+                command_fastqToCA += " {},{} ".format(read1, read2)
         elif orientation=="outtie":
-            command_fastqToCA  += " -outtie "
-            command_fastqToCA  += " -mates "
-            command_fastqToCA  += " {},{} ".format(read1, read2)
-        command_fastqToCA  += " > "
-        command_fastqToCA  += " {}_{}.frg ".format(outputName, libraries)
-        
+            command_fastqToCA += " -outtie "
+            command_fastqToCA += " -mates "
+            command_fastqToCA += " {},{} ".format(read1, read2)
+        command_fastqToCA += " > "
+        command_fastqToCA += " {}_{}.frg ".format(outputName, libraries)
+
         common.print_command(command_fastqToCA)
         if not common.check_dryrun(sample_config):
             cabog_stdOut = open("cabog_fastqToCA.stdOut", "w")
@@ -340,11 +335,11 @@ def _run_cabog(global_config, sample_config, sorted_libraries_by_insert):
     returnValue = 0
     cabog_stdOut = open("cabog_runCA.stdOut", "w")
     cabog_stdErr = open("cabog_runCA.stdErr", "w")
-    returnValue = subprocess.call(command_runCA, stdout=cabog_stdOut, 
+    returnValue = subprocess.call(command_runCA, stdout=cabog_stdOut,
             stderr=cabog_stdErr, shell=True)
     if returnValue == 0:
         #assembly succed, remove files and save assembly
-        if os.path.exists(os.path.join("runCABOGfolder","9-terminator", 
+        if os.path.exists(os.path.join("runCABOGfolder","9-terminator",
             "{}.ctg.fasta".format(outputName))):
             subprocess.call(["mv", os.path.join("runCABOGfolder","9-terminator",
                 "{}.ctg.fasta".format(outputName)),
@@ -354,25 +349,23 @@ def _run_cabog(global_config, sample_config, sorted_libraries_by_insert):
                 "{}.scf.fasta".format(outputName)])
             subprocess.call(["rm", "-r", "runCABOGfolder"])
         else:
-            print "something wrong with CABOG -> no contig file generated"
+            print("something wrong with CABOG -> no contig file generated")
     else:
-        print "CABOG terminated with an error. Please check running folder \
-                for more informations"
+        print("CABOG terminated with an error. Please check running folder "
+                "for more informations")
     os.chdir("..")
     return sample_config
 
 
-
-
 def _run_masurca(global_config, sample_config,sorted_libraries_by_insert):
     ########## ACQUIRE ALL THE INFO AND CREATE THE ASSEMBLY FOLDER
-    assembler                  = "masurca"
-    outputName                 = sample_config["output"]
-    currentDirectory           = os.getcwd()
-    assemblyDirectory          = os.path.join(currentDirectory, assembler)
+    assembler = "masurca"
+    outputName = sample_config["output"]
+    currentDirectory = os.getcwd()
+    assemblyDirectory = os.path.join(currentDirectory, assembler)
     # in cabog case there is no exectuable
-    programBIN                 = global_config["Tools"][assembler]["bin"]
-    program_options            = global_config["Tools"][assembler]["options"]
+    programBIN = global_config["Tools"][assembler]["bin"]
+    program_options = global_config["Tools"][assembler]["options"]
     sorted_libraries_by_insert = common._sort_libraries_by_insert(sample_config)
     if _prepare_folder_structure(assembler, assemblyDirectory) == 0:
         os.chdir(assemblyDirectory)
@@ -380,7 +373,7 @@ def _run_masurca(global_config, sample_config,sorted_libraries_by_insert):
         return sample_config
     ########### HERE IT START THE SPECIFIC ASSEMBLER PART
 
-    masurca_config_file = open("configuration.txt", "w")    
+    masurca_config_file = open("configuration.txt", "w")
     masurca_config_file.write("DATA\n")
     allTheLetters = string.lowercase
     libraryPE    = "p"
@@ -392,25 +385,25 @@ def _run_masurca(global_config, sample_config,sorted_libraries_by_insert):
         read1=libraryInfo["pair1"]
         read2=libraryInfo["pair2"]
         orientation = libraryInfo["orientation"]
-        insert      = libraryInfo["insert"]
-        std         = libraryInfo["std"]
+        insert = libraryInfo["insert"]
+        std = libraryInfo["std"]
         if orientation=="innie":
             if read2 is not None:
-                configurationLine = "PE = {}{} {} {} {} {}".format(libraryPE, 
+                configurationLine = "PE = {}{} {} {} {} {}".format(libraryPE,
                         allTheLetters[libraryPEnum], insert, std, read1, read2)
                 masurca_config_file.write("{}\n".format(configurationLine))
-                libraryPEnum+=1 
+                libraryPEnum += 1
                 #TODO: check when more than 21 PE libraries ae specified
         elif orientation=="outtie":
             configurationLine = "JUMP = {}{} {} {} {} {}".format(libraryMP, 
                     allTheLetters[libraryMPnum], insert, std, read1, read2)
             masurca_config_file.write("{}\n".format(configurationLine))
-            libraryMPnum += 1  
+            libraryMPnum += 1
             #TODO: check when more than 21 PE libraries ae specified
     masurca_config_file.write("END\n")
-    
+
     masurca_config_file.write("\n")
-    
+
     masurca_config_file.write("PARAMETERS\n")
     #this is k-mer size for deBruijn graph values between 25 and 101 are 
     #supported, auto will compute the optimal size based on the read data 
@@ -484,23 +477,22 @@ def _run_masurca(global_config, sample_config,sorted_libraries_by_insert):
         else:
             print "something wrong with MaSuRCA -> no contig file generated"
     else:
-        print "MaSuRCA terminated with an error. Please check running folder \
-                for more informations"
+        print("MaSuRCA terminated with an error. Please check running folder "
+                "for more informations")
         return sample_config
     os.chdir("..")
     return sample_config
 
 
-
 def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
     ########## ACQUIRE ALL THE INFO AND CREATE THE ASSEMBLY FOLDER
-    assembler                  = "soapdenovo"
-    outputName                 = sample_config["output"]
-    currentDirectory           = os.getcwd()
-    assemblyDirectory          = os.path.join(currentDirectory, assembler)
+    assembler = "soapdenovo"
+    outputName = sample_config["output"]
+    currentDirectory = os.getcwd()
+    assemblyDirectory = os.path.join(currentDirectory, assembler)
     # in cabog case there is no exectuable
-    programBIN                 = global_config["Tools"][assembler]["bin"]
-    program_options            = global_config["Tools"][assembler]["options"]
+    programBIN = global_config["Tools"][assembler]["bin"]
+    program_options = global_config["Tools"][assembler]["options"]
     sorted_libraries_by_insert = common._sort_libraries_by_insert(sample_config)
     if _prepare_folder_structure(assembler, assemblyDirectory) == 0:
         os.chdir(assemblyDirectory)
@@ -519,11 +511,11 @@ def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
     rank = 1
     for library, libraryInfo in sorted_libraries_by_insert:
         soap_config_file.write("[LIB]\n")
-        read1       =libraryInfo["pair1"]
-        read2       =libraryInfo["pair2"]
+        read1 = libraryInfo["pair1"]
+        read2 = libraryInfo["pair2"]
         orientation = libraryInfo["orientation"]
-        insert      = libraryInfo["insert"]
-        std         = libraryInfo["std"]
+        insert = libraryInfo["insert"]
+        std = libraryInfo["std"]
         soap_config_file.write("avg_ins={}\n".format(insert))
         soap_config_file.write("rank={}\n".format(rank))
         rank += 1
@@ -551,7 +543,7 @@ def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
     os.chdir("runSOAP")
     #TODO : lots of missing options
     command = [programBIN , "all", "-s", "../configuration.txt", "-K",
-            "{}".format(kmer), "-L", "500", "-o", "soapAssembly", threads[0], 
+            "{}".format(kmer), "-L", "500", "-o", "soapAssembly", threads[0],
             threads[1] ]
     common.print_command(command)
     returnValue = 0
@@ -566,39 +558,38 @@ def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
     os.chdir("..")
     if returnValue == 0:
         if(os.path.exists(os.path.join("runSOAP","soapAssembly.scafSeq"))):
-            subprocess.call(["mv", os.path.join("runSOAP", 
+            subprocess.call(["mv", os.path.join("runSOAP",
                 "soapAssembly.scafSeq"), "{}.scf.fasta".format(outputName)])
             subprocess.call(["mv", os.path.join("runSOAP",
                 "soapAssembly.contig"), "{}.ctg.fasta".format(outputName)])
             subprocess.call(["rm", "-r", "runSOAP"])
         else:
-            print "something wrong with SOAPdenovo -> no contig file generated"
+            print("something wrong with SOAPdenovo -> no contig file generated")
     else:
-        print "SOAPdenovo terminated with an error. Please check running \
-                folder for more informations"
+        print("SOAPdenovo terminated with an error. Please check running "
+                "folder for more informations")
         oc.chdir("..")
         return sample_config
     os.chdir("..")
     return sample_config
 
 
-
 def _run_spades(global_config, sample_config, sorted_libraries_by_insert):
     ########## ACQUIRE ALL THE INFO AND CREATE THE ASSEMBLY FOLDER
-    assembler                  = "spades"
-    outputName                 = sample_config["output"]
-    currentDirectory           = os.getcwd()
-    assemblyDirectory          = os.path.join(currentDirectory, assembler)
+    assembler = "spades"
+    outputName = sample_config["output"]
+    currentDirectory = os.getcwd()
+    assemblyDirectory = os.path.join(currentDirectory, assembler)
     # in cabog case there is no exectuable
-    programBIN                 = global_config["Tools"][assembler]["bin"]
-    program_options            = global_config["Tools"][assembler]["options"]
+    programBIN = global_config["Tools"][assembler]["bin"]
+    program_options = global_config["Tools"][assembler]["options"]
     sorted_libraries_by_insert = common._sort_libraries_by_insert(sample_config)
     if _prepare_folder_structure(assembler, assemblyDirectory) == 0:
         os.chdir(assemblyDirectory)
     else:
         return sample_config
     ########### HERE IT START THE SPECIFIC ASSEMBLER PART
-    
+
     command = ""
     command += "{} ".format(programBIN)
     for option in program_options:
@@ -608,11 +599,11 @@ def _run_spades(global_config, sample_config, sorted_libraries_by_insert):
     peLibrary = 1
     mpLibrary = 1
     for library, libraryInfo in sorted_libraries_by_insert:
-        read1       = libraryInfo["pair1"]
-        read2       = libraryInfo["pair2"]
+        read1 = libraryInfo["pair1"]
+        read2 = libraryInfo["pair2"]
         orientation = libraryInfo["orientation"]
-        insert      = libraryInfo["insert"]
-        std         = libraryInfo["std"]
+        insert = libraryInfo["insert"]
+        std = libraryInfo["std"]
         if orientation=="innie" or orientation=="none":
             if read2 is None:
                 command += "--pe{}-s {} ".format(peLibrary, read1)
@@ -625,8 +616,8 @@ def _run_spades(global_config, sample_config, sorted_libraries_by_insert):
                     mpLibrary, read2)
             mpLibrary += 1
         else:
-            print "orientation{} not supported.... why the program didnot \
-                    failed earlier?".format(orientation)
+            print("orientation{} not supported.... why the program did not "
+                    "failed earlier?".format(orientation))
 
     command += "-o {} ".format(outputName)
     common.print_command(command)
@@ -647,15 +638,13 @@ def _run_spades(global_config, sample_config, sorted_libraries_by_insert):
                 "{}.scf.fasta".format(outputName)])
             subprocess.call(["rm", "-r", outputName])
         else:
-            print "something wrong with SPADES -> no contig file generated"
+            print("something wrong with SPADES -> no contig file generated")
     else:
-        print "SPADES terminated with an error. Please check running folder \
-                for more informations"
+        print("SPADES terminated with an error. Please check running folder "
+                "for more informations")
 
     os.chdir("..")
     return sample_config
-
-
 
 
 def _run_trinity(global_config, sample_config, sorted_libraries_by_insert):
@@ -682,11 +671,11 @@ def _run_trinity(global_config, sample_config, sorted_libraries_by_insert):
     command.append("--JM")
     command.append("50G")
     for library, libraryInfo in sorted_libraries_by_insert:
-        read1       =libraryInfo["pair1"]
-        read2       =libraryInfo["pair2"]
+        read1 = libraryInfo["pair1"]
+        read2 = libraryInfo["pair2"]
         orientation = libraryInfo["orientation"]
-        insert      = libraryInfo["insert"]
-        std         = libraryInfo["std"]
+        insert = libraryInfo["insert"]
+        std = libraryInfo["std"]
         if read2 is None:
             command.append("--single")
             command.append("{}".format(read1))
@@ -696,8 +685,8 @@ def _run_trinity(global_config, sample_config, sorted_libraries_by_insert):
             command.append("--right")
             command.append("{}".format(read2))
         else:
-            print "trinity: somthing wrong or unexpected in the sample \
-                    config file"
+            print("trinity: somthing wrong or unexpected in the sample "
+                    "config file")
             return sample_config
     command.append("--output")
     command.append("trinity")
@@ -705,7 +694,7 @@ def _run_trinity(global_config, sample_config, sorted_libraries_by_insert):
     assembler_stdErr = open("trinity.stdErr", "w")
     print command
 
-    returnValue = subprocess.call(" ".join(command), stdout=assembler_stdOut, 
+    returnValue = subprocess.call(" ".join(command), stdout=assembler_stdOut,
             stderr=assembler_stdErr, shell=True)
 
     # now align reads back to transcripts
@@ -718,11 +707,11 @@ def _run_trinity(global_config, sample_config, sorted_libraries_by_insert):
     command.append("--seqType")
     command.append("fq")
     for library, libraryInfo in sorted_libraries_by_insert:
-        read1       =libraryInfo["pair1"]
-        read2       =libraryInfo["pair2"]
+        read1 = libraryInfo["pair1"]
+        read2 = libraryInfo["pair2"]
         orientation = libraryInfo["orientation"]
-        insert      = libraryInfo["insert"]
-        std         = libraryInfo["std"]
+        insert = libraryInfo["insert"]
+        std = libraryInfo["std"]
         if read2 is not None and orientation == "innie":
             command.append("--left")
             command.append("{}".format(os.path.splitext(read1)[0]))
@@ -733,7 +722,7 @@ def _run_trinity(global_config, sample_config, sorted_libraries_by_insert):
     command.append("bowtie")
     command.append("--retain_intermediate_files")
     print command
-    returnValue = subprocess.call(" ".join(command), stdout=assembler_stdOut, 
+    returnValue = subprocess.call(" ".join(command), stdout=assembler_stdOut,
             stderr=assembler_stdErr, shell=True)
 
     # now quantify trnascripts
@@ -745,11 +734,11 @@ def _run_trinity(global_config, sample_config, sorted_libraries_by_insert):
     command.append("--seqType")
     command.append("fq")
     for library, libraryInfo in sorted_libraries_by_insert:
-        read1       =libraryInfo["pair1"]
-        read2       =libraryInfo["pair2"]
+        read1 = libraryInfo["pair1"]
+        read2 = libraryInfo["pair2"]
         orientation = libraryInfo["orientation"]
-        insert      = libraryInfo["insert"]
-        std         = libraryInfo["std"]
+        insert = libraryInfo["insert"]
+        std = libraryInfo["std"]
         if read2 is not None and orientation == "innie":
             command.append("--left")
             command.append("{}".format(os.path.splitext(read1)[0]))
@@ -772,18 +761,12 @@ def _run_trinity(global_config, sample_config, sorted_libraries_by_insert):
     return sample_config
 
 
-
-
-
 def _prepare_folder_structure(assembler,assemblyDirectory):
     if common.directory_exists(assemblyDirectory):
         print "Assembler {} asumer already computed as folder \
                 {} exists".format(assembler,assemblyDirectory)
         return 1
     return 0
-
-
-
 
 
 def _run_abyss_mergePairs(global_config, sample_config, 
@@ -804,23 +787,23 @@ def _run_abyss_mergePairs(global_config, sample_config,
     if assembler in sample_config:
         program_options=sample_config[assembler]
     ########### HERE IT START THE SPECIFIC ASSEMBLER PART
-    
+
     program=programBIN
     command = []
     command.append(program)
     for option in program_options:
             command.append(option)
-    
+
     libraries = {}
     for library, libraryInfo in sorted_libraries_by_insert:
-        read1       = libraryInfo["pair1"]
-        read2       = libraryInfo["pair2"]
+        read1 = libraryInfo["pair1"]
+        read2 = libraryInfo["pair2"]
         orientation = libraryInfo["orientation"]
-        insert      = libraryInfo["insert"]
-        std         = libraryInfo["std"]
+        insert = libraryInfo["insert"]
+        std = libraryInfo["std"]
         outputNameArray  = read1.split('/')[-1].split('_')
         outputName = "{}_{}".format(outputNameArray[0], outputNameArray[1])
-        
+
         if orientation=="innie":
             if read2 is not None:
                 currentCommand = command;

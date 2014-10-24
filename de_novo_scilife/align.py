@@ -11,8 +11,8 @@ def _align_reads(global_config, sample_config, sorted_libraries_by_insert):
     reference =  build_reference_bwa(global_config, sample_config)
     #now prepare for alignment
     for library, libraryInfo in sorted_libraries_by_insert:
-        read1       = libraryInfo["pair1"]
-        read2       = libraryInfo["pair2"]
+        read1 = libraryInfo["pair1"]
+        read2 = libraryInfo["pair2"]
         orientation = libraryInfo["orientation"]
         insert      = libraryInfo["insert"]
         std         = libraryInfo["std"]
@@ -28,29 +28,29 @@ def _align_reads(global_config, sample_config, sorted_libraries_by_insert):
 def _merge_bam_files(global_config, sample_config, sorted_libraries_by_insert):
     BAMfiles = {};
     reference = sample_config["reference"]
-    
+
     samtools = "samtools"
     if "samtools" in global_config["Tools"]:
         samtools = global_config["Tools"]["samtools"]["bin"]
     elif not common.which("samtools"):
-        sys.exit("error while trying to run  samtools: bwa not present in the \
-                path and not in global config, please make sure to install \
-                bwa properly")
+        sys.exit("error while trying to run  samtools: bwa not present in the "
+                "path and not in global config, please make sure to install "
+                "bwa properly")
 
     numInserts = 0
     for library, libraryInfo in sorted_libraries_by_insert:
-        read1       = libraryInfo["pair1"]
-        read2       = libraryInfo["pair2"]
+        read1 = libraryInfo["pair1"]
+        read2 = libraryInfo["pair2"]
         orientation = libraryInfo["orientation"]
-        insert      = libraryInfo["insert"]
-        std         = libraryInfo["std"]
-        alignment   = libraryInfo["alignment"]
+        insert = libraryInfo["insert"]
+        std = libraryInfo["std"]
+        alignment = libraryInfo["alignment"]
         if insert not in BAMfiles:
             BAMfiles[insert] = [alignment]
             numInserts += 1
         else:
             BAMfiles[insert].append(alignment)
-    
+
     BAMfilesMerged = {}
     for insert, insertGroup in BAMfiles.iteritems():
         dir_insert = "lib_{}".format(insert)
@@ -63,7 +63,7 @@ def _merge_bam_files(global_config, sample_config, sorted_libraries_by_insert):
         bamMerged = "lib_{}.bam".format(insert)
         if numInserts == 1:
             bamMerged = "{}.bam".format(sample_config["output"])
-        
+
         if os.path.exists(bamMerged):
             BAMfilesMerged[insert] = [os.path.abspath(bamMerged), dir_insert]
             os.chdir("..")
@@ -88,10 +88,10 @@ def _merge_bam_files(global_config, sample_config, sorted_libraries_by_insert):
                         insertGroup))
         BAMfilesMerged[insert] = [os.path.abspath(bamMerged), dir_insert]
         os.chdir("..")
-    
+
     sorted_alignments_by_insert = []
     for key in sorted(BAMfilesMerged.iterkeys()):
-        sorted_alignments_by_insert.append([key, BAMfilesMerged[key][0], 
+        sorted_alignments_by_insert.append([key, BAMfilesMerged[key][0],
             BAMfilesMerged[key][1]]) # memorise insert length, bam file, folder
     return sorted_alignments_by_insert
 
@@ -106,13 +106,13 @@ def picard_CGbias(global_config, sample_config, sorted_alignments_by_insert):
     for library, BAMfile, working_dir in sorted_alignments_by_insert:
         os.chdir(working_dir)
         output_header = os.path.basename(BAMfile).split(".bam")[0]
-        command= ["java", "-Xmx16g", "-XX:PermSize=2g", "-jar", 
-                os.path.join(picard, "CollectGcBiasMetrics.jar"), 
-                "REFERENCE_SEQUENCE={}".format(sample_config["reference"]), 
+        command= ["java", "-Xmx16g", "-XX:PermSize=2g", "-jar",
+                os.path.join(picard, "CollectGcBiasMetrics.jar"),
+                "REFERENCE_SEQUENCE={}".format(sample_config["reference"]),
                 "INPUT={}".format(BAMfile), \
-                "OUTPUT={}.collectGcBias.txt".format(output_header), 
-                "CHART_OUTPUT={}.collectGcBias.pdf".format(output_header), 
-                "ASSUME_SORTED=true", "VALIDATION_STRINGENCY=LENIENT", 
+                "OUTPUT={}.collectGcBias.txt".format(output_header),
+                "CHART_OUTPUT={}.collectGcBias.pdf".format(output_header),
+                "ASSUME_SORTED=true", "VALIDATION_STRINGENCY=LENIENT",
                 "TMP_DIR=/scratch"]
         returnValue = 0;
         common.print_command(command)
@@ -120,7 +120,7 @@ def picard_CGbias(global_config, sample_config, sorted_alignments_by_insert):
             if not common.check_dryrun(sample_config):
                 stdOut = open("collectGcBias.stdOut", "w")
                 stdErr = open("collectGcBias.stdErr", "w")
-                returnValue = subprocess.call(command, stdout=stdOut, 
+                returnValue = subprocess.call(command, stdout=stdOut,
                         stderr=stdErr)
                 if not returnValue == 0:
                     print "problem running collectGCBias"
@@ -129,7 +129,7 @@ def picard_CGbias(global_config, sample_config, sorted_alignments_by_insert):
 
 
 
-def picard_collectInsertSizeMetrics(global_config, sample_config, 
+def picard_collectInsertSizeMetrics(global_config, sample_config,
         sorted_alignments_by_insert):
     picard = "";
     if os.environ.get('PICARD_HOME'):
@@ -140,12 +140,12 @@ def picard_collectInsertSizeMetrics(global_config, sample_config,
         os.chdir(working_dir)
         output_header = os.path.basename(BAMfile).split(".bam")[0]
         histWide = library * 2
-        command= ["java", "-Xmx16g", "-XX:PermSize=2g", "-jar", 
-                os.path.join(picard, "CollectInsertSizeMetrics.jar"), 
+        command= ["java", "-Xmx16g", "-XX:PermSize=2g", "-jar",
+                os.path.join(picard, "CollectInsertSizeMetrics.jar"),
                 "INPUT={}".format(BAMfile), "MINIMUM_PCT=0",
                 "HISTOGRAM_FILE={}.collectInsertSize.pdf".format(
                 output_header),
-                "OUTPUT={}.collectInsertSize.txt".format(output_header), 
+                "OUTPUT={}.collectInsertSize.txt".format(output_header),
                 "HISTOGRAM_WIDTH={}".format(histWide), 
                 "VALIDATION_STRINGENCY=LENIENT", "TMP_DIR=/scratch"]
         returnValue = 0;
@@ -155,7 +155,7 @@ def picard_collectInsertSizeMetrics(global_config, sample_config,
             if not common.check_dryrun(sample_config):
                 stdOut = open("collectInsertSize.stdOut", "w")
                 stdErr = open("collectInsertSize.stdErr", "w")
-                returnValue = subprocess.call(command, stdout=stdOut, 
+                returnValue = subprocess.call(command, stdout=stdOut,
                         stderr=stdErr)
                 if not returnValue == 0:
                     print "problem running CollectInsertSizeMetrics"
@@ -163,7 +163,7 @@ def picard_collectInsertSizeMetrics(global_config, sample_config,
     return sorted_alignments_by_insert
 
 
-def picard_markDuplicates(global_config, sample_config, 
+def picard_markDuplicates(global_config, sample_config,
         sorted_alignments_by_insert):
     picard = "";
     if os.environ.get('PICARD_HOME'):
@@ -173,11 +173,11 @@ def picard_markDuplicates(global_config, sample_config,
     for library, BAMfile, working_dir in sorted_alignments_by_insert:
         os.chdir(working_dir)
         output_header = os.path.basename(BAMfile).split(".bam")[0]
-        command= ["java", "-Xmx16g", "-XX:PermSize=3g", "-jar", 
-                os.path.join(picard, "MarkDuplicates.jar"), 
+        command= ["java", "-Xmx16g", "-XX:PermSize=3g", "-jar",
+                os.path.join(picard, "MarkDuplicates.jar"),
                 "INPUT={}".format(BAMfile), "OUTPUT={}_noDup.bam".format(
                 output_header),"METRICS_FILE={0}.markDuplicates.txt".format(
-                output_header), "ASSUME_SORTED=true", 
+                output_header), "ASSUME_SORTED=true",
                 "VALIDATION_STRINGENCY=LENIENT", "TMP_DIR=/scratch"]
         returnValue = 0;
         common.print_command(command)
@@ -185,7 +185,7 @@ def picard_markDuplicates(global_config, sample_config,
             if not common.check_dryrun(sample_config):
                 stdOut = open("removeDup.stdOut", "w")
                 stdErr = open("removeDup.stdErr", "w")
-                returnValue = subprocess.call(command, stdout=stdOut, 
+                returnValue = subprocess.call(command, stdout=stdOut,
                         stderr=stdErr)
                 if not returnValue == 0:
                     print "problem running MarkDuplicates"
@@ -200,9 +200,9 @@ def build_reference_bwa(global_config, sample_config):
     if "bwa" in global_config["Tools"]:
         program = global_config["Tools"]["bwa"]["bin"]
     elif not common.which("bwa"):
-        sys.exit("error while trying to run  bwa index: bwa not present in \
-                the path and not in global config, please make sure to \
-                install bwa properly")
+        sys.exit("error while trying to run  bwa index: bwa not present in "
+                "the path and not in global config, please make sure to "
+                "install bwa properly")
     # check if reference provided exisists
     reference = os.path.abspath(reference)
     # check if I have already the bwt index
@@ -238,8 +238,8 @@ def build_reference_bwa(global_config, sample_config):
             returnValue = subprocess.call(command, stdout=bwa_stdOut, 
                     stderr=bwa_stdErr)
             if  not returnValue == 0:
-                sys.exit("error, while indexing reference file {} \
-                        with bwa index".format(reference))
+                sys.exit("error, while indexing reference file {} "
+                        "with bwa index".format(reference))
     #extra control to avoid problem with unexpected return value
     if not os.path.exists("{}.bwt".format(reference)):
         sys.exit("bwa index failed")
@@ -254,17 +254,17 @@ def align_bwa_mem(global_config, read1, read2, reference, threads, dryrun):
     if "bwa" in global_config["Tools"]:
         aligner = global_config["Tools"]["bwa"]["bin"]
     elif not common.which("bwa"):
-        sys.exit("error while trying to run  bwa mem: bwa not present in the \
-                path and not in global config, please make sure to install \
-                bwa properly")
-    
+        sys.exit("error while trying to run  bwa mem: bwa not present in the "
+                "path and not in global config, please make sure to install "
+                "bwa properly")
+
     samtools = "samtools"
     if "samtools" in global_config["Tools"]:
         samtools = global_config["Tools"]["samtools"]["bin"]
     elif not common.which("samtools"):
-        sys.exit("error while trying to run  samtools: bwa not present in the \
-                path and not in global config, please make sure to install \
-                bwa properly")
+        sys.exit("error while trying to run  samtools: bwa not present in the "
+                "path and not in global config, please make sure to install "
+                "bwa properly")
 
     # extract base name
     libraryBase = ""
@@ -276,7 +276,7 @@ def align_bwa_mem(global_config, read1, read2, reference, threads, dryrun):
     if not os.path.exists(libraryBase):
         os.makedirs(libraryBase)
     os.chdir(libraryBase)
-    mappingBase = "{}_to_{}".format(libraryBase, 
+    mappingBase = "{}_to_{}".format(libraryBase,
             os.path.basename(reference).split(".fasta")[0])
     BAMsorted   = "{}.bam".format(mappingBase)
     BAMunsorted = "{}.unsorted.bam".format(mappingBase)
@@ -287,21 +287,21 @@ def align_bwa_mem(global_config, read1, read2, reference, threads, dryrun):
         return BAMsorted
 
 
-    bwa_mem_command = [aligner, "mem", "-M", "-t", "{}".format(threads), 
+    bwa_mem_command = [aligner, "mem", "-M", "-t", "{}".format(threads),
             reference, read1, read2]
     samtools_view_command = [samtools, "view", "-b", "-S",  "-u",  "-"]
 
     if not os.path.exists(BAMunsorted):
-        command = "{} | {} > {}".format(" ".join(bwa_mem_command), 
+        command = "{} | {} > {}".format(" ".join(bwa_mem_command),
                 " ".join(samtools_view_command), BAMunsorted)
         bwa_stdOut       = open("bwa.stdOut", "w")
         bwa_stdErr       = open("bwa.stdErr", "w")
         common.print_command(command)
         if not dryrun:
-            subprocess.call(command, shell=True, stdout=bwa_stdOut, 
+            subprocess.call(command, shell=True, stdout=bwa_stdOut,
                     stderr=bwa_stdErr)
 
-    samtools_sort_command = [samtools, "sort", "-@", "{}".format(threads), 
+    samtools_sort_command = [samtools, "sort", "-@", "{}".format(threads),
             "-m" , "1G", BAMunsorted,  mappingBase]
     command = " ".join(samtools_sort_command)
     if not os.path.exists(BAMsorted):
@@ -311,13 +311,11 @@ def align_bwa_mem(global_config, read1, read2, reference, threads, dryrun):
         if not dryrun:
             subprocess.call(command, shell=True, stdout=stdOut, stderr=stdErr)
 
-    if os.path.exists(BAMsorted) and os.path.exists(BAMunsorted)  :
+    if os.path.exists(BAMsorted) and os.path.exists(BAMunsorted):
         subprocess.call(["rm", BAMunsorted])
     BAMsorted = os.path.abspath(BAMsorted)
     os.chdir("..")
     return BAMsorted
-
-
 
 
 def align_bwa(read1, read2, reference):
@@ -325,21 +323,21 @@ def align_bwa(read1, read2, reference):
     if "bwa" in global_config["Tools"]:
         program = global_config["Tools"]["bwa"]["bin"]
     elif not common.which("bwa"):
-        sys.exit("error while trying to run  bwa aln: bwa not present in the \
-                path and not in global config, please make sure to install \
-                bwa properly")
-    
+        sys.exit("error while trying to run  bwa aln: bwa not present in the "
+                "path and not in global config, please make sure to install "
+                "bwa properly")
+
     samtools = "samtools"
     if "samtools" in global_config["Tools"]:
         program = global_config["Tools"]["samtools"]["bin"]
     elif not common.which("samtools"):
-        sys.exit("error while trying to run  samtools: bwa not present in the \
-                path and not in global config, please make sure to install \
-                bwa properly")
- 
+        sys.exit("error while trying to run  samtools: bwa not present in the "
+                "path and not in global config, please make sure to install "
+                "bwa properly")
+
     libraryBase = os.path.basename(read1).split(".")[0]
     if read2:
-        libraryBase = "{}_{}".format(libraryBase.split("_")[0], 
+        libraryBase = "{}_{}".format(libraryBase.split("_")[0],
                 libraryBase.split("_")[1])
     if not os.path.exists(libraryBase):
         os.makedirs(libraryBase)
@@ -366,14 +364,14 @@ def align_bwa(read1, read2, reference):
         if read2:
             if not os.path.exists("{}_2.sai".format(mappingBase)):
                 with open(bwaAln_2, "w") as fh:
-                    returnValue = subprocess.call(["bwa", "aln", "-t", 
+                    returnValue = subprocess.call(["bwa", "aln", "-t",
                         "8", reference, read2], stdout=fh)
                     if  not returnValue == 0:
                         sys.exit("error, while aligning read {} \
                                 against {}".format(read1, reference))
         with open(BAMunsorted, 'w') as fh:
             if read2:
-                cl1 = ["bwa", "sampe", "-P", "-s",  reference, bwaAln_1, 
+                cl1 = ["bwa", "sampe", "-P", "-s",  reference, bwaAln_1,
                         bwaAln_2, read1, read2]
                 cl2 = ["samtools", "view", "-Shb", "-F", "4", "-"]
                 p1 = subprocess.Popen(cl1, stdout=subprocess.PIPE)
@@ -402,18 +400,17 @@ def _run_pileup(global_config, bamfile):
     Perform samtools pileup on a .bam-file
     """
 
-
     if "samtools" in global_config["Tools"]:
         samtools = global_config["Tools"]["samtools"]["bin"]
     elif not common.which("samtools"):
-        sys.exit("error while trying to run samtools: samtools not present in \
-                the path and not in global config, please make sure to \
-                install samtools properly")
+        sys.exit("error while trying to run samtools: samtools not present in "
+                "the path and not in global config, please make sure to "
+                "install samtools properly")
 
     pileupfile = bamfile.replace('.bam', '_coverage.csv')
-    pileup_cmd = "{} mpileup {} | awk '{print $2, $4}' > {}".format(samtools, 
+    pileup_cmd = "{} mpileup {} | awk '{print $2, $4}' > {}".format(samtools,
             bamfile, pileupfile)
-    p1 = subprocess.Popen(pileup_cmd, shell=True, stdout=subprocess.PIPE, 
+    p1 = subprocess.Popen(pileup_cmd, shell=True, stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT)
     p1.wait()
     if p1.returncode == 0:
@@ -441,5 +438,3 @@ def plot_coverage(pileupfile, samplename=None):
     plt.savefig(samplename)     #Save plot as .png
     return 0
 
- 
- 
