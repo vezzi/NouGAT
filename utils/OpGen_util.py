@@ -4,6 +4,7 @@ import argparse
 from collections import Counter
 import pandas as pd
 import csv
+import re
 
 
 def main(args):
@@ -20,10 +21,8 @@ def main(args):
 
     #problems = find_problems_in_maps(args.opgen_report, contigsLengthDict, contigsSequencesDict)
 
-    produce_consensus(args.opgen_report, contigsLengthDict, contigsSequencesDict, args.output)
-    
+    produce_consensus(args.opgen_report, contigsLengthDict, contigsSequencesDict, args.output)    
     return
-
 
 
 def produce_consensus(opgen_report, contigsLengthDict, contigsSequencesDict, output):
@@ -166,7 +165,6 @@ def print_contigs(Maps, output):
             final_assembly.write("{}\n".format("".join(sequence)))
 
 
-
 def find_problems_in_maps(opgen_report, contigsLengthDict, contigsSequencesDict):
     ###TODO: this function is still to be defined.
     print opgen_report
@@ -251,17 +249,8 @@ def find_problems_in_maps(opgen_report, contigsLengthDict, contigsSequencesDict)
             ### check if this contig is an erroneus contig or a real repeat
     print "number of contigs aligning in multiple maps is {}".format(contigsInMultipleMaps)
 
-
-
-
-
-
     for Map in Maps_length:
         Maps[Map] = [0] * Maps_length[Map]
-
-
-
-
 
 
 def _compute_assembly_stats(assembly, genomeSize):
@@ -305,7 +294,6 @@ def _compute_assembly_stats(assembly, genomeSize):
         print "assembly stast file {} already created".format(stats_file_name)
         return (contigsLengthDict, contigsSequencesDict)
 
-
     percentageNs = float(numNs)/totalLength
     contigsLength.sort()
     contigsLength.reverse()
@@ -336,10 +324,16 @@ def _compute_assembly_stats(assembly, genomeSize):
     return (contigsLengthDict, contigsSequencesDict)
 
 
-
 def _build_new_reference(assembly, minCtgLength):
-    new_assembly_name    = os.path.basename(assembly)
-    (basename, type, extention) = new_assembly_name.split(os.extsep)
+    match_expr = re.compile("(\S+)\.(scf|ctg)\.(fasta|fa)$", re.IGNORECASE)
+    new_assembly_name = os.path.basename(assembly)
+    match_res = re.match(match_expr, new_assembly_name)
+    try:
+        (basename, type, extention) = match_res.groups()
+    except ValueError, AttributeError:
+        print("The assembly name is not valid: {}".format(new_assembly_name))
+        return new_assembly_name
+
     new_assembly_name    = basename + ".{}.{}.{}".format(type, minCtgLength, extention)
     new_assembly_name =  os.path.abspath(os.path.basename(new_assembly_name))
 
@@ -368,7 +362,6 @@ def _build_new_reference(assembly, minCtgLength):
     return new_assembly_name
 
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--assembly',       help="assembly sequence", type=str)
@@ -387,6 +380,4 @@ if __name__ == '__main__':
         sys.exit("error")
 
     main(args)
-
-
 
