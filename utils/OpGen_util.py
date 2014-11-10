@@ -325,7 +325,7 @@ def _compute_assembly_stats(assembly, genomeSize):
 
 
 def _build_new_reference(assembly, minCtgLength):
-    match_expr = re.compile("(\S+).(scf|ctg).(fasta|fa)", re.IGNORECASE)
+    match_expr = re.compile("(\S+)\.(scf|ctg)\.(fasta|fa)$", re.IGNORECASE)
     new_assembly_name = os.path.basename(assembly)
     match_res = re.match(match_expr, new_assembly_name)
     try:
