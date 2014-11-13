@@ -20,7 +20,7 @@ def _align_reads(global_config, sample_config, sorted_libraries_by_insert):
         dryrun      = common.check_dryrun(sample_config)
         if "threads" in sample_config:
             threads  = sample_config["threads"]
-        libraryInfo["alignment"] = align_bwa_mem(global_config, read1, read2, 
+        libraryInfo["alignment"] = align_bwa_mem(global_config, read1, read2,
                 reference, threads, dryrun)
     return sorted_libraries_by_insert
 
@@ -146,7 +146,7 @@ def picard_collectInsertSizeMetrics(global_config, sample_config,
                 "HISTOGRAM_FILE={}.collectInsertSize.pdf".format(
                 output_header),
                 "OUTPUT={}.collectInsertSize.txt".format(output_header),
-                "HISTOGRAM_WIDTH={}".format(histWide), 
+                "HISTOGRAM_WIDTH={}".format(histWide),
                 "VALIDATION_STRINGENCY=LENIENT", "TMP_DIR=/scratch"]
         returnValue = 0;
         common.print_command(command)
@@ -222,20 +222,23 @@ def build_reference_bwa(global_config, sample_config):
     os.chdir(bwa_index_folder)
     # if needed soft link the reference
     if not os.path.exists(base_name):
+        #check and remove broken links
+        if os.path.lexists(base_name):
+            os.remove(base_name)
         returnValue = subprocess.call(["ln", "-s", reference, base_name])
         if not returnValue == 0:
             sys.exit("error while trying to soft link reference sequence")
     # now I have a soflinked copy
     reference = os.path.join(path_name, "bwa", base_name)
     # now check if index alredy build or not
-    if not os.path.exists("{}.bwt".format(reference)): 
+    if not os.path.exists("{}.bwt".format(reference)):
         # then create the index sequence
         bwa_stdOut = open("bwa_index.stdOut", "w")
         bwa_stdErr = open("bwa_index.stdErr", "w")
         command = [program, "index", reference]
         common.print_command(command)
         if not common.check_dryrun(sample_config):
-            returnValue = subprocess.call(command, stdout=bwa_stdOut, 
+            returnValue = subprocess.call(command, stdout=bwa_stdOut,
                     stderr=bwa_stdErr)
             if  not returnValue == 0:
                 sys.exit("error, while indexing reference file {} "
