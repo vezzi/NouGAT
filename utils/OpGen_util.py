@@ -6,6 +6,24 @@ import pandas as pd
 import csv
 import re
 
+reverse_complements = {
+    "A": "T",
+    "T": "A",
+    "G": "C",
+    "C": "G",
+    "Y": "R",
+    "R": "Y",
+    "W": "W",
+    "S": "S",
+    "K": "M",
+    "M": "K",
+    "D": "H",
+    "H": "D",
+    "V": "B",
+    "B": "V",
+    "N": "N"
+}
+
 
 def main(args):
     workingDir     = os.getcwd()
@@ -20,13 +38,12 @@ def main(args):
         return
 
     #problems = find_problems_in_maps(args.opgen_report, contigsLengthDict, contigsSequencesDict)
-
     produce_consensus(args.opgen_report, contigsLengthDict, contigsSequencesDict, args.output)    
     return
 
 
 def produce_consensus(opgen_report, contigsLengthDict, contigsSequencesDict, output):
-    print opgen_report
+
     # starting to parse opgen report, since the csv file is unstructured I need to parse it
     placement        = "{}.placement".format(opgen_report)
     stats            = "{}.stats".format(opgen_report)
@@ -51,7 +68,9 @@ def produce_consensus(opgen_report, contigsLengthDict, contigsSequencesDict, out
         stats_file.close()
         gaps_overlaps_file.close()
 
-   # I need a list with one element for each base in my map. THe problem is that the OpGen report does not tell the length of the maps, therefore I need to find the maximum limit between the placments part and the gapped part
+   # I need a list with one element for each base in my map. THe problem is that
+   # the OpGen report does not tell the length of the maps, therefore I need to 
+   # find the maximum limit between the placments part and the gapped part
     Maps            = {}
     Maps_length     = {}
     ContigsToMaps   = {}
@@ -97,24 +116,25 @@ def produce_consensus(opgen_report, contigsLengthDict, contigsSequencesDict, out
     multipleHittedPositions = 0
     rescuedBases            = 0
     conflictingBases        = 0
+
     for Map in Maps_length:
         Maps[Map] = ["n"] * Maps_length[Map]
         print "now working with Map {}".format(Map)
         if MapsToContigs[Map] is not None: # if this map has some contigs aligning
             for hit in MapsToContigs[Map]:
-                start_on_Map = hit[0]
-                end_on_Map   = hit[1]
+                start_on_Map = hit[0] - 1
+                end_on_Map   = hit[1] - 1
                 Ctg          = hit[2]
-                start_on_Ctg = hit[3]
-                end_on_Ctg   = hit[4]
+                start_on_Ctg = hit[3] - 1
+                end_on_Ctg   = hit[4] - 1
                 orientation  = hit[5]
                 #extract the seuqence
                 sequence     = contigsSequencesDict[Ctg][start_on_Ctg:end_on_Ctg]
                 if orientation == '-1':
                     sequence = revcom(sequence)
                 letters = list(sequence)
-                index = start_on_Map
-                
+                index = start_on_Map 
+
                 for base in letters:
                     if len(Maps[Map]) <= index:
                         Maps[Map].append("n");
@@ -142,16 +162,8 @@ def complement(s):
     letters      = list(s)
     complemented = []
     for base in letters:
-        if base is "A" or base is "a":
-            complemented.append("T")
-        elif base is 'C' or base is 'c':
-            complemented.append("G")
-        elif base is 'G' or base is 'g':
-            complemented.append("C")
-        elif base is 'T' or base is 't':
-            complemented.append("A")
-        elif base is 'N' or base is 'n':
-            complemented.append("N")
+        if base.title() in reverse_complements.keys():
+            complemented.append(reverse_complements[base.title()])
         else:
             complemented.append("N")
 
