@@ -44,7 +44,7 @@ def main(args):
         find_problems_in_maps(placement, contigsLengthDict, contigsSequencesDict)
         return
 
-    produce_consensus(placement, gaps_overlaps, contigsLengthDict, contigsSequencesDict, args.output, args.place_last)    
+    produce_consensus(placement, gaps_overlaps, contigsLengthDict, contigsSequencesDict, args.output, args.place_last)
     return
 
 
@@ -72,7 +72,7 @@ def parse_report(opgen_report):
         placement_file.close()
         stats_file.close()
         gaps_overlaps_file.close()
-    
+
     return (placement, gaps_overlaps)
 
 
@@ -95,13 +95,13 @@ def produce_consensus(placement, gaps_overlaps, contigsLengthDict, contigsSequen
                 Contig = Contig.split()[0]
                 if not ContigsToMaps.has_key(Contig):
                     ContigsToMaps[Contig] = []
-                
+
                 if not Maps_length.has_key(Map):
                     Maps_length[Map] = Map_End
                     MapsToContigs[Map] = []
                 elif Map_End > Maps_length[Map]:
                     Maps_length[Map] = Map_End
-                
+
                 MapsToContigs[Map].append([Map_Start, Map_End, Contig, Ctg_Start, Ctg_End, Orientation])
                 ContigsToMaps[Contig].append([Map, Map_Start, Map_End, Ctg_Start, Ctg_End, Orientation])
 
@@ -144,12 +144,14 @@ def produce_consensus(placement, gaps_overlaps, contigsLengthDict, contigsSequen
                 if orientation == '-1':
                     sequence = revcom(contigsSequencesDict[Ctg][end_on_Ctg:start_on_Ctg:-1])
                 letters = list(sequence)
-                index = start_on_Map 
+                index = start_on_Map
 
+                #Start pasting the contig onto the canvas
                 for base in letters:
                     if len(Maps[Map]) <= index:
                         Maps[Map].append("n")
                     if Maps[Map][index] is not "n":
+                        #For recordkeeping purposes, we'll overwrite any sequence
                         multipleHittedPositions += 1
                         if Maps[Map][index].title() in ambigous and base.title() not in ambigous:
                             rescuedBases += 1
@@ -193,7 +195,10 @@ def print_contigs(Maps, output):
 
 
 def find_problems_in_maps(placement, contigsLengthDict, contigsSequencesDict):
-
+    """ The idea is to output the sequences of contig overlaps, this might
+        tell us something about the quality of this process. Are we mixing apples
+        in with the oranges? Very WIP!
+    """
     Map_contigs = OrderedDict()
     with open(placement, 'rb') as csvfile:
         opgenCSV = csv.reader(csvfile, delimiter='\t')
@@ -207,10 +212,14 @@ def find_problems_in_maps(placement, contigsLengthDict, contigsSequencesDict):
 
     if not os.path.exists("ovl"):
         os.mkdir("ovl")
+    # All combinations of contigs (without replacement) sorted from left to right on the map.
     for combo in combinations(Map_contigs.keys(), 2):
         l_map, r_map = combo
-        l_contig = Map_contigs[l_map]
-        r_contig = Map_contigs[r_map]
+        l_contig = Map_contigs[l_map] # contig starting leftmost
+        r_contig = Map_contigs[r_map] # contig starting rightmost
+
+        # l0(   r0(     l1)   r1)
+        # Note, enveloping overlaps should be pruned before this.
         if l_map[1] > r_map[0] and l_map[0] < r_map[1]:
             ovl_len = min(l_map[1], r_map[1])- r_map[0]
             l_ovl = [l_contig[1] - ovl_len, l_contig[1], l_contig[2], l_contig[3]]
@@ -229,7 +238,7 @@ def find_problems_in_maps(placement, contigsLengthDict, contigsSequencesDict):
                 with open("ovl/{}.fasta".format(ovl_name), "w") as overlap:
                     overlap.write(">{}\n".format(ovl_name))
                     overlap.write(sequence)
-                    
+
 
 def _compute_assembly_stats(assembly, genomeSize):
     stats_file_name = ".".join([assembly, "statistics", "txt"])
@@ -242,7 +251,7 @@ def _compute_assembly_stats(assembly, genomeSize):
     N50 = 0
     N80 = 0
     numNs = 0
-    
+
     with open(assembly, "r") as ref_fd:
         fasta_header = ref_fd.readline()
         header = (fasta_header.split(">")[1]).rstrip()
@@ -275,7 +284,7 @@ def _compute_assembly_stats(assembly, genomeSize):
     percentageNs = float(numNs)/totalLength
     contigsLength.sort()
     contigsLength.reverse()
-    
+
     teoN50 = genomeSize * 0.5
     teoN80 = genomeSize * 0.8
     testSum = 0
@@ -318,7 +327,7 @@ def _build_new_reference(assembly, minCtgLength):
     if os.path.exists(new_assembly_name):
         print "assembly {} already created".format(new_assembly_name)
         return new_assembly_name
-    
+
     contigID = 1
     with open(new_assembly_name, "w") as new_ref_fd:
         with open(assembly, "r") as ref_fd:
@@ -351,12 +360,12 @@ if __name__ == '__main__':
             help="generates only assembly stats")
     parser.add_argument('--opgen-report',help="op gen placment report", type=str)
     parser.add_argument('--find-problems-in-maps',
-            help="generates only the new refernce (i.e., only scaffolds longer than min-contig)",
-            default=0, type=int)
+            help="Generates overlap sequences found in the map, if any",
+            action='store_true', default=False)
     parser.add_argument('--produce-consensus',
             help="generates only the new refernce (i.e., only scaffolds longer than min-contig)",
-            default=0, type=int)
-    parser.add_argument('--output', help="aoutput header name",
+            action='store_true', defaul=False)
+    parser.add_argument('--output', help="output header name",
             default="opgen_scaffolded_assembly", type=str)
     parser.add_argument('--place-last', 
             help="Place contigs with this prefix last on the consensus sequence", type=str)
