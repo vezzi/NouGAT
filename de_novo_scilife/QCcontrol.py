@@ -145,17 +145,64 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
             print "ABySS kmer plotting failed: unkwnown reason"
         else :
             subprocess.call(("rm", "preUnitgs.fa"))
-            _plotKmerPlot(1,200, kmer, "kmer_coverage_1_200.png")
-            _plotKmerPlot(1,500, kmer, "kmer_coverage_1_500.png")
-            _plotKmerPlot(15,200, kmer, "kmer_coverage_15_200.png")
-            _plotKmerPlot(15,500, kmer, "kmer_coverage_15_500.png")
+            _plotKmerFixed(1,200, kmer, "kmer_coverage_1_200.png")
+            _plotKmerFixed(1,500, kmer, "kmer_coverage_1_500.png")
+            _plotKmerFixed(15,200, kmer, "kmer_coverage_15_200.png")
+            _plotKmerFixed(15,500, kmer, "kmer_coverage_15_500.png")
+            _plotKmer(kmer, "kmer_coverage.png")
 
     os.chdir("..")
     sample_config["abyss"] = ABySS_Kmer_Folder
     return sample_config
 
 
-def _plotKmerPlot(min_limit, max_limit,kmer, output_name):
+def _plotKmer(kmer, output_name):
+    """Kmer abundance as a single plot, suitable for the report
+    """
+    Kmer_histogram = pd.io.parsers.read_csv("histogram.hist", sep='\t',
+            header=None)
+    Kmer_coverage = Kmer_histogram[Kmer_histogram.columns[0]].tolist()
+    Kmer_count = Kmer_histogram[Kmer_histogram.columns[1]].tolist()
+
+    # Not interested in coverage > 5000
+    kcov = [c for c in Kmer_coverage if c <= 5000]
+    # Multiply the abundance by a gradient
+    kcount_gradient = [kcov[i] * Kmer_count[i] for i in range(len(kcov))]
+
+    first_valley = kcount_gradient.index(min(kcount_gradient[0:100]))
+    after_valley = kcount_gradient[first_valley:]
+    avg_count = sum(after_valley) / len(after_valley)
+
+    # This hack seems to work reasonably well. Set the the xlimit for 
+    # the plot to be the average kmer abundance in the interval fm 
+    # first valley to 5000.
+    xmax = min(range(len(after_valley)),
+            key=lambda i: abs(after_valley[i]-avg_count))
+    xmax += first_valley
+
+    # It might happen
+    if xmax < 200:
+        xmax = 200
+
+    ymax = max(kcount_gradient)
+    peak = kcount_gradient.index(max(after_valley))
+    plt.xlim((0, xmax))
+    plt.ylim((0, ymax))
+    plt.plot(kcov, kcount_gradient)
+
+    plt.vlines(peak, 1, kcount_gradient[peak], colors='r',
+        linestyles='--')
+    plt.text(peak, kcount_gradient[peak], str(peak))
+
+    plotname = "{}".format(output_name)
+    plt.savefig(plotname)
+    plt.clf()
+    return 0
+
+
+def _plotKmerFixed(min_limit, max_limit, kmer, output_name):
+    """Old kmerplot, kept just in case...
+    """
     Kmer_histogram = pd.io.parsers.read_csv("histogram.hist", sep='\t',
             header=None)
     Kmer_coverage = Kmer_histogram[Kmer_histogram.columns[0]].tolist()
@@ -548,7 +595,7 @@ def _run_report(global_config, sample_config, sorted_libraries_by_insert):
                     "highly heterozygous a second peak at half of the coverage "
                     "can be expected.")
             kmer_1_200 = os.path.join(sample_config["abyss"],
-                    "kmer_coverage_1_200.png")
+                    "kmer_coverage.png")
             doc.add_image(kmer_1_200, 500, 300, pdf.CENTER,
                     "kmer profile with k={}.".format(sample_config["kmer"]))
             #copy the results in resutls
