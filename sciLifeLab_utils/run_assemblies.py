@@ -123,7 +123,7 @@ def submit_job(sample_config, global_config, output,  pipeline, env,
     slurm_handle.write("source activate {}\n".format(env))
     slurm_handle.write("module load bioinfo-tools\n")
     slurm_handle.write("module load soapdenovo/2.04-r240\n")
-    slurm_handle.write("module load spades/3.0.0\n")
+    slurm_handle.write("module load spades/3.1.1\n")
     slurm_handle.write("module load cabog/8.1\n")
     slurm_handle.write("module load abyss/1.3.5\n")
     slurm_handle.write("deNovo_pipeline.py --global-config {} "
