@@ -5,11 +5,11 @@ Pipelines:
  align: []
 Tools:
  kmergenie:
-  bin: /proj/a2010002/nobackup/sw/mf/bioinfo-tools/kmergenie/kmergenie-1.6741/kmergenie
+  bin: /sw/apps/bioinfo/KmerGenie/1.6741/milou/kmergenie
   options: [""]
  fastqc:
-  bin: /sw/apps/bioinfo/fastqc/0.10.1/milou/fastqc
-  options: [--threads,  "16" ,  --outdir,  fastqc]
+  bin: /sw/apps/bioinfo/fastqc/0.11.2/milou/fastqc
+  options: [--threads,  "16" ,  --outdir,  fastqc, --extract]
  trimmomatic:
   bin: /proj/a2010002/nobackup/sw/mf/bioinfo-tools/misc/trimmomatic/0.30/trimmomatic-0.30.jar
   options: [""]
@@ -35,20 +35,20 @@ Tools:
   bin: /sw/apps/bioinfo/cabog/8.1/Linux-amd64/bin/
   options: [""]
  masurca:
-  bin: /sw/apps/bioinfo/MaSuRCA/2.2.1/milou/
+  bin: /sw/apps/bioinfo/MaSuRCA/2.3.2/milou/
   options: [""]
  soapdenovo:
   bin: /sw/apps/bioinfo/SOAPdenovo/2.04-r240/milou/bin/SOAPdenovo-63mer
   options: [""]
  spades:
-  bin: /sw/apps/bioinfo/spades/3.0.0/milou/bin/spades.py
+  bin: /sw/apps/bioinfo/spades/3.1.1/milou/bin/spades.py
   options: ["--careful", "-t 8"]
  trinity:
   bin:
   options: []
  FRC:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/FRC_align/bin/FRC
+  bin: /proj/a2010002/nobackup/sw/mf/bioinfo-tools/misc/FRC_align/bin/FRC
   options: ""
  qaTools:
-  bin: /home/vezzi/DE_NOVO_PIPELINE/tools/qaTools/qaCompute
+  bin: /proj/a2010002/nobackup/sw/mf/bioinfo-tools/misc/qaTools/qaCompute
   options: ""
