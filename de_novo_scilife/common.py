@@ -208,11 +208,9 @@ def _check_pipeline(sample_config, global_config):
                 binaries_to_check.append(os.path.join(tool_bin,))
             if tool == "trinity": ## check special tools
                 binaries_to_check.append(os.path.join(tool_bin,
-                    "Trinity.pl"))
+                    "Trinity"))
                 binaries_to_check.append(os.path.join(tool_bin, "util",
-                    "alignReads.pl"))
-                binaries_to_check.append(os.path.join(tool_bin, "util",
-                    "RSEM_util", "run_RSEM_align_n_estimate.pl"))
+                    "align_and_estimate_abundance.pl"))
             if tool == "trimmomatic":
                 if not os.path.exists(tool_bin):
                     sys.exit("tool trimmomatic specified but file {} does not "

@@ -659,17 +659,18 @@ def _run_trinity(global_config, sample_config, sorted_libraries_by_insert):
     sorted_libraries_by_insert = common.prepare_folder_structure(
             sorted_libraries_by_insert)
      # in masurca case there is no exectuable as a make file must be created
-    programBIN      = global_config["Tools"][assembler]["bin"] + "Trinity.pl"
+    programBIN = global_config["Tools"][assembler]["bin"] + "Trinity"
     program_options = global_config["Tools"][assembler]["options"]
     if assembler in sample_config:
         program_options=sample_config[assembler]
     ########### HERE IT START THE SPECIFIC ASSEMBLER PART
 
     command = [programBIN]
-    command.append("--seqType")
-    command.append("fq")
-    command.append("--JM")
-    command.append("50G")
+    command.extend(["--seqType", "fq"])
+    command.extend(["--JM", "100G"])
+    if "threads" in sample_config:
+        command.extend(["--CPU", str(sample_config["threads"])])
+
     for library, libraryInfo in sorted_libraries_by_insert:
         read1 = libraryInfo["pair1"]
         read2 = libraryInfo["pair2"]
@@ -688,24 +689,21 @@ def _run_trinity(global_config, sample_config, sorted_libraries_by_insert):
             print("trinity: somthing wrong or unexpected in the sample "
                     "config file")
             return sample_config
-    command.append("--output")
-    command.append("trinity")
+    command.extend(["--output", "trinity"])
     assembler_stdOut = open("trinity.stdOut", "w")
     assembler_stdErr = open("trinity.stdErr", "w")
-    print command
+    print " ".join(command)
 
     returnValue = subprocess.call(" ".join(command), stdout=assembler_stdOut,
             stderr=assembler_stdErr, shell=True)
 
-    # now align reads back to transcripts
+    # now align reads back to transcripts and estimate abundance
     os.chdir("trinity")
     programBIN = global_config["Tools"][assembler]["bin"] + \
-            "util/alignReads.pl"
+            "util/align_and_estimate_abundance.pl"
     command = [programBIN]
-    command.append("--target")
-    command.append("Trinity.fasta")
-    command.append("--seqType")
-    command.append("fq")
+    command.extend(["--transcripts", "Trinity.fasta"])
+    command.extend(["--seqType", "fq"])
     for library, libraryInfo in sorted_libraries_by_insert:
         read1 = libraryInfo["pair1"]
         read2 = libraryInfo["pair2"]
@@ -718,34 +716,15 @@ def _run_trinity(global_config, sample_config, sorted_libraries_by_insert):
             command.append("--right")
             command.append("{}".format(os.path.splitext(read2)[0]))
 
-    command.append("--aligner")
-    command.append("bowtie")
-    command.append("--retain_intermediate_files")
-    print command
-    returnValue = subprocess.call(" ".join(command), stdout=assembler_stdOut,
-            stderr=assembler_stdErr, shell=True)
+    command.extend(["--aln_method", "bowtie"])
+    command.extend(["--est_method", "RSEM"])
+    command.append("--debug")
+    command.append("--trinity_mode")
+    command.append("--prep_reference")
 
-    # now quantify trnascripts
-    programBIN = global_config["Tools"][assembler]["bin"] + \
-            "util/RSEM_util/run_RSEM_align_n_estimate.pl"
-    command = [programBIN]
-    command.append("--transcripts")
-    command.append("Trinity.fasta")
-    command.append("--seqType")
-    command.append("fq")
-    for library, libraryInfo in sorted_libraries_by_insert:
-        read1 = libraryInfo["pair1"]
-        read2 = libraryInfo["pair2"]
-        orientation = libraryInfo["orientation"]
-        insert = libraryInfo["insert"]
-        std = libraryInfo["std"]
-        if read2 is not None and orientation == "innie":
-            command.append("--left")
-            command.append("{}".format(os.path.splitext(read1)[0]))
-            command.append("--right")
-            command.append("{}".format(os.path.splitext(read2)[0]))
-
-    print command
+    if "threads" in sample_config:
+        command.extend(["--thread_count", str(sample_config["threads"])])
+    print " ".join(command)
     returnValue = subprocess.call(" ".join(command), stdout=assembler_stdOut,
             stderr=assembler_stdErr, shell=True)
 
