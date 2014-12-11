@@ -44,7 +44,7 @@ Tools:
   bin: /sw/apps/bioinfo/spades/3.1.1/milou/bin/spades.py
   options: ["--careful", "-t 8"]
  trinity:
-  bin:
+  bin: /sw/apps/bioinfo/trinity/2014-07-17/milou/
   options: []
  FRC:
   bin: /proj/a2010002/nobackup/sw/mf/bioinfo-tools/misc/FRC_align/bin/FRC
