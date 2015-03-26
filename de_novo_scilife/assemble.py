@@ -261,7 +261,7 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
                     "final.assembly.fasta"), "{}.scf.fasta".format(outputName)])
             else:
                 print("something wrong with Allpaths > no contig file generated")
-                oc.chdir("..")
+                os.chdir("..")
                 return sample_config
     else:
         print("ALLPATHS PrepareAllPathInputs terminated with an error. "
@@ -568,7 +568,7 @@ def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
     else:
         print("SOAPdenovo terminated with an error. Please check running "
                 "folder for more informations")
-        oc.chdir("..")
+        os.chdir("..")
         return sample_config
     os.chdir("..")
     return sample_config
