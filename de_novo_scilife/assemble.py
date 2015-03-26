@@ -266,7 +266,7 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
     else:
         print("ALLPATHS PrepareAllPathInputs terminated with an error. "
                 "Please check running folder for more informations")
-        oc.chdir("..")
+        os.chdir("..")
         return sample_config
     os.chdir("..")
     return sample_config
