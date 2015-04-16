@@ -364,7 +364,7 @@ if __name__ == '__main__':
             action='store_true', default=False)
     parser.add_argument('--produce-consensus',
             help="generates only the new refernce (i.e., only scaffolds longer than min-contig)",
-            action='store_true', defaul=False)
+            action='store_true', default=False)
     parser.add_argument('--output', help="output header name",
             default="opgen_scaffolded_assembly", type=str)
     parser.add_argument('--place-last', 
