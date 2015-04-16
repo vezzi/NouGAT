@@ -22,12 +22,13 @@ The supported tools are:
 * bwa
 * picard-tools
 * samtools
-* abyss
-* allpathslg
+* ABySS
+* ALLPATHS-LG
 * cabog
 * MaSuRCA
 * SOAPdenovo
-* spades
+* SPAdes
+* Trinity
 * FRC_align --> https://github.com/vezzi/FRC_align
 * qaTools   --> https://github.com/vezzi/qaTools
 

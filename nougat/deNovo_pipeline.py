@@ -1,10 +1,6 @@
 import sys, os, yaml, glob
 import argparse
-from de_novo_scilife import evaluete
-from de_novo_scilife import assemble
-from de_novo_scilife import QCcontrol
-from de_novo_scilife import align
-from de_novo_scilife import common
+from nougat import evaluete, assemble, QCcontrol, align, common
 
 
 def main(args):
