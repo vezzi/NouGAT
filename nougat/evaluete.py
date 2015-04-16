@@ -9,8 +9,7 @@ import matplotlib
 matplotlib.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
-from de_novo_scilife import common
-from de_novo_scilife import align
+from nougat import common, align
 
 
 def run(global_config, sample_config):

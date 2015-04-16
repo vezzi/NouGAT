@@ -8,9 +8,9 @@ import shutil
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
-from de_novo_scilife import common
-from de_novo_scilife import pdf
-from de_novo_scilife.pdf.theme import colors, DefaultTheme
+from nougat import common
+from nougat import pdf
+from nougat.pdf.theme import colors, DefaultTheme
 
 
 def main(args):
