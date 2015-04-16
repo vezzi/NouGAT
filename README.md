@@ -1,21 +1,21 @@
-# de_novo_scilife
-De novo assembly is certainly one of the most difficult tasks of today genomics. On the one hand new sequencing technologies have given the ability to the research community to sequence an increasing number of genome, however, on the other hand, the high number of tools, the difficulties in evaluating the results, and the need of high computational resources makes de novo assembly of genomes still an holygrail.
+# NouGAT
+De novo assembly is certainly one of the most difficult tasks of today genomics. On the one hand new sequencing technologies have given the ability to the research community to sequence an increasing number of genome, however, on the other hand, the high number of tools, the difficulties in evaluating the results, and the need of high computational resources makes de novo assembly of genomes still an holy grail.
 
-De Novo Scilife is a pipeline that allows, to a certain extent, to automate some of the most complex common processes that take place during the analysis of a de novo assembly project. The pipeline aims to generate a first draft assembly that can be used as a first step towards the production of a better assembly or in order to draw the first biological conclusion.
+NouGAT, NGI open universal Genome Assembly Toolbox, is a pipeline that allows, to a certain extent, to automate some of the most complex common processes that take place during the analysis of a de novo assembly project. The pipeline aims to generate a first draft assembly that can be used as a first step towards the production of a better assembly or in order to draw the first biological conclusion.
 
 The pipeline is structured in three different sub-pipelines and in a number of commodity scripts that allow to speed up the analysis in the Uppmax environment.
 
 ## Installation
-De_novo_scilife is a python package. From a practical point of view it is a wrapper around a certain number of tools that allow to perform de novo assembly analysis.
+NouGAT is a python package. From a practical point of view it is a wrapper around a certain number of tools that allow to perform de novo assembly analysis.
 In order to install it the following steps must be followed:
 * Install conda (http://docs.continuum.io/anaconda/install.html#linux-install)
 * create a virtual enviorment for the de novo pipeline `conda create -n DeNovoPipeline anaconda`
 * activate the virtual enviorment `source activate DeNovoPipeline`
 * install report lab package to generate reports `pip install reportlab`
-* clone the repository `git clone https://github.com/SciLifeLab/de_novo_scilife.git`
+* clone the repository `git clone https://github.com/SciLifeLab/NouGAT.git`
 * install de novo pipeline `python setup.py develop`
 
-De_novo_pipeline is a wrapper around several tools. The tools needs to be installed and it is highly recommended to have them available on the path.
+NouGAT is a wrapper around several tools. The tools needs to be installed and it is highly recommended to have them available on the path.
 The supported tools are:
 * fastqc
 * trimmomatic
