@@ -128,7 +128,7 @@ libraries:
 
 
 ## The Pipelines
-De_Novo_Scilife currently implements 3 different pipelines:
+NouGAT currently implements 3 different pipelines:
 
 * QCcontrol
 * assemble
