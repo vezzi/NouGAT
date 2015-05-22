@@ -29,7 +29,7 @@ Tools:
   bin: /sw/apps/bioinfo/abyss/1.3.5/milou/bin/abyss-mergepairs
   options: ["-m 20", "-1 230", "-2 230"]
  allpaths:
-  bin: /sw/apps/bioinfo/allpathslg/49618/milou/bin/
+  bin: /sw/apps/bioinfo/allpathslg/52485/milou/bin/
   options: ["PLOIDY=2"]
  cabog:
   bin: /sw/apps/bioinfo/cabog/8.1/Linux-amd64/bin/
