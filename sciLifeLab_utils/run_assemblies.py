@@ -128,6 +128,8 @@ def submit_job(sample_config, global_config, output,  pipeline, env,
     slurm_handle.write("module load abyss/1.3.5\n")
     slurm_handle.write("module load samtools/1.1\n")
     slurm_handle.write("module load bowtie/1.1.0\n")
+    slurm_handle.write("module unload gcc\n")
+    slurm_handle.write("module load allpathslg/52485\n")
     slurm_handle.write("deNovo_pipeline.py --global-config {} "
             "--sample-config {}\n\n".format(global_config,sample_config))
     slurm_handle.close()
