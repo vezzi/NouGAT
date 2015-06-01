@@ -5,10 +5,11 @@ import gzip
 import re
 import string
 import shutil
+import numpy as np
 from matplotlib import pyplot as plt
 from nougat import common, align, pdf
 from nougat.pdf.theme import colors, DefaultTheme
-
+from nougat.pdf.peakdetect import peakdet 
 
 def run(global_config, sample_config):
     sorted_libraries_by_insert = common._sort_libraries_by_insert(
@@ -167,23 +168,37 @@ def _plotKmer(kmer, output_name):
     # Multiply the abundance by a gradient
     kcount_gradient = [kcov[i] * Kmer_count[i] for i in range(len(kcov))]
 
-    first_valley = kcount_gradient.index(min(kcount_gradient[0:100]))
-    after_valley = kcount_gradient[first_valley:]
-    avg_count = sum(after_valley) / len(after_valley)
+    # Lazily drift towards the most spacious area under the curve
+    # using divide and conquer.
+    def get_bisect(chunk):
+        left = chunk[:len(chunk)/2]
+        right = chunk[len(chunk)/2:]
+        lweight = sum(map(lambda x: x[0] * x[1], left)) / len(left)
+        rweight = sum(map(lambda x: x[0] * x[1], right)) / len(right)
+        if lweight > rweight:
+            return left
+        else:
+            return right
 
-    # This hack seems to work reasonably well. Set the the xlimit for 
-    # the plot to be the average kmer abundance in the interval fm 
-    # first valley to 5000.
-    xmax = min(range(len(after_valley)),
-            key=lambda i: abs(after_valley[i]-avg_count))
-    xmax += first_valley
+    # Perform six bisections
+    cov_count = zip(kcov, kcount_gradient)
+    for i in xrange(0,6):
+        cov_count = get_bisect(cov_count)
+    xmax = cov_count[-1][0]
 
-    # It might happen
-    if xmax < 200:
-        xmax = 200
-
+    # We could always use more space
+    xmax = int(xmax * 1.3)
     ymax = max(kcount_gradient)
-    peak = kcount_gradient.index(max(after_valley))
+
+    # Find the highest peak x > 1. Works 70% of the time.
+    maxtab, mintab = peakdet(kcount_gradient, 100000.0)
+    first_peak = list(np.array(maxtab)[:,0])[0]
+    # Discard x = 0 peak
+    if first_peak == 0 and maxtab.size > 2:
+        maxtab = np.delete(maxtab, 0, 0)
+    peak = np.argmax(maxtab, axis=0)[1]
+    peak = maxtab[peak][0]
+
     plt.xlim((0, xmax))
     plt.ylim((0, ymax))
     plt.plot(kcov, kcount_gradient)
