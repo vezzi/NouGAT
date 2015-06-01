@@ -2,6 +2,8 @@ import sys, os, yaml, glob
 import subprocess
 import argparse
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
 
