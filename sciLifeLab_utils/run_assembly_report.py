@@ -418,6 +418,7 @@ def _plotFRCurve(outputName, FRCurves):
     for i in range(len(tableau20)):
         r, g, b = tableau20[i]
         tableau20[i] = (r / 255., g / 255., b / 255.)
+    plt.rcParams['lines.linewidth'] = 2.0
 
     FRCurveName = "{}_FRCurve.png".format(outputName)
     maxXvalues   = []
@@ -428,7 +429,7 @@ def _plotFRCurve(outputName, FRCurves):
         FRC_features = FRC_data[FRC_data.columns[0]].tolist()
         FRC_coverage = FRC_data[FRC_data.columns[1]].tolist()
         plt.plot(FRC_features, FRC_coverage, label="{}".format(assembler),
-                 color=tableau20[i], marker=marks[i], markersize=1.5, markeredgecolor='k', markevery=2)
+                 color=tableau20[i], marker=marks[i], markersize=5, markeredgecolor='k', markevery=2)
         maxXvalues.append(max(FRC_features))
     maxXvalues.sort()
     maxXvalues.reverse()
