@@ -105,7 +105,6 @@ def submit_job(sample_config, global_config, output,  pipeline, env,
     slurm_handle = open(slurm_file, "w")
 
     slurm_handle.write("#! /bin/bash -l\n")
-    slurm_handle.write("set -e\n")
     slurm_handle.write("#SBATCH -A {}\n".format(project))
     slurm_handle.write("#SBATCH -o {}_{}.out\n".format(output,pipeline))
     slurm_handle.write("#SBATCH -e {}_{}.err\n".format(output,pipeline))
@@ -121,6 +120,7 @@ def submit_job(sample_config, global_config, output,  pipeline, env,
     if qos:
         slurm_handle.write("#SBATCH --qos={}".format(qos))
     slurm_handle.write("\n\n")
+    slurm_handle.write("set -e\n")
     slurm_handle.write("source activate {}\n".format(env))
     slurm_handle.write("module load bioinfo-tools\n")
     slurm_handle.write("module load bwa\n")
