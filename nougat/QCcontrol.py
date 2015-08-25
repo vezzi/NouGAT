@@ -13,6 +13,7 @@ from nougat.pdf.peakdetect import peakdet
 def run(global_config, sample_config):
     sorted_libraries_by_insert = common._sort_libraries_by_insert(
             sample_config)
+    sample_config["commands"] = ""
     if "tools" in sample_config:
         """If so, execute them one after the other in the specified order
         (might not work)"""
@@ -83,6 +84,7 @@ def _run_fastqc(global_config, sample_config, sorted_libraries_by_insert):
         if read2 is not None:
             command.append(read2)
         common.print_command(command)
+        sample_config["commands"] += "\n" + common.get_command_str(command)
         folder_output_name = os.path.join(FastqcFolder,
                 os.path.basename(read1).split(".fastq.gz")[0])
         if not common.check_dryrun(sample_config) and not \
@@ -134,6 +136,8 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
             command += " {} ".format(read1)
 
     common.print_command(command)
+    sample_config["commands"] += "\n" + common.get_command_str(command)
+
     if not common.check_dryrun(sample_config) and not \
             os.path.exists("histogram.hist"):
         ABySS_Kmer_stdOut = open("ABySS_Kmer_Folder.stdOut", "a")
@@ -287,6 +291,8 @@ def _run_trimmomatic(global_config, sample_config, sorted_libraries_by_insert):
                     "LEADING:3", "TRAILING:3", "SLIDINGWINDOW:4:15",
                     "MINLEN:30"]
             common.print_command(command)
+            sample_config["commands"] += "\n" + common.get_command_str(command)
+
             # do not execute is files have been already gennerated
             if not common.check_dryrun(sample_config) and not \
                     os.path.exists(output_read1_pair):
@@ -362,6 +368,8 @@ def _run_kmergenie(global_config, sample_config, sorted_libraries_by_insert):
         cmd_list.append("-t {}".format(threads))
     command = " ".join(cmd_list)
     common.print_command(command)
+    sample_config["commands"] += "\n" + common.get_command_str(command)
+
 
     if not common.check_dryrun(sample_config):
         with open(kmer_input, "w") as f:

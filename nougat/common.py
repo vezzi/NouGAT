@@ -128,15 +128,17 @@ def check_dryrun(sample_config):
         return 1
     return 0
 
-def print_command(command):
-    """ prinnts in ahuman readable way a command stored in a list"""
+def get_command_str(command):
     ts = time.time()
     st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-    print st
     if type(command) is list:
-        print ' '.join(command)
-    else:
-        print command
+        command = ' '.join(command)
+
+    return "{}\n{}\n".format(st, command)
+
+def print_command(command):
+    """ prints in a human readable way a command stored in a list"""
+    print get_command_str(command)
 
 
 def _check_pipeline(sample_config, global_config):

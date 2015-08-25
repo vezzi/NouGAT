@@ -352,8 +352,15 @@ def _run_qc_report(global_config, sample_config):
             if not os.path.exists(dest):
                 shutil.copytree(kmerdir, dest)
     doc.render(PDFtitle)
+    
+    # Copy the pipeline files and commands run to the report directory
+    filesToCopy = glob.glob(currentDir+"/{}_QCcontrol.*".format(sampleName))
+    for cfile in filesToCopy:
+        shutil.copyfile(cfile, os.path.join(reportDir, os.path.basename(cfile)))
 
-    ##TODO: if trimmomatic not run needs to copy also original reads?
+    with open(os.path.join(reportDir, "commands.txt"), "w") as f:
+        f.write(sample_config.get("commands", ""))
+
     os.chdir(currentDir)
 
 if __name__ == '__main__':
@@ -376,9 +383,9 @@ if __name__ == '__main__':
                 sample_config = yaml.load(sample_config_handle)
             with open(global_yaml) as global_config_handle:
                 global_config = yaml.load(global_config_handle)
-        except IOerror, e:
+        except IOError, e:
             print "Cannot open file: {}".format(e)
-        except YAMLerror, e:
+        except YAMLError, e:
             print "Error in config file: {}".format(e)
         else:
             _run_qc_report(global_config, sample_config)
