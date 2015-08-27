@@ -113,7 +113,7 @@ def picard_CGbias(global_config, sample_config, sorted_alignments_by_insert):
                 "OUTPUT={}.collectGcBias.txt".format(output_header),
                 "CHART_OUTPUT={}.collectGcBias.pdf".format(output_header),
                 "ASSUME_SORTED=true", "VALIDATION_STRINGENCY=LENIENT",
-                "TMP_DIR=/scratch"]
+                "TMP_DIR=$TMPDIR"]
         returnValue = 0;
         common.print_command(command)
         if not os.path.exists("{}.collectGcBias.pdf".format(output_header)):
@@ -147,7 +147,7 @@ def picard_collectInsertSizeMetrics(global_config, sample_config,
                 output_header),
                 "OUTPUT={}.collectInsertSize.txt".format(output_header),
                 "HISTOGRAM_WIDTH={}".format(histWide),
-                "VALIDATION_STRINGENCY=LENIENT", "TMP_DIR=/scratch"]
+                "VALIDATION_STRINGENCY=LENIENT", "TMP_DIR=$TMPDIR"]
         returnValue = 0;
         common.print_command(command)
         if not os.path.exists("{}.collectInsertSize.pdf".format(
@@ -178,7 +178,7 @@ def picard_markDuplicates(global_config, sample_config,
                 "INPUT={}".format(BAMfile), "OUTPUT={}_noDup.bam".format(
                 output_header),"METRICS_FILE={0}.markDuplicates.txt".format(
                 output_header), "ASSUME_SORTED=true",
-                "VALIDATION_STRINGENCY=LENIENT", "TMP_DIR=/scratch"]
+                "VALIDATION_STRINGENCY=LENIENT", "TMP_DIR=$TMPDIR"]
         returnValue = 0;
         common.print_command(command)
         if not os.path.exists("{}.markDuplicates.txt".format(output_header)):
