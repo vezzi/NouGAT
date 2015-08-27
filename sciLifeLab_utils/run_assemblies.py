@@ -17,7 +17,7 @@ def main(args):
         os.chdir(sample_folder)
         # if this is the case I need to retrive the project name from the yaml
         # file
-        if args.afterQC:
+        if args.afterqc:
             QC_YAML_file = os.path.join(samples_data_dir,sample_dir_name,
                     "{}_QCcontrol.yaml".format(sample_dir_name))
             if not os.path.exists(QC_YAML_file):
@@ -29,23 +29,24 @@ def main(args):
             projectName  = QC_sample_config["projectName"]
         #Now all the info is in place and I am in the correct folder
         pipeline = "assemble"
-        tools = args.assemblers
+        tools = list(args.assemblers)
+        tools = map(str, tools) # Beware whoever inputs unicode characters
         sample_YAML_name = os.path.join(sample_folder,
                 "{}_{}.yaml".format(sample_dir_name, pipeline))
         sample_YAML = open(sample_YAML_name, 'w')
         sample_YAML.write("pipeline:\n")
         sample_YAML.write(" {}\n".format(pipeline))
         sample_YAML.write("tools:\n")
-        sample_YAML.write(" {}\n".format(tools[0]))
+        sample_YAML.write(" {}\n".format(tools))
         sample_YAML.write("output: {}\n".format(sample_dir_name))
         sample_YAML.write("projectName: {}\n".format(projectName))
         sample_YAML.write("kmer: {}\n".format(args.kmer))
         sample_YAML.write("threads: {}\n".format(args.threads))
-        sample_YAML.write("genomeSize: {}\n".format(args.genomeSize))
+        sample_YAML.write("genomeSize: {}\n".format(args.genomesize))
         #I have to distinguish between afterQC and not
         sample_data_dir = ""
         sample_files = []
-        if args.afterQC:
+        if args.afterqc:
             sample_data_dir = os.path.join(samples_data_dir,sample_dir_name)
             fastq_files     = os.path.join(sample_data_dir, "results",
                     "fastq_trimmed")
@@ -164,14 +165,14 @@ if __name__ == '__main__':
             default="DeNovoPipeline", help=("name of the virtual enviorment "
             "(default is DeNovoPipeline)"))
     parser.add_argument('--assemblers', type=str, required=True,
-            action='append', nargs='+', help=("List of assemblers to be "
+            nargs='+', help=("List of assemblers to be "
             "employed on the datasets specified"))
     parser.add_argument('--kmer', type=int, required=True,
             help=("kmer size to employ when requested (i.e., some tools "
             "make a guess"))
-    parser.add_argument('--genomeSize', type=int, required=True,
+    parser.add_argument('--genomesize', type=int, required=True,
             help="Estimated genome size (make an educated guess)")
-    parser.add_argument('--afterQC', action='store_true',
+    parser.add_argument('--afterqc', action='store_true',
             default = False,  help=("To be specified if sample-data-dir is a "
             "QC output"))
     parser.add_argument('--email', type=str,

@@ -18,7 +18,7 @@ def main(args):
 
         pipeline = "QCcontrol"
         tools    = ["trimmomatic", "fastqc", "abyss", "align"]
-        if args.reference == "":
+        if hasattr(args, "reference"):
             tools    = ["trimmomatic", "fastqc", "abyss"]
 
         sample_YAML_name = os.path.join(sample_folder,  "{}_{}.yaml".format(
@@ -37,7 +37,7 @@ def main(args):
         sample_YAML.write("genomeSize: \n")
         sample_YAML.write("adapters: {}\n".format(args.adapter))
 
-        if args.reference is not "":
+        if hasattr(args, "reference"):
             sample_YAML.write("reference: {}\n".format(args.reference))
         sample_YAML.write("libraries:\n")
 
@@ -136,7 +136,7 @@ def submit_job(sample_config, global_config, output,  pipeline, env,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--reference', type=str, default="",
+    parser.add_argument('--reference', type=str,
             help="path to the reference file")
     parser.add_argument('--adapter', type=str, required=True,
             help="path to the file containing the adaptor sequence to be removed")
@@ -164,7 +164,7 @@ if __name__ == '__main__':
             help="project name for slurm submission (default is a2010002)")
     parser.add_argument('--threads', type=int, default=16,
             help="Number of thread the job will require")
-    parser.add_argument('--qos', type=str, default=None,
+    parser.add_argument('--qos', type=str,
             help=("Specify a quality of service preset for the job (eg. "
             "--qos short)"))
     args = parser.parse_args()

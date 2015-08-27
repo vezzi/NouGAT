@@ -6,7 +6,28 @@ import re
 import shutil
 from nougat import common, align, pdf
 from nougat.pdf.theme import colors, DefaultTheme
-from nougat.pdf.peakdetect import peakdet 
+from nougat.pdf.peakdetect import peakdet
+
+
+def main(args):
+    for qdir in os.listdir(args.qc_folder):
+        # Dumping the pipeline state to yaml.. Not elegant, but gets the job done
+        sample_yaml = os.path.join(args.qc_folder, qdir, "{}.nougat".format(qdir))
+        sample_yaml = os.path.realpath(sample_yaml)
+        global_yaml = os.path.realpath(args.global_config)
+        try:
+            os.chdir(os.path.join(args.qc_folder, qdir))
+            with open(sample_yaml) as sample_config_handle:
+                sample_config = yaml.load(sample_config_handle)
+            with open(global_yaml) as global_config_handle:
+                global_config = yaml.load(global_config_handle)
+        except IOError, e:
+            print "Cannot open file: {}".format(e)
+        except YAMLError, e:
+            print "Error in config file: {}".format(e)
+        else:
+            _run_qc_report(global_config, sample_config)
+
 
 
 def _run_qc_report(global_config, sample_config):
@@ -363,29 +384,14 @@ def _run_qc_report(global_config, sample_config):
 
     os.chdir(currentDir)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--global-config', type=str, required=True,
             help="Global configuration file")
-    parser.add_argument('--QC-folder', type=str, required=True,
+    parser.add_argument('--qc-folder', type=str, required=True,
             help=("Path to where denovo QC pipeline was run. Where you find, "
                 "the sample folders P????_??? eg. in, /foo/B.Baz_15_01/01-QC/"))
     args = parser.parse_args()
+    main(args)
 
-    for qdir in os.listdir(args.QC_folder):
-        # Dumping the pipeline state to yaml.. Not elegant, but gets the job done
-        sample_yaml = os.path.join(args.QC_folder, qdir, "{}.nougat".format(qdir))
-        sample_yaml = os.path.realpath(sample_yaml)
-        global_yaml = os.path.realpath(args.global_config)
-        try:
-            os.chdir(os.path.join(args.QC_folder, qdir))
-            with open(sample_yaml) as sample_config_handle:
-                sample_config = yaml.load(sample_config_handle)
-            with open(global_yaml) as global_config_handle:
-                global_config = yaml.load(global_config_handle)
-        except IOError, e:
-            print "Cannot open file: {}".format(e)
-        except YAMLError, e:
-            print "Error in config file: {}".format(e)
-        else:
-            _run_qc_report(global_config, sample_config)
