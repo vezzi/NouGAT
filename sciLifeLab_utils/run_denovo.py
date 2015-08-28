@@ -2,7 +2,7 @@ import click
 import argparse
 import os
 from collections import OrderedDict
-import ConfigParser
+import yaml
 
 
 class State(object):
@@ -167,13 +167,11 @@ def report(state, **kwargs):
 def main():
     try:
         conf_file = os.path.join(os.environ.get('HOME'), '.nougat','scilifelab.conf')
-        config = ConfigParser.SafeConfigParser()
         with open(conf_file) as f:
-            config.readfp(f)
-        all_config = {section: dict(config.items(section)) for section in config.sections()}
+            config = yaml.load(f)
     except IOError:
         click.secho("Could not open the config file {}, will use hardcoded defaults".format(conf_file), fg="red")
     else:   
-        CONTEXT_SETTINGS["default_map"] = all_config
+        CONTEXT_SETTINGS["default_map"] = config
     cli()
 
