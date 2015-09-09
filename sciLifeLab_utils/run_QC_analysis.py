@@ -18,7 +18,7 @@ def main(args):
 
         pipeline = "QCcontrol"
         tools    = ["trimmomatic", "fastqc", "abyss", "align"]
-        if hasattr(args, "reference"):
+        if args.reference is None:
             tools    = ["trimmomatic", "fastqc", "abyss"]
 
         sample_YAML_name = os.path.join(sample_folder,  "{}_{}.yaml".format(
@@ -37,7 +37,7 @@ def main(args):
         sample_YAML.write("genomeSize: \n")
         sample_YAML.write("adapters: {}\n".format(args.adapter))
 
-        if hasattr(args, "reference"):
+        if args.reference is not None:
             sample_YAML.write("reference: {}\n".format(args.reference))
         sample_YAML.write("libraries:\n")
 
@@ -136,7 +136,7 @@ def submit_job(sample_config, global_config, output,  pipeline, env,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--reference', type=str,
+    parser.add_argument('--reference', type=str, default=None,
             help="path to the reference file")
     parser.add_argument('--adapter', type=str, required=True,
             help="path to the file containing the adaptor sequence to be removed")
