@@ -29,7 +29,6 @@ def main(args):
             _run_qc_report(global_config, sample_config)
 
 
-
 def _run_qc_report(global_config, sample_config):
     """This function produces a pdf report and stores the important \
             resutls in a single folder"""

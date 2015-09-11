@@ -34,7 +34,7 @@ def _to_namespace(args_dict, **kwargs):
 
 def common_options(f):
     f = click.option('--dry-run', is_flag=True, default=False, expose_value=False, callback=callback,
-            help='Will not create any files or run any analyses')(f)
+            help='A dry-run (of sorts). Will create .yaml and .slurm but not run the analysis')(f)
     f = click.option('--global-config', expose_value=False, type=click.Path(exists=True), required=True, callback=callback,
             help='Path to NouGAT config file')(f)
     return f
@@ -87,7 +87,7 @@ def cli(ctx):
 @pass_state
 def qc_analysis(state, **kwargs):
     """Perform QC for de novo / mate-pair libraries"""
-    import run_QC_analysis
+    from . import run_QC_analysis
     run_QC_analysis.main(_to_namespace(state.params, **kwargs))
 
 
@@ -100,7 +100,7 @@ def qc_report(state, **kwargs):
     """Generate a PDF report detailing the QC analysis results. 
     This will also create a results folder for each sample, which 
     contains the QC data to be delivered to the platform user."""
-    import run_QC_report
+    from . import run_QC_report
     run_QC_report.main(_to_namespace(state.params, **kwargs))
 
 
@@ -123,7 +123,7 @@ def assembly(state, **kwargs):
     specified folder then one assembly for each sample will be
     performed. If a sample is splitted across multiple runs all the
     data willl be used"""
-    import run_assemblies
+    from . import run_assemblies
     run_assemblies.main(_to_namespace(state.params, **kwargs))
 
 
@@ -142,7 +142,7 @@ def validation(state, **kwargs):
     specified folder then one assembly for each sample will be
     performed. If a sample is split across multiple runs all the
     data will be used"""
-    import run_validation
+    from . import run_validation
     run_validation.main(_to_namespace(state.params, **kwargs))
 
 
@@ -160,7 +160,7 @@ def report(state, **kwargs):
     It is assumed that assemble part and evalaution part have been run with this
     pipeline, otherwise the assumptions done on the file names and on the results
     """
-    import run_assembly_report
+    from . import run_assembly_report
     run_assembly_report.main(_to_namespace(state.params, **kwargs))
 
 

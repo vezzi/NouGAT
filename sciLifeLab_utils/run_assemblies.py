@@ -2,7 +2,7 @@ import sys, os, yaml, glob
 import subprocess
 import argparse
 import re
-
+from sciLifeLab_utils import submit_job
 
 def main(args):
     projectFolder    = os.getcwd()
@@ -89,54 +89,20 @@ def main(args):
             sample_files.remove(pair2_file)
             library += 1
         sample_YAML.close
-        if not hasattr(args, "email"):
-            args.email = None
-        submit_job(sample_YAML_name, args.global_config, sample_dir_name ,
-                pipeline, args.env, args.email, args.time, args.project,
-                args.threads, args.qos) # now I can submit the job to slurm
+
+        #Run the job
+        all_modules = {
+                "abyss": "module load abyss/1.3.5\n",
+                "soapdenovo": "module load soapdenovo/2.04-r240\n",
+                "spades": "module load spades/3.6.0\n",
+                "cabog": "module load cabog/8.1\n",
+                "allpaths": "module unload gcc\nmodule load allpathslg/52485\n"
+        }
+
+        extramodules = [all_modules[tool] for tool in tools]
+        jobname = "{}_{}".format(sample_dir_name, pipeline)
+        submit_job(sample_YAML_name, jobname, os.getcwd(), args, extramodules)
         os.chdir(projectFolder)
-
-
-def submit_job(sample_config, global_config, output,  pipeline, env,
-        email=None, required_time='1-00:00:00', project='a2010002',
-        threads=16, qos=None):
-    workingDir = os.getcwd()
-    slurm_file = os.path.join(workingDir, "{}_{}.slurm".format(
-        output,pipeline))
-    slurm_handle = open(slurm_file, "w")
-    slurm_handle.write("#! /bin/bash -l\n")
-    slurm_handle.write("#SBATCH -A {}\n".format(project))
-    slurm_handle.write("#SBATCH -o {}_{}.out\n".format(output,pipeline))
-    slurm_handle.write("#SBATCH -e {}_{}.err\n".format(output,pipeline))
-    slurm_handle.write("#SBATCH -J {}_{}.job\n".format(output,pipeline))
-    if threads<16 :
-        slurm_handle.write("#SBATCH -p core -n {}\n".format(threads))
-    else:
-        slurm_handle.write("#SBATCH -p node -n {}\n".format(threads))
-    slurm_handle.write("#SBATCH -t {}\n".format(required_time))
-    if email:
-        slurm_handle.write("#SBATCH --mail-user {}\n".format(email))
-        slurm_handle.write("#SBATCH --mail-type=ALL\n")
-    if qos:
-        slurm_handle.write("#SBATCH --qos={}".format(qos))
-    slurm_handle.write("\n\n")
-    slurm_handle.write("set -e\n")
-    slurm_handle.write("source activate {}\n".format(env))
-    slurm_handle.write("module load bioinfo-tools\n")
-    slurm_handle.write("module load soapdenovo/2.04-r240\n")
-    slurm_handle.write("module load spades/3.1.1\n")
-    slurm_handle.write("module load cabog/8.1\n")
-    slurm_handle.write("module load abyss/1.3.5\n")
-    slurm_handle.write("module load samtools/1.1\n")
-    slurm_handle.write("module load bowtie/1.1.0\n")
-    slurm_handle.write("module unload gcc\n")
-    slurm_handle.write("module load allpathslg/52485\n")
-    slurm_handle.write("deNovo_pipeline.py --global-config {} "
-            "--sample-config {}\n\n".format(global_config,sample_config))
-    slurm_handle.close()
-    command=("sbatch", slurm_file)
-    print command
-    subprocess.call(command)
 
 
 if __name__ == '__main__':
