@@ -37,10 +37,9 @@ def submit_job(sample_config, jobname, rundir, cliargs, extramodules=[]):
 
     command=("sbatch", slurmfile_path)
     print command
-    if not hasattr(cliargs, "dry_run"):
-        cliargs.dry_run = False
-    if cliargs.dry_run:
-        return 0
-    else:
-        return subprocess.call(command)
-
+    try:
+        if cliargs.dry_run:
+            return 0
+    except AttributeError, e:
+        print "Warning! Could not determine if dry-run, running the command anyway: {}".format(e)
+    return subprocess.call(command)
