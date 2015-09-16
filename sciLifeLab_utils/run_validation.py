@@ -69,8 +69,11 @@ def main(args):
             sample_YAML.close
 
             # Run the job
+            extramodules = []
+            if "align" in tools:
+                extramodules.append("module load samtools/1.1\nmodule load bwa\n")
             jobname = "{}_{}_{}".format(sample_dir_name, pipeline, assembler)
-            submit_job(sample_YAML_name, jobname, os.getcwd(), args)
+            submit_job(sample_YAML_name, jobname, os.getcwd(), args, extramodules)
 
             os.chdir(validation_folder)
         os.chdir(projectFolder)

@@ -27,8 +27,6 @@ def submit_job(sample_config, jobname, rundir, cliargs, extramodules=[]):
         slurmfile.write("set -e\n")
         slurmfile.write("source activate {}\n".format(cliargs.env))
         slurmfile.write("module load bioinfo-tools\n")
-        slurmfile.write("module load samtools/1.1\n")
-        slurmfile.write("module load bwa\n")
         for module in extramodules:
             slurmfile.write(module)
 
