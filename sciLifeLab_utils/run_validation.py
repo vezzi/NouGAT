@@ -52,7 +52,7 @@ def main(args):
             sample_YAML.write(
                     "genomeSize: {}\n".format(
                     sample_config_assembly["genomeSize"]))
-            sample_YAML.write("minCrgLength: 1000\n")
+            sample_YAML.write("minCtgLength: 1000\n")
             sample_YAML.write("reference: {}\n".format(assembly_name))
             sample_YAML.write("libraries:\n")
             for library, libraryData in \
@@ -69,9 +69,7 @@ def main(args):
             sample_YAML.close
 
             # Run the job
-            extramodules = []
-            if "align" in tools:
-                extramodules.append("module load samtools/1.1\nmodule load bwa\n")
+            extramodules = ["module load samtools/1.1\nmodule load bwa\n"]
             jobname = "{}_{}_{}".format(sample_dir_name, pipeline, assembler)
             submit_job(sample_YAML_name, jobname, os.getcwd(), args, extramodules)
 
