@@ -447,57 +447,6 @@ def _plotFRCurve(outputName, FRCurves):
     return FRCurveName
 
 
-def computeAssemblyStats(assembler,sequence, minlenght, genomeSize):
-    contigsLength = []
-    Contigs_TotalLength = 0
-    Contigs_longLength  = 0
-    numContigs = 0
-    numLongContigs = 0
-    with open(sequence, "r") as ref_fd:
-        fasta_header = ref_fd.readline()
-        sequence = ""
-        for line in ref_fd:
-            line = line
-            if line.startswith(">"):
-                Contigs_TotalLength += len(sequence)
-                contigsLength.append(len(sequence))
-                if len(sequence) >= minlenght:
-                    numLongContigs      += 1
-                    Contigs_longLength  += len(sequence)
-                numContigs += 1
-                sequence    = ""
-            else:
-                sequence+=line
-        Contigs_TotalLength += len(sequence)
-        contigsLength.append(len(sequence))
-        if len(sequence) >= minlenght:
-            numLongContigs      += 1
-            Contigs_longLength  += len(sequence)
-        numContigs += 1
-
-    contigsLength.sort()
-    contigsLength.reverse()
-
-    teoN50 = genomeSize * 0.5
-    teoN80 = genomeSize * 0.8
-    testSum = 0
-    N50 = 0
-    N80 = 0
-    maxContigLength   = contigsLength[0]
-    for con in contigsLength:
-        testSum += con
-        if teoN50 < testSum:
-            if N50 == 0:
-                N50 = con
-        if teoN80 < testSum:
-            N80 = con
-            break
-    return ['{}'.format(assembler), '{}'.format(numContigs),
-    '{}'.format(numLongContigs), '{}'.format(N50), '{}'.format(N80),
-    '{}'.format(maxContigLength), '{}'.format(Contigs_TotalLength),
-    '{}'.format(Contigs_longLength)]
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("This utility scripts will generate the "
             "report files for each assembled sample. It is assumed that "

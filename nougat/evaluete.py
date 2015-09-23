@@ -1,21 +1,21 @@
 import sys, os, yaml, glob
 import subprocess
 import pandas as pd
-import gzip
 import re
-import string
 import shutil
 import matplotlib
 matplotlib.use('Agg')
-import numpy as np
 import matplotlib.pyplot as plt
 from nougat import common, align
-
+from itertools import groupby
+from collections import OrderedDict
 
 def run(global_config, sample_config):
     sorted_libraries_by_insert = \
             common._sort_libraries_by_insert(sample_config)
     _check_libraries(sorted_libraries_by_insert)
+
+    computeAssemblyStats(sample_config)
     # filter out short contigs
     sample_config = _build_new_reference(sample_config)
     if "tools" in sample_config:
@@ -349,3 +349,81 @@ def computeGC(sequence):
     gcFraction = float(gcCount) / totalBaseCount
     return gcFraction
 
+
+def computeAssemblyStats(sample_config):
+
+    outfile = os.path.join("contig_stats", "contiguity.out")
+    if not os.path.exists("contig_stats"):
+        os.makedirs("contig_stats")
+
+    try:
+        sequence = sample_config["reference"]
+        minlength = sample_config["minCtgLength"]
+        genomesize = sample_config["genomeSize"]
+    except KeyError, e:
+        if e is "minCtgLength":
+            minlength = 1000
+        else:
+            raise
+
+    ctg = re.sub("scf.fasta$", "ctg.fasta", sequence)
+    scf = re.sub("ctg.fasta$", "scf.fasta", sequence)
+
+    def asm_stats(sequence):
+        stats = OrderedDict()
+        stats["assembly type"] = "" 
+        stats["# sequences"] = 0 
+        stats["assembly length"] = 0
+        stats["trim shorter than(bp)"] = minlength
+        stats["# trimmed sequences"] = 0 
+        stats["trimmed assembly length"] = 0
+        stats["N50"] = 0 
+        stats["N80"] = 0 
+        stats["NG50"] = 0 
+        stats["NG80"] = 0
+        sequence_lengths = []
+
+        with open(sequence, "r") as seq_file:
+            # Groupby iterator. Should work for fasta of any column width 
+            fai = groupby(seq_file, lambda x: x.startswith(">"))
+            while True:
+                try:
+                    _, header = fai.next()
+                    _, sequence = fai.next()
+                except StopIteration:
+                    break
+                # Collect fasta sequence stats
+                seq_len = sum([len(i.strip()) for i in sequence])
+                sequence_lengths.append(seq_len)
+                stats["# sequences"] += 1
+                stats["assembly length"] += seq_len
+                if seq_len > minlength:
+                    stats["# trimmed sequences"] += 1
+                    stats["trimmed assembly length"] += seq_len
+
+        sequence_lengths = sorted(sequence_lengths, reverse=True)
+        test_sum = 0
+        for sequence in sequence_lengths:
+            test_sum += sequence
+            if stats["assembly length"] * 0.5 < test_sum and stats["N50"] is 0:
+                stats["N50"] = test_sum
+            if stats["assembly length"] * 0.8 < test_sum and stats["N80"] is 0:
+                stats["N80"] = test_sum
+            if genomesize * 0.5 < test_sum and stats["NG50"] is 0:
+                stats["NG50"] = test_sum
+            if genomesize * 0.8 < test_sum and stats["NG80"] is 0:
+                stats["NG80"] = test_sum
+
+        return stats
+
+    ctg_stats = asm_stats(ctg)
+    ctg_stats["assembly type"] = "contigs"
+    scf_stats = asm_stats(scf)
+    scf_stats["assembly type"] = "scaffolds"
+
+    with open(outfile, "w") as out:
+        out.write('\t'.join(ctg_stats.keys()))
+        out.write('\n')
+        for asm in [ctg_stats, scf_stats]:
+            out.write('\t'.join(map(str, asm.values())))
+            out.write('\n')
