@@ -178,7 +178,7 @@ def collect_results_and_report(validation_sample_dir, assemblies_sample_dir,
             for line in sf:
                 if line.startswith("scaffolds"):
                     sl = line.strip().split("\t")
-                    asm_stats.extend([sl[1], sl[5], sl[8], sl[9], sl[10], sl[2], sl[6]])
+                    asm_stats.extend([sl[1], sl[4], sl[8], sl[9], sl[10], sl[2], sl[6]])
         contig_stats.append(asm_stats)
     contig_stats = sorted(contig_stats, key=lambda x: x[0])
 
