@@ -381,6 +381,7 @@ def computeAssemblyStats(sample_config):
         stats["N80"] = 0 
         stats["NG50"] = 0 
         stats["NG80"] = 0
+        stats["longest seq"] = 0
         sequence_lengths = []
 
         with open(sequence, "r") as seq_file:
@@ -400,6 +401,8 @@ def computeAssemblyStats(sample_config):
                 if seq_len > minlength:
                     stats["# trimmed sequences"] += 1
                     stats["trimmed assembly length"] += seq_len
+                if seq_len > stats["longest seq"]:
+                    stats["longest seq"] = seq_len
 
         sequence_lengths = sorted(sequence_lengths, reverse=True)
         test_sum = 0
