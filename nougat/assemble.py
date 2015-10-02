@@ -113,6 +113,7 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
     returnValue = subprocess.call(command, stdout=assembler_stdOut,
             stderr=assembler_stdErr, shell=True)
     os.chdir("..")
+    flags = sample_config.get("flags", [])
     if returnValue == 0 and not common.check_dryrun(sample_config):
         if os.path.exists(os.path.join("runABySS","{}-contigs.fa".format(
             outputName))):
@@ -122,7 +123,8 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
             subprocess.call(["cp", os.path.join("runABySS",
                 "{}-scaffolds.fa".format(outputName)),
                 "{}.scf.fasta".format(outputName) ])
-            subprocess.call(["rm", "-r", "runABySS"])
+            if not "keep_tmp_files" in flags:
+                subprocess.call(["rm", "-r", "runABySS"])
         elif not common.check_dryrun(sample_config):
             print "something wrong with ABySS -> no contig file generated"
             return sample_config
@@ -236,6 +238,7 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
             stderr=assembler_stdErr)
     assembler_stdOut.close()
     assembler_stdErr.close()
+    flags = sample_config.get("flags", [])
     if returnValue == 0:
         program = os.path.join(programBIN, "RunAllPathsLG")
         command = [program, "PRE=.", "REFERENCE_NAME=.", "DATA_SUBDIR=data_dir",
@@ -255,10 +258,12 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
                     "run")
             if os.path.exists(os.path.join(assembly_dir,
                 "final.assembly.fasta")):
-                subprocess.call(["cp", os.path.join(assembly_dir,
+                exit_code = subprocess.call(["cp", os.path.join(assembly_dir,
                     "final.contigs.fasta"), "{}.ctg.fasta".format(outputName)])
-                subprocess.call(["cp", os.path.join(assembly_dir,
+                exit_code += subprocess.call(["cp", os.path.join(assembly_dir,
                     "final.assembly.fasta"), "{}.scf.fasta".format(outputName)])
+                if not "keep_tmp_files" in flags and exit_code == 0:
+                    subprocess.call(["rm", "-r", "data_dir"])
             else:
                 print("something wrong with Allpaths > no contig file generated")
                 os.chdir("..")
@@ -337,6 +342,7 @@ def _run_cabog(global_config, sample_config, sorted_libraries_by_insert):
     cabog_stdErr = open("cabog_runCA.stdErr", "w")
     returnValue = subprocess.call(command_runCA, stdout=cabog_stdOut,
             stderr=cabog_stdErr, shell=True)
+    flags = sample_config.get("flags", [])
     if returnValue == 0:
         #assembly succed, remove files and save assembly
         if os.path.exists(os.path.join("runCABOGfolder","9-terminator",
@@ -347,7 +353,8 @@ def _run_cabog(global_config, sample_config, sorted_libraries_by_insert):
             subprocess.call(["mv", os.path.join("runCABOGfolder","9-terminator",
                 "{}.scf.fasta".format(outputName)),
                 "{}.scf.fasta".format(outputName)])
-            subprocess.call(["rm", "-r", "runCABOGfolder"])
+            if not "keep_tmp_files" in flags:
+                subprocess.call(["rm", "-r", "runCABOGfolder"])
         else:
             print("something wrong with CABOG -> no contig file generated")
     else:
@@ -464,6 +471,7 @@ def _run_masurca(global_config, sample_config,sorted_libraries_by_insert):
     returnValue = subprocess.call(command, stdout=masurca_stdOut,
             stderr=masurca_stdErr)
     os.chdir("..")
+    flags = sample_config.get("flags", [])
     if returnValue == 0:
         if os.path.exists(os.path.join(
             "runMASURCA","CA/10-gapclose/genome.scf.fasta")):
@@ -473,7 +481,8 @@ def _run_masurca(global_config, sample_config,sorted_libraries_by_insert):
             subprocess.call(["cp", os.path.join(
                 "runMASURCA","CA/10-gapclose/genome.scf.fasta"),
                 "{}.scf.fasta".format(outputName) ])
-            subprocess.call(["rm", "-r", "runMASURCA"])
+            if not "keep_tmp_files" in flags:
+                subprocess.call(["rm", "-r", "runMASURCA"])
         else:
             print "something wrong with MaSuRCA -> no contig file generated"
     else:
@@ -556,13 +565,15 @@ def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
         return sample_config
 
     os.chdir("..")
+    flags = sample_config.get("flags", [])
     if returnValue == 0:
         if(os.path.exists(os.path.join("runSOAP","soapAssembly.scafSeq"))):
             subprocess.call(["mv", os.path.join("runSOAP",
                 "soapAssembly.scafSeq"), "{}.scf.fasta".format(outputName)])
             subprocess.call(["mv", os.path.join("runSOAP",
                 "soapAssembly.contig"), "{}.ctg.fasta".format(outputName)])
-            subprocess.call(["rm", "-r", "runSOAP"])
+            if not "keep_tmp_files" in flags:
+                subprocess.call(["rm", "-r", "runSOAP"])
         else:
             print("something wrong with SOAPdenovo -> no contig file generated")
     else:
@@ -630,13 +641,15 @@ def _run_spades(global_config, sample_config, sorted_libraries_by_insert):
     else:
         return sample_config
 
+    flags = sample_config.get("flags", [])
     if returnValue == 0:
         if os.path.exists(os.path.join(outputName,"contigs.fasta")):
             subprocess.call(["cp", os.path.join(outputName,"contigs.fasta"),
                 "{}.ctg.fasta".format(outputName)])
             subprocess.call(["cp", os.path.join(outputName,"scaffolds.fasta"),
                 "{}.scf.fasta".format(outputName)])
-            subprocess.call(["rm", "-r", outputName])
+            if not "keep_tmp_files" in flags:
+                subprocess.call(["rm", "-r", outputName])
         else:
             print("something wrong with SPADES -> no contig file generated")
     else:

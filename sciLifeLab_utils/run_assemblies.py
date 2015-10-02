@@ -43,6 +43,8 @@ def main(args):
         sample_YAML.write("kmer: {}\n".format(args.kmer))
         sample_YAML.write("threads: {}\n".format(args.threads))
         sample_YAML.write("genomeSize: {}\n".format(args.genomesize))
+        if args.keep_tmp_files: #TODO: generalize if we add more flags
+            sample_YAML.write("flags: ['keep_tmp_files']\n")
         #I have to distinguish between afterQC and not
         sample_data_dir = ""
         sample_files = []
@@ -152,6 +154,9 @@ if __name__ == '__main__':
     parser.add_argument('--qos', type=str, default=None,
             help=("Specify a quality of service preset for the job (eg. "
             "--qos short)"))
+    parser.add_argument('--keep-tmp-files', action='store_true', default=False,
+            help=("This will override the default behaviour of deleting temporary "
+            "files, eg. assembly graphs and error corrections."))
     args = parser.parse_args()
     main(args)
 
