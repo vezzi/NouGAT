@@ -355,16 +355,9 @@ def computeAssemblyStats(sample_config):
     outfile = os.path.join("contig_stats", "contiguity.out")
     if not os.path.exists("contig_stats"):
         os.makedirs("contig_stats")
-
-    try:
-        sequence = sample_config["reference"]
-        minlength = sample_config["minCtgLength"]
-        genomesize = sample_config["genomeSize"]
-    except KeyError, e:
-        if e is "minCtgLength":
-            minlength = 1000
-        else:
-            raise
+    minlength = sample_config.get("minCtgLength", 1000)
+    sequence = sample_config["reference"]
+    genomesize = sample_config["genomeSize"]
 
     ctg = re.sub("scf.fasta$", "ctg.fasta", sequence)
     scf = re.sub("ctg.fasta$", "scf.fasta", sequence)
