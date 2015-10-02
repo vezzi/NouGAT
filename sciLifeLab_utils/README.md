@@ -10,7 +10,7 @@
 ```bash
 # Assuming NouGAT has been installed
 source activate DeNovoPipeline
-pip install reportlab
+pip install reportlab click
 ```
 
 The commandline tool `scilifelab_denovo` supports customizable parameter defaults for all it's sub-commands. It attempts to read a [configuration file](../config_files/scilifelab.conf) found in the file `$HOME/.nougat/scilifelab.conf`.

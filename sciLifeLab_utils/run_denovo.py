@@ -114,6 +114,8 @@ def qc_report(state, **kwargs):
 @click.option('--genomesize', required=True, type=int ,help="The size of the genome (in bp)")
 @click.option('--afterqc', is_flag=True, default=False, 
         help="The data sample data is the output of the QC pipeline. --sample-data-dir should be set accordingly")
+@click.option('--keep-tmp-files', is_flag=True, default=False,
+        help="This will override the default behaviour of deleting temporary files, eg. assembly graphs and error corrections.")
 @pass_state
 def assembly(state, **kwargs):
     """Start assembly using with sample sequenced with a single

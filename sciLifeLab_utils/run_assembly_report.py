@@ -73,12 +73,17 @@ def collect_results_and_report(validation_sample_dir, assemblies_sample_dir,
     ##copied original assemblies
     if not os.path.exists("evaluation"):
         os.makedirs("evaluation")
+
     # let us start with QAcompute results
     QA_pictures = os.path.join(sample_folder, "evaluation", "QA_pictures")
     if not os.path.exists(QA_pictures):
         os.makedirs(QA_pictures)
     picturesQA = {}
     for assembler in assemblers_assemblies:
+        original_QA_dir = os.path.join(validation_sample_dir,
+                    assembler, "QAstats")
+        if not os.path.exists(original_QA_dir):
+            continue
         cur_ass_dir = os.path.join(QA_pictures, assembler)
         if not os.path.exists(cur_ass_dir):
             os.makedirs(cur_ass_dir)
@@ -137,6 +142,7 @@ def collect_results_and_report(validation_sample_dir, assemblies_sample_dir,
             [Copied_GC_vs_CtgLength, "GC-content versus contig-Length"],
             [Copied_MedianCov_vs_CtgLength,
             "Median-coverage vs Contig-Length"]]
+
     # now FRCurve results
     FRC_folder = os.path.join(sample_folder, "evaluation", "FRCurves")
     if not os.path.exists(FRC_folder):
@@ -159,16 +165,40 @@ def collect_results_and_report(validation_sample_dir, assemblies_sample_dir,
         if feature == "_FRC":
             FRC_to_print = FRCname
         FRCurves = []
-    #### now I can produce the report
 
+    #Contiguity stats
+    contig_stats = []
+    source_stats = []
+    for assembler in assemblers_assemblies:
+        asm_stats = [assembler]
+        stat_file = os.path.join(validation_sample_dir, assembler,
+                "contig_stats", "contiguity.out")
+        source_stats.append((stat_file, assembler))
+        with open(stat_file, "r") as sf:
+            for line in sf:
+                if line.startswith("scaffolds"):
+                    sl = line.strip().split("\t")
+                    asm_stats.extend([sl[1], sl[4], sl[8], sl[9], sl[10], sl[2], sl[6]])
+        contig_stats.append(asm_stats)
+    contig_stats = sorted(contig_stats, key=lambda x: x[0])
+
+    # Copy the contig stats
+    stat_folder = os.path.join(sample_folder, "evaluation", "contig_stats")
+    if not os.path.exists(stat_folder):
+        os.makedirs(stat_folder)
+    for src_stat in source_stats:
+        shutil.copy(src_stat[0], os.path.join(stat_folder, "{}.contiguity.out".format(src_stat[1])))
+
+
+    #### now I can produce the report
     write_report(sample_folder, sample, assemblies_sample_dir,
             assemblers_assemblies,  picturesQA, FRC_to_print,
-            min_contig_length)
+            min_contig_length, contig_stats)
     return
 
 
 def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,
-        picturesQA, FRCname ,min_contig_length):
+        picturesQA, FRCname ,min_contig_length, contig_stats):
     """This function produces a pdf report """
 
     with open(os.path.join(assemblies_sample_dir,
@@ -300,33 +330,24 @@ def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,
             "n. scaff>{}: number of scaffolds produced by the assembler "
             "longer or equal to {}bp.".format(
             min_contig_length, min_contig_length),
-            "N50: length of the longest contig such that the sum of all the "
-            "contigs longer than it is at least 50% of the estimated genome "
+            "NG50: length of the longest scaffold such that the sum of all the "
+            "scaffolds longer than it is at least 50% of the estimated genome "
             "length.",
-            "N80: length of the longest contig such that the sum of all the "
-            "contigs longer than it is at least 80% of the estimated genome "
+            "NG80: length of the longest scaffold such that the sum of all the "
+            "scaffolds longer than it is at least 80% of the estimated genome "
             "length.",
             "max_scf_lgth: maximum scaffold length.",
             "Ass_length: total assembly length.",
-            "Ass_lgth_ctgs>{}: total assembly length considering only "
+            "Ass_lgth_scfs>{}: total assembly length considering only "
             "scaffolds longer or equal to {}bp.".format(
             min_contig_length,min_contig_length)])
     doc.add_spacer()
+
     assemblyStats = [['assembler', 'n. scaff',
-        'n. scaff>{}'.format(min_contig_length), 'N50', 'N80', 'max_scf_lgth',
-        'Ass_lgth', 'Ass_lgth_ctgs>{}'.format(min_contig_length)]]
-    for assembler in assemblers:
-        #compute assembly statistics
-        assemblySeq = os.path.join(assemblies_sample_dir, assembler,
-                "{}.scf.fasta".format(sample))
-        if os.path.exists(assemblySeq):
-            statistics = computeAssemblyStats(assembler, assemblySeq,
-                    min_contig_length, sample_config["genomeSize"])
-            assemblyStats.append(['{}'.format(statistics[0]),
-                '{}'.format(statistics[1]), '{}'.format(statistics[2]),
-                '{}'.format(statistics[3]), '{}'.format(statistics[4]),
-                '{}'.format(statistics[5]), '{}'.format(statistics[6]),
-                '{}'.format(statistics[7])])
+        'n. scaff>{}'.format(min_contig_length), 'NG50', 'NG80', 'max_scf_lgth',
+        'Ass_lgth', 'Ass_lgth_scfs>{}'.format(min_contig_length)]]
+    assemblyStats.extend(contig_stats)
+
     doc.add_spacer()
     doc.add_table(assemblyStats, TABLE_WIDTH)
     doc.add_spacer()
@@ -369,8 +390,8 @@ def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,
             "might be possible that some outliers are not printed. The "
             "original cov.gc table is present under the "
             "evaluation/QA_pictures folder")
-    for assembler in assemblers:
-        assembler_QC_pictures = picturesQA[assembler]
+
+    for assembler, assembler_QC_pictures in picturesQA.iteritems():
         doc.add_pagebreak() 
         doc.add_header("QC plots for {}".format(assembler) , pdf.H3)
         doc.add_image(assembler_QC_pictures[0][0], 280, 200, pdf.CENTER,
@@ -445,57 +466,6 @@ def _plotFRCurve(outputName, FRCurves):
     plt.savefig(FRCurveName)
     plt.clf()
     return FRCurveName
-
-
-def computeAssemblyStats(assembler,sequence, minlenght, genomeSize):
-    contigsLength = []
-    Contigs_TotalLength = 0
-    Contigs_longLength  = 0
-    numContigs = 0
-    numLongContigs = 0
-    with open(sequence, "r") as ref_fd:
-        fasta_header = ref_fd.readline()
-        sequence = ""
-        for line in ref_fd:
-            line = line
-            if line.startswith(">"):
-                Contigs_TotalLength += len(sequence)
-                contigsLength.append(len(sequence))
-                if len(sequence) >= minlenght:
-                    numLongContigs      += 1
-                    Contigs_longLength  += len(sequence)
-                numContigs += 1
-                sequence    = ""
-            else:
-                sequence+=line
-        Contigs_TotalLength += len(sequence)
-        contigsLength.append(len(sequence))
-        if len(sequence) >= minlenght:
-            numLongContigs      += 1
-            Contigs_longLength  += len(sequence)
-        numContigs += 1
-
-    contigsLength.sort()
-    contigsLength.reverse()
-
-    teoN50 = genomeSize * 0.5
-    teoN80 = genomeSize * 0.8
-    testSum = 0
-    N50 = 0
-    N80 = 0
-    maxContigLength   = contigsLength[0]
-    for con in contigsLength:
-        testSum += con
-        if teoN50 < testSum:
-            if N50 == 0:
-                N50 = con
-        if teoN80 < testSum:
-            N80 = con
-            break
-    return ['{}'.format(assembler), '{}'.format(numContigs),
-    '{}'.format(numLongContigs), '{}'.format(N50), '{}'.format(N80),
-    '{}'.format(maxContigLength), '{}'.format(Contigs_TotalLength),
-    '{}'.format(Contigs_longLength)]
 
 
 if __name__ == '__main__':
