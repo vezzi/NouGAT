@@ -23,7 +23,7 @@ Tools:
   bin: /sw/apps/bioinfo/samtools/0.1.19/milou/bin/samtools
   options: ""
  abyss:
-  bin: /sw/apps/bioinfo/abyss/1.3.5/milou/bin/
+  bin: /sw/apps/bioinfo/abyss/1.9.0/milou/bin/
   options: [""]
  abyss_mergePairs:
   bin: /sw/apps/bioinfo/abyss/1.3.5/milou/bin/abyss-mergepairs
@@ -41,7 +41,7 @@ Tools:
   bin: /sw/apps/bioinfo/SOAPdenovo/2.04-r240/milou/bin/SOAPdenovo-63mer
   options: [""]
  spades:
-  bin: /sw/apps/bioinfo/spades/3.1.1/milou/bin/spades.py
+  bin: /sw/apps/bioinfo/spades/3.6.0/milou/bin/spades.py
   options: ["--careful", "-t 8"]
  trinity:
   bin: /sw/apps/bioinfo/trinity/2014-07-17/milou/
