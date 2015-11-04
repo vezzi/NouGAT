@@ -49,9 +49,10 @@ def main(args):
 
         sample_files = []
         for flowcell in flowcells_dirs:
+
             sample_files.extend([os.path.join(flowcell, f) for f in \
                     os.listdir(flowcell) \
-                    if (os.path.isfile(os.path.join(flowcell,f)) \
+                    if (os.path.isfile(os.path.realpath(os.path.join(flowcell,f))) \
                     and re.search('.gz$',f))])
         # now sample_files contains all the file sequenced for this sample
         pair1_file = ""

@@ -205,16 +205,17 @@ def build_reference_bwa(global_config, sample_config):
                 "install bwa properly")
     # check if reference provided exisists
     reference = os.path.abspath(reference)
+    path_name, base_name  = os.path.split(reference)
+    index_path = os.path.join(basename, "bwa", "{}.bwt".format(reference))
     # check if I have already the bwt index
-    if os.path.exists("{}.bwt".format(reference)):
+    if os.path.exists(index_path):
         #index already present, nothing to do
         return reference
     #otherwise I need to build the reference, in this case I build it locally
     if not os.path.exists(reference):
         sys.exit("error, reference file {} does not exists".format(reference))
     # check if bwa index already created
-    current_dir           = os.getcwd()
-    path_name, base_name  = os.path.split(reference)
+    current_dir           = os.getcwd() 
     bwa_index_folder      = os.path.join(path_name, "bwa")
     #if needed create directory
     if not os.path.exists(bwa_index_folder):

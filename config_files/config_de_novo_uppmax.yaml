@@ -41,7 +41,7 @@ Tools:
   bin: /sw/apps/bioinfo/SOAPdenovo/2.04-r240/milou/bin/SOAPdenovo-63mer
   options: [""]
  spades:
-  bin: /sw/apps/bioinfo/spades/3.1.1/milou/bin/spades.py
+  bin: /sw/apps/bioinfo/spades/3.6.0/milou/bin/spades.py
   options: ["--careful", "-t 8"]
  trinity:
   bin: /sw/apps/bioinfo/trinity/2014-07-17/milou/
