@@ -98,7 +98,8 @@ def main(args):
                 "soapdenovo": "module load soapdenovo/2.04-r240\n",
                 "spades": "module load spades/3.6.0\n",
                 "cabog": "module load cabog/8.1\n",
-                "allpaths": "module unload gcc\nmodule load allpathslg/52485\n"
+                "allpaths": "module unload gcc\nmodule load allpathslg/52485\n",
+                "masurca": "module load masurca MaSuRCA/2.3.2\n"
         }
 
         extramodules = [all_modules[tool] for tool in tools]
