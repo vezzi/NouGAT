@@ -206,7 +206,7 @@ def build_reference_bwa(global_config, sample_config):
     # check if reference provided exisists
     reference = os.path.abspath(reference)
     path_name, base_name  = os.path.split(reference)
-    index_path = os.path.join(basename, "bwa", "{}.bwt".format(reference))
+    index_path = os.path.join(base_name, "bwa", "{}.bwt".format(reference))
     # check if I have already the bwt index
     if os.path.exists(index_path):
         #index already present, nothing to do
