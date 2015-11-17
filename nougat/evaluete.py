@@ -402,13 +402,13 @@ def computeAssemblyStats(sample_config):
         for sequence in sequence_lengths:
             test_sum += sequence
             if stats["assembly length"] * 0.5 < test_sum and stats["N50"] is 0:
-                stats["N50"] = test_sum
+                stats["N50"] = sequence
             if stats["assembly length"] * 0.8 < test_sum and stats["N80"] is 0:
-                stats["N80"] = test_sum
+                stats["N80"] = sequence
             if genomesize * 0.5 < test_sum and stats["NG50"] is 0:
-                stats["NG50"] = test_sum
+                stats["NG50"] = sequence
             if genomesize * 0.8 < test_sum and stats["NG80"] is 0:
-                stats["NG80"] = test_sum
+                stats["NG80"] = sequence
 
         return stats
 
