@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import yaml
 import subprocess
@@ -34,10 +36,10 @@ def submit_job(sample_config, jobname, rundir, cliargs, extramodules=[]):
             "--sample-config {}\n\n".format(cliargs.global_config, sample_config))
 
     command=("sbatch", slurmfile_path)
-    print command
+    print(command)
     try:
         if cliargs.dry_run:
             return 0
     except AttributeError, e:
-        print "Warning! Could not determine if dry-run, running the command anyway: {}".format(e)
+        print("Warning! Could not determine if dry-run, running the command anyway: {}".format(e))
     return subprocess.call(command)

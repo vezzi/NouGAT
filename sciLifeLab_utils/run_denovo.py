@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import click
 import argparse
 import os
@@ -25,9 +26,9 @@ def callback(ctx, param, value):
 def _to_namespace(args_dict, **kwargs):
     args = argparse.Namespace()
     d = vars(args)
-    for key, val in args_dict.iteritems():
+    for key, val in args_dict.items():
         d[key] = val
-    for key, val in kwargs.iteritems():
+    for key, val in kwargs.items():
         d[key] = val
     return args
 

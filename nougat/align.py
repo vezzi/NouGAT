@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import sys, os, yaml, glob
 import subprocess
 import string
@@ -52,7 +54,7 @@ def _merge_bam_files(global_config, sample_config, sorted_libraries_by_insert):
             BAMfiles[insert].append(alignment)
 
     BAMfilesMerged = {}
-    for insert, insertGroup in BAMfiles.iteritems():
+    for insert, insertGroup in BAMfiles.items():
         dir_insert = "lib_{}".format(insert)
         if numInserts == 1:
             dir_insert = sample_config["output"]
@@ -90,7 +92,7 @@ def _merge_bam_files(global_config, sample_config, sorted_libraries_by_insert):
         os.chdir("..")
 
     sorted_alignments_by_insert = []
-    for key in sorted(BAMfilesMerged.iterkeys()):
+    for key in sorted(BAMfilesMerged.keys()):
         sorted_alignments_by_insert.append([key, BAMfilesMerged[key][0],
             BAMfilesMerged[key][1]]) # memorise insert length, bam file, folder
     return sorted_alignments_by_insert
@@ -123,7 +125,7 @@ def picard_CGbias(global_config, sample_config, sorted_alignments_by_insert):
                 returnValue = subprocess.call(command, stdout=stdOut,
                         stderr=stdErr)
                 if not returnValue == 0:
-                    print "problem running collectGCBias"
+                    print("problem running collectGCBias")
         os.chdir("..")
     return sorted_alignments_by_insert
 
@@ -158,7 +160,7 @@ def picard_collectInsertSizeMetrics(global_config, sample_config,
                 returnValue = subprocess.call(command, stdout=stdOut,
                         stderr=stdErr)
                 if not returnValue == 0:
-                    print "problem running CollectInsertSizeMetrics"
+                    print("problem running CollectInsertSizeMetrics")
         os.chdir("..")
     return sorted_alignments_by_insert
 
@@ -188,7 +190,7 @@ def picard_markDuplicates(global_config, sample_config,
                 returnValue = subprocess.call(command, stdout=stdOut,
                         stderr=stdErr)
                 if not returnValue == 0:
-                    print "problem running MarkDuplicates"
+                    print("problem running MarkDuplicates")
         os.chdir("..")
     return sorted_alignments_by_insert
 
@@ -420,7 +422,7 @@ def _run_pileup(global_config, bamfile):
     if p1.returncode == 0:
         return pileupfile
     else:
-        print "Could not perform mpileup"
+        print("Could not perform mpileup")
         return 1
 
 

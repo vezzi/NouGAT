@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import sys, os, yaml, glob
 import subprocess
 import pandas as pd
@@ -42,8 +44,8 @@ def run(global_config, sample_config):
 
 def _run_align(global_config, sample_config,sorted_libraries_by_insert):
     if "reference" not in sample_config:
-        print("reference sequence not provided, skypping alignment step. "
-                "Please provide a reference if you are intrested in aligning "
+        print("reference sequence not provided, skypping alignment step.",
+                "Please provide a reference if you are intrested in aligning",
                 "the reads against a reference")
         return sample_config
     if not os.path.exists("alignments"):
@@ -382,8 +384,8 @@ def computeAssemblyStats(sample_config):
             fai = groupby(seq_file, lambda x: x.startswith(">"))
             while True:
                 try:
-                    _, header = fai.next()
-                    _, sequence = fai.next()
+                    _, header = next(fai)
+                    _, sequence = next(fai)
                 except StopIteration:
                     break
                 # Collect fasta sequence stats

@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import sys, os, yaml, glob
 import subprocess
 import string
@@ -126,10 +128,10 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
             if not "keep_tmp_files" in flags:
                 subprocess.call(["rm", "-r", "runABySS"])
         elif not common.check_dryrun(sample_config):
-            print "something wrong with ABySS -> no contig file generated"
+            print("something wrong with ABySS -> no contig file generated")
             return sample_config
     else:
-        print("ABySS terminated with an error. Please check running folder "
+        print("ABySS terminated with an error. Please check running folder",
                 "for more informations")
     os.chdir("..")
     return sample_config
@@ -165,32 +167,32 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
         insert      = libraryInfo["insert"]
         std         = libraryInfo["std"]
         if orientation=="innie":
-            path,file=os.path.split(read1)
-            if "_1.fastq" in file:
-                file = file.replace("_1.fastq", "_?.fastq")
-            elif "_R1_" in file:
-                file = file.replace("_R1_", "_R?_")
+            path, fqfile=os.path.split(read1)
+            if "_1.fastq" in fqfile:
+                fqfile = fqfile.replace("_1.fastq", "_?.fastq")
+            elif "_R1_" in fqfile:
+                fqfile = fqfile.replace("_R1_", "_R?_")
             else:
-                print("error file format not supported {}".format(file))
+                print("error file format not supported {}".format(fqfile))
                 return sample_config
             inGroups_file.write("PE{}, lib{}, {}\n".format(group_name, insert,
-                os.path.join(path, file)))
+                os.path.join(path, fqfile)))
             group_name += 1
             if insert not in librariesForInLibsDict:
                 librariesForInLibsDict[insert] = insert
                 librariesForInLibs.append("lib{}, genome, genome, fragment, 1, "
                         "{}, {}, , , inward, 0, 0\n".format(insert,insert, std))
         elif orientation=="outtie":
-            path,file=os.path.split(read1)
-            if "_1.fastq" in file:
-                file = file.replace("_1.fastq", "_?.fastq")
-            elif "_R1_" in file:
-                file = file.replace("_R1_", "_R?_")
+            path, fqfile = os.path.split(read1)
+            if "_1.fastq" in fqfile:
+                fqfile = fqfile.replace("_1.fastq", "_?.fastq")
+            elif "_R1_" in fqfile:
+                fqfile = fqfile.replace("_R1_", "_R?_")
             else:
-                print "error file format not supported {}".format(file)
+                print("error file format not supported {}".format(file))
                 return sample_config
             inGroups_file.write("MP{}, lib{}, {}\n".format(group_name, insert,
-                os.path.join(path, file)))
+                os.path.join(path, fqfile)))
             group_name += 1
             if insert not in librariesForInLibsDict:
                 librariesForInLibsDict[insert] = insert
@@ -209,13 +211,13 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
     ploidy = "PLOIDY=1"
     if len(program_options) > 0:
         if len(program_options) >1:
-            print("Running ALlpaths only one parameter accepted as option "
+            print("Running ALlpaths only one parameter accepted as option",
                     "here: PLOIDY=2")
             return sample_config
         if program_options[0] == "PLOIDY=2":
             ploidy = "PLOIDY=2"
         else:
-            print("Running ALlpaths only one parameter accepted as option "
+            print("Running ALlpaths only one parameter accepted as option",
                     "here: PLOIDY=2")
             return sample_config
 
@@ -249,8 +251,8 @@ def _run_allpaths(global_config, sample_config, sorted_libraries_by_insert):
         returnValue = subprocess.call(command,  stdout=assembler_stdOut,
                 stderr=assembler_stdErr)
         if returnValue != 0:
-            print "ALLPATHS RunAllPathsLG terminated with an error. Please \
-                    check running folder for more informations"
+            print("ALLPATHS RunAllPathsLG terminated with an error. Please",
+                    "check running folder for more informations")
             os.chdir("..")
             return sample_config
         else: # save results
@@ -358,7 +360,7 @@ def _run_cabog(global_config, sample_config, sorted_libraries_by_insert):
         else:
             print("something wrong with CABOG -> no contig file generated")
     else:
-        print("CABOG terminated with an error. Please check running folder "
+        print("CABOG terminated with an error. Please check running folder",
                 "for more informations")
     os.chdir("..")
     return sample_config
@@ -464,7 +466,7 @@ def _run_masurca(global_config, sample_config,sorted_libraries_by_insert):
 
     subprocess.call(command, stdout=masurca_stdOut, stderr=masurca_stdErr)
     if not os.path.exists("assemble.sh"):
-        print "MaSuRCA: assemble.sh not created. Unknown failure"
+        print("MaSuRCA: assemble.sh not created. Unknown failure")
         return sample_config
     command = ["./assemble.sh"]
     common.print_command(command)
@@ -484,9 +486,9 @@ def _run_masurca(global_config, sample_config,sorted_libraries_by_insert):
             if not "keep_tmp_files" in flags:
                 subprocess.call(["rm", "-r", "runMASURCA"])
         else:
-            print "something wrong with MaSuRCA -> no contig file generated"
+            print("something wrong with MaSuRCA -> no contig file generated")
     else:
-        print("MaSuRCA terminated with an error. Please check running folder "
+        print("MaSuRCA terminated with an error. Please check running folder",
                 "for more informations")
         return sample_config
     os.chdir("..")
@@ -577,7 +579,7 @@ def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
         else:
             print("something wrong with SOAPdenovo -> no contig file generated")
     else:
-        print("SOAPdenovo terminated with an error. Please check running "
+        print("SOAPdenovo terminated with an error. Please check running",
                 "folder for more informations")
         os.chdir("..")
         return sample_config
@@ -627,7 +629,7 @@ def _run_spades(global_config, sample_config, sorted_libraries_by_insert):
                     mpLibrary, read2)
             mpLibrary += 1
         else:
-            print("orientation{} not supported.... why the program did not "
+            print("orientation{} not supported.... why the program did not",
                     "failed earlier?".format(orientation))
 
     command += "-o {} ".format(outputName)
@@ -653,7 +655,7 @@ def _run_spades(global_config, sample_config, sorted_libraries_by_insert):
         else:
             print("something wrong with SPADES -> no contig file generated")
     else:
-        print("SPADES terminated with an error. Please check running folder "
+        print("SPADES terminated with an error. Please check running folder",
                 "for more informations")
 
     os.chdir("..")
@@ -661,7 +663,7 @@ def _run_spades(global_config, sample_config, sorted_libraries_by_insert):
 
 
 def _run_trinity(global_config, sample_config, sorted_libraries_by_insert):
-    print "running trinity ..."
+    print("running trinity ...")
     assembler = "trinity"
     outputName = sample_config["output"]
     currentDirectory  = os.getcwd()
@@ -699,13 +701,13 @@ def _run_trinity(global_config, sample_config, sorted_libraries_by_insert):
             command.append("--right")
             command.append("{}".format(read2))
         else:
-            print("trinity: somthing wrong or unexpected in the sample "
+            print("trinity: somthing wrong or unexpected in the sample",
                     "config file")
             return sample_config
     command.extend(["--output", "trinity"])
     assembler_stdOut = open("trinity.stdOut", "w")
     assembler_stdErr = open("trinity.stdErr", "w")
-    print " ".join(command)
+    print(" ".join(command))
 
     returnValue = subprocess.call(" ".join(command), stdout=assembler_stdOut,
             stderr=assembler_stdErr, shell=True)
@@ -737,7 +739,7 @@ def _run_trinity(global_config, sample_config, sorted_libraries_by_insert):
 
     if "threads" in sample_config:
         command.extend(["--thread_count", str(sample_config["threads"])])
-    print " ".join(command)
+    print(" ".join(command))
     returnValue = subprocess.call(" ".join(command), stdout=assembler_stdOut,
             stderr=assembler_stdErr, shell=True)
 
@@ -755,15 +757,15 @@ def _run_trinity(global_config, sample_config, sorted_libraries_by_insert):
 
 def _prepare_folder_structure(assembler,assemblyDirectory):
     if common.directory_exists(assemblyDirectory):
-        print "Assembler {} asumer already computed as folder \
-                {} exists".format(assembler,assemblyDirectory)
+        print("Assembler {} asumer already computed as folder {} exists".format(
+            assembler,assemblyDirectory))
         return 1
     return 0
 
 
 def _run_abyss_mergePairs(global_config, sample_config, 
         sorted_libraries_by_insert):
-    print "running abyss-mergepairs ..."
+    print("running abyss-mergepairs ...")
     assembler = "abyss_mergePairs"
     outputName = sample_config["output"]
     currentDirectory  = os.getcwd()
@@ -807,7 +809,7 @@ def _run_abyss_mergePairs(global_config, sample_config,
                         "a")
                 abyss_stdErr = open("mergePairs_{}.stdErr".format(outputName),
                         "a")
-                print command
+                print(command)
                 subprocess.call(command, stdout=abyss_stdOut,
                         stderr=abyss_stdErr)
                 command_mv = ["mv", "mergePairs_{}.stdErr".format(outputName),
