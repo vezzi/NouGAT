@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import sys, os, yaml, glob
 import subprocess
 import argparse
@@ -8,6 +9,7 @@ def main(args):
 
     projectFolder = os.getcwd()
     assemblies_dir  = args.assembly_dir
+    lineage = args.lineage
 
     for sample_dir_name in [dir for dir in os.listdir(assemblies_dir) \
             if os.path.isdir(os.path.join(assemblies_dir, dir))]:
@@ -41,7 +43,10 @@ def main(args):
             sample_YAML.write("pipeline:\n")
             sample_YAML.write(" {}\n".format(pipeline))
             sample_YAML.write("tools:\n")
-            sample_YAML.write(" [align, qaTools, FRC]\n")
+            if lineage == 'none':
+                sample_YAML.write(" [align, qaTools, FRC]\n")
+            else:
+                sample_YAML.write(" [aling, qaTools, FRC, BUSCO{}]\n".format(lineage))
             sample_YAML.write(
                     "output: {}\n".format(sample_config_assembly["output"]))
             sample_YAML.write(
@@ -110,6 +115,7 @@ if __name__ == '__main__':
             help="Specify a quality of service preset for the job "
             "(eg. --qos short)")
     args = parser.parse_args()
+    args.lineage = "none"
     main(args)
 
 

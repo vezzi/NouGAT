@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import sys, os, yaml, glob
 import subprocess
 import pandas as pd
@@ -391,7 +392,7 @@ def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,
             "original cov.gc table is present under the "
             "evaluation/QA_pictures folder")
 
-    for assembler, assembler_QC_pictures in picturesQA.iteritems():
+    for assembler, assembler_QC_pictures in picturesQA.items():
         doc.add_pagebreak() 
         doc.add_header("QC plots for {}".format(assembler) , pdf.H3)
         doc.add_image(assembler_QC_pictures[0][0], 280, 200, pdf.CENTER,
