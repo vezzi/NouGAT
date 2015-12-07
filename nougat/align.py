@@ -6,7 +6,7 @@ import string
 import sys
 import gzip
 import pandas as pd
-import common
+from nougat import common
 
 
 def _align_reads(global_config, sample_config, sorted_libraries_by_insert):

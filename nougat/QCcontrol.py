@@ -177,8 +177,8 @@ def _plotKmer(kmer, output_name):
     # Lazily drift towards the most spacious area under the curve
     # using divide and conquer.
     def get_bisect(chunk):
-        left = chunk[:len(chunk)/2]
-        right = chunk[len(chunk)/2:]
+        left = chunk[:int(len(chunk)/2)]
+        right = chunk[int(len(chunk)/2):]
         lweight = sum(map(lambda x: x[0] * x[1], left)) / len(left)
         rweight = sum(map(lambda x: x[0] * x[1], right)) / len(right)
         if lweight > rweight:

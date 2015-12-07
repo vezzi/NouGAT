@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 import sys, os, yaml, glob
 import subprocess
-import align
 import datetime
 import time
 import types
@@ -119,7 +118,7 @@ def which(program):
 
 
 def _sort_libraries_by_insert(sample_config):
-    sorted_libraries_by_insert = sorted(sample_config["libraries"].iteritems(),
+    sorted_libraries_by_insert = sorted(sample_config["libraries"].items(),
             key=lambda v: v[1]["insert"])
     return sorted_libraries_by_insert
 

@@ -4,7 +4,7 @@ import sys, os, yaml, glob
 import subprocess
 import string
 import sys
-import common
+from nougat import common
 
 
 def run(global_config, sample_config):
@@ -87,14 +87,14 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
         librariesSE = libraries["se"]
     if "lib" in libraries:
         lib="lib=\'"
-        for libPE, libPEreads in sorted(libraries["lib"].iteritems()):
+        for libPE, libPEreads in sorted(libraries["lib"].items()):
             lib = lib + "lib{} ".format(libPE)
             librariesPE += " lib{}=\'{}\' ".format(libPE,libPEreads)
         lib=lib + "\' "
         command += "{} ".format(lib)
     if "mp" in libraries:
         mp="mp=\'"
-        for libMP, libMPreads in sorted(libraries["mp"].iteritems()):
+        for libMP, libMPreads in sorted(libraries["mp"].items()):
             mp = mp + "lib{} ".format(libMP)
             librariesMP += " lib{}=\'{}\' ".format(libMP,libMPreads)
         mp=mp + "\' "

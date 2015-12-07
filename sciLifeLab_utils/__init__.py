@@ -40,6 +40,6 @@ def submit_job(sample_config, jobname, rundir, cliargs, extramodules=[]):
     try:
         if cliargs.dry_run:
             return 0
-    except AttributeError, e:
+    except AttributeError as e:
         print("Warning! Could not determine if dry-run, running the command anyway: {}".format(e))
     return subprocess.call(command)

@@ -6,12 +6,11 @@
     
 """
 
-
+from __future__ import absolute_import
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.lib import colors, enums
-
-from common import *
+from nougat.pdf.common import *
 
 
 class DefaultTheme(object):
