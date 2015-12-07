@@ -12,10 +12,11 @@ before_install:
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda2/bin:$PATH
-  - conda update --yes conda
+  - conda update -y -q conda
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy matplotlib click reportlab pandas
+  - conda create -q -n -y DeNovoPipeline python=$TRAVIS_PYTHON_VERSION numpy matplotlib click reportlab pandas
+  - source activate DeNovoPipeline
   - python setup.py install
 
 script:
