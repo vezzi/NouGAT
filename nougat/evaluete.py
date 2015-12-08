@@ -141,6 +141,11 @@ def _run_BUSCOvertebrata(global_config, sample_config, sorted_alignments_by_inse
     program = global_config["Tools"]["BUSCOvertebrata"]["bin"]
     _BUSCO(program, options, sample_config, sorted_alignments_by_insert)
 
+def _run_BUSCOfungi(global_config, sample_config, sorted_alignments_by_insert):
+    options = global_config["Tools"]["BUSCOfungi"]["options"]
+    program = global_config["Tools"]["BUSCOfungi"]["bin"]
+    _BUSCO(program, options, sample_config, sorted_alignments_by_insert)
+
 
 def _BUSCO(program, options, sample_config, sorted_alignments_by_insert):
     main_dir = os.getcwd()

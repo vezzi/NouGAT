@@ -46,7 +46,7 @@ def main(args):
             if lineage == 'none':
                 sample_YAML.write(" [align, qaTools, FRC]\n")
             else:
-                sample_YAML.write(" [aling, qaTools, FRC, BUSCO{}]\n".format(lineage))
+                sample_YAML.write(" [align, qaTools, FRC, BUSCO{}]\n".format(lineage))
             sample_YAML.write(
                     "output: {}\n".format(sample_config_assembly["output"]))
             sample_YAML.write(

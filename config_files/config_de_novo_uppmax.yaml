@@ -61,3 +61,6 @@ Tools:
  BUSCObacteria:
   bin: /sw/apps/bioinfo/BUSCO/1.1b1/milou/BUSCO
   options: ["-l $BUSCO_LINEAGE_SETS/bacteria", "-m genome", "-f"]
+ BUSCOfungi:
+  bin: /sw/apps/bioinfo/BUSCO/1.1b1/milou/BUSCO
+  options: ["-l $BUSCO_LINEAGE_SETS/fungi", "-m genome", "-f"]

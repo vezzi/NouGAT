@@ -190,16 +190,39 @@ def collect_results_and_report(validation_sample_dir, assemblies_sample_dir,
     for src_stat in source_stats:
         shutil.copy(src_stat[0], os.path.join(stat_folder, "{}.contiguity.out".format(src_stat[1])))
 
+    #BUSCO
+    BUSCO = []
+    BUSCO_dirs = []
+    for assembler in assemblers_assemblies:
+        row = [assembler]
+        summary_g = os.path.join(validation_sample_dir, assembler, "BUSCO", "run_*", "short_summary_*")
+        if len(summary_g) > 0:
+            summary_f = glob.glob(summary_g)[0]
+            BUSCO_dirs.append([os.path.dirname(summary_f), assembler])
+            with open(summary_f, "r") as f:
+                found = False
+                for line in f:
+                    if found:
+                        row.append(line.split()[0])
+                    if line.startswith("Representing"):
+                        found = True
+            BUSCO.append(row)
+            
+    BUSCO_target = os.path.join(sample_folder, "evaluation", "BUSCO")
+    if not os.path.exists(BUSCO_target):
+        os.makedirs(BUSCO_target)
+    for bdir in BUSCO_dirs:
+        shutil.copytree(bdir[0], os.path.join(BUSCO_target, bdir[1]))
 
     #### now I can produce the report
     write_report(sample_folder, sample, assemblies_sample_dir,
             assemblers_assemblies,  picturesQA, FRC_to_print,
-            min_contig_length, contig_stats)
+            min_contig_length, contig_stats, BUSCO)
     return
 
 
 def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,
-        picturesQA, FRCname ,min_contig_length, contig_stats):
+        picturesQA, FRCname ,min_contig_length, contig_stats, BUSCO):
     """This function produces a pdf report """
 
     with open(os.path.join(assemblies_sample_dir,
@@ -423,6 +446,18 @@ def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,
     doc.add_image(FRCname, 336, 220, pdf.CENTER, "Feature-Response curve. "
             "On x-axis is the number of features in total, on y-axis is "
             "coverage (based on estimated genome size).")
+
+    #BUSCO
+    BUSCO_table = [["Assembly", "Complete", "Duplicates", "Fragmented", "Missing", "Total"]]
+    BUSCO_table.extend(BUSCO)
+    doc.add_pagebreak()
+    doc.add_header("BUSCO", pdf.H2)
+    doc.add_paragraph("TEXT HERE")
+    doc.add_spacer()
+    doc.add_table(BUSCO_table, TABLE_WIDTH)
+
+    
+
     doc.render(PDFtitle)
     return 0
 
