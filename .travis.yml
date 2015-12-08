@@ -7,18 +7,18 @@ notifications:
 
 # Setup anaconda
 before_install:
-  - sudo apt-get update
   - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
-  - export PATH=/home/travis/miniconda2/bin:$PATH
+  - export PATH=$HOME/miniconda2/bin:$PATH
   - conda update -y -q conda
 # Install packages
 install:
-  - conda create -q -y -n DeNovoPipeline python=$TRAVIS_PYTHON_VERSION numpy matplotlib click reportlab pandas
+  - conda create -q -y -n DeNovoPipeline python=$TRAVIS_PYTHON_VERSION numpy matplotlib click reportlab pandas yaml
   - source activate DeNovoPipeline
-  - python setup.py install
+  - python setup.py develop
 
 script:
   - deNovo_pipeline.py --help
   - scilifelab_denovo --help
+
