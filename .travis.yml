@@ -14,7 +14,7 @@ before_install:
   - conda update -y -q conda
 # Install packages
 install:
-  - conda create -q -y -n DeNovoPipeline python=$TRAVIS_PYTHON_VERSION numpy matplotlib click reportlab pandas yaml
+  - conda create -q -y -n DeNovoPipeline python=$TRAVIS_PYTHON_VERSION numpy matplotlib click reportlab pandas pyyaml
   - source activate DeNovoPipeline
   - python setup.py develop
 
