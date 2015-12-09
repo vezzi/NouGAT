@@ -1,7 +1,7 @@
 Pipelines:
  QCcontrol: ["fastqc", "abyss", "trimmomatic", "kmergenie", "align"]
  assemble: ["abyss", "allpaths", "cabog",  "masurca", "soapdenovo", "spades", "trinity"]
- evaluete: ["align", "qaTools", "FRC"]
+ evaluete: ["align", "qaTools", "FRC", "BUSCObacteria", "BUSCOeukarya", "BUSCOvertebrata", "BUSCOfungi"]
  align: []
 Tools:
  kmergenie:
@@ -54,13 +54,13 @@ Tools:
   options: ""
  BUSCOeukarya:
   bin: /sw/apps/bioinfo/BUSCO/1.1b1/milou/BUSCO
-  options: ["-l $BUSCO_LINEAGE_SETS/eukaryota", "-m genome", "-f"]
+  options: ["-l", "/sw/apps/bioinfo/BUSCO/1.1b1/lineage_sets/eukaryota", "-m", "genome", "-f"]
  BUSCOvertebrata:
   bin: /sw/apps/bioinfo/BUSCO/1.1b1/milou/BUSCO
-  options: ["-l $BUSCO_LINEAGE_SETS/vertebrata", "-m genome", "-f"]
+  options: ["-l", "/sw/apps/bioinfo/BUSCO/1.1b1/lineage_sets/vertebrata", "-m", "genome", "-f"] 
  BUSCObacteria:
   bin: /sw/apps/bioinfo/BUSCO/1.1b1/milou/BUSCO
-  options: ["-l $BUSCO_LINEAGE_SETS/bacteria", "-m genome", "-f"]
+  options: ["-l", "/sw/apps/bioinfo/BUSCO/1.1b1/lineage_sets/bacteria", "-m", "genome", "-f"]
  BUSCOfungi:
   bin: /sw/apps/bioinfo/BUSCO/1.1b1/milou/BUSCO
-  options: ["-l $BUSCO_LINEAGE_SETS/fungi", "-m genome", "-f"]
+  options: ["-l", "$/sw/apps/bioinfo/BUSCO/1.1b1/lineage_sets/fungi", "-m", "genome", "-f"]

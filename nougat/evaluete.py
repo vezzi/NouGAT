@@ -157,8 +157,8 @@ def _BUSCO(program, options, sample_config, sorted_alignments_by_insert):
     reference = sample_config["reference"]
     output = sample_config["output"]
     threads = sample_config.get("threads", 16)
-    command = [program, "-o {}".format(output), "-in {}".format(reference),
-            "-c {}".format(threads)]
+    command = [program, "-in", "{}".format(reference), "-o", "{}".format(output), 
+            "-c", "{}".format(threads)]
     command.extend(options)
     common.print_command(command)
 
