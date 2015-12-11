@@ -1,4 +1,4 @@
-# NouGAT
+# NouGAT [![Build Status](https://travis-ci.org/SciLifeLab/NouGAT.svg?branch=master)](https://travis-ci.org/SciLifeLab/NouGAT)
 De novo assembly is certainly one of the most difficult tasks of today genomics. On the one hand new sequencing technologies have given the ability to the research community to sequence an increasing number of genome, however, on the other hand, the high number of tools, the difficulties in evaluating the results, and the need of high computational resources makes de novo assembly of genomes still an holy grail.
 
 NouGAT, NGI open universal Genome Assembly Toolbox, is a pipeline that allows, to a certain extent, to automate some of the most complex common processes that take place during the analysis of a de novo assembly project. The pipeline aims to generate a first draft assembly that can be used as a first step towards the production of a better assembly or in order to draw the first biological conclusion.
