@@ -190,11 +190,28 @@ def collect_results_and_report(validation_sample_dir, assemblies_sample_dir,
     for src_stat in source_stats:
         shutil.copy(src_stat[0], os.path.join(stat_folder, "{}.contiguity.out".format(src_stat[1])))
 
-    #BUSCO
-    BUSCO = []
+    # Building the BUSCO results table
+    BUSCO = [] # Assembly, BUSCO dataset, Complete, Duplicates, Fragmented, Missing, Total
     BUSCO_dirs = []
     for assembler in assemblers_assemblies:
+
         row = [assembler]
+
+        #Find which BUSCO data set was used from the evaluation config file
+        sample_config_g = os.path.join(validation_sample_dir,
+                    assembler, "*_evaluete.yaml")
+        sample_config_f = glob.glob(sample_config_g)[0]
+        with open(sample_config_f, "r") as f:
+            sample_config = yaml.load(f)
+        tools = sample_config.get("tools", [])
+
+        data_set = "Unknown"
+        for tool in tools:
+            if tool.startswith("BUSCO"):
+                data_set = tool
+        row.append(data_set)
+
+        #Find the BUSCO metrics from the result file
         summary_g = os.path.join(validation_sample_dir, assembler, "BUSCO", "run_*", "short_summary_*")
         if len(summary_g) > 0:
             summary_f = glob.glob(summary_g)[0]
@@ -215,19 +232,16 @@ def collect_results_and_report(validation_sample_dir, assemblies_sample_dir,
         shutil.copytree(bdir[0], os.path.join(BUSCO_target, bdir[1]))
 
     #### now I can produce the report
-    write_report(sample_folder, sample, assemblies_sample_dir,
-            assemblers_assemblies,  picturesQA, FRC_to_print,
-            min_contig_length, contig_stats, BUSCO)
+    write_report(sample_folder, sample, assemblers_assemblies, picturesQA,
+            FRC_to_print, min_contig_length, contig_stats, BUSCO)
     return
 
 
-def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,
-        picturesQA, FRCname ,min_contig_length, contig_stats, BUSCO):
+def write_report(sample_folder, sample, assemblers,
+        picturesQA, FRCname, min_contig_length, contig_stats, BUSCO):
     """This function produces a pdf report """
-
-    with open(os.path.join(assemblies_sample_dir,
-        "{}_assemble.yaml").format(sample)) as sample_config_handle:
-        sample_config = yaml.load(sample_config_handle)
+    # TODO: Build my own report generation function, with blackjack 
+    # and markdown. In fact, forget the blackjack.
 
     reportDir   = os.path.join(sample_folder, "report")
     if not os.path.exists(reportDir):
@@ -448,16 +462,23 @@ def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,
             "coverage (based on estimated genome size).")
 
     #BUSCO
-    BUSCO_table = [["Assembly", "Complete", "Duplicates", "Fragmented", "Missing", "Total"]]
+    BUSCO_table = [["Assembly", "BUSCO data set", "Complete", "Duplicates",
+        "Fragmented", "Missing", "Total"]]
     BUSCO_table.extend(BUSCO)
     doc.add_pagebreak()
     doc.add_header("BUSCO", pdf.H2)
-    doc.add_paragraph("TEXT HERE")
+    doc.add_paragraph("BUSCO evaluates the completeness de novo assemblies in "
+            "terms of gene content. It uses a lineage specific dataset (eg. "
+            "eykaryotes, vertebrates, bacteria) of single-copy orthologous "
+            "genes to query the assembly. Genes that are recovered from the "
+            "de novo assembled sequence are classified as 'Complete', "
+            "'Duplicate' , or 'Fragmented'. A complete gene falls within "
+            "two standard deviations of the expected gene length of the "
+            "particular dataset, otherwise it's classified as fragmented. "
+            "If two complete copies of a gene is recovered, it is classified "
+            "as duplicate.")
     doc.add_spacer()
     doc.add_table(BUSCO_table, TABLE_WIDTH)
-
-    
-
     doc.render(PDFtitle)
     return 0
 
