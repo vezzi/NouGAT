@@ -125,7 +125,7 @@ def _build_new_reference(sample_config):
     return sample_config
 
 
-def _BUSCO(program, options, sample_config, sorted_alignments_by_insert):
+def _run_BUSCO(program, options, sample_config, sorted_alignments_by_insert):
     main_dir = os.getcwd()
     BUSCOfolder = os.path.join(main_dir, "BUSCO")
     if not os.path.exists(BUSCOfolder):
@@ -139,7 +139,7 @@ def _BUSCO(program, options, sample_config, sorted_alignments_by_insert):
     reference = sample_config["reference"]
     output = sample_config["output"]
     threads = sample_config.get("threads", 16)
-    command = [program, "-l", BUSCO_data_path, "-in", "{}".format(reference), "-o", "{}".format(output),
+    command = [program, "-l", BUSCO_data_path, "-in", "{}".format(reference), "-o", "{}".format(output), 
             "-c", "{}".format(threads)]
     command.extend(options)
     common.print_command(command)
