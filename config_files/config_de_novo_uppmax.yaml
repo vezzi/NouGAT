@@ -52,15 +52,6 @@ Tools:
  qaTools:
   bin: /proj/a2010002/nobackup/sw/mf/bioinfo-tools/misc/qaTools/qaCompute
   options: ""
- BUSCOeukarya:
+ BUSCO:
   bin: /sw/apps/bioinfo/BUSCO/1.1b1/milou/BUSCO
-  options: ["-l", "/sw/apps/bioinfo/BUSCO/1.1b1/lineage_sets/eukaryota", "-m", "genome", "-f"]
- BUSCOvertebrata:
-  bin: /sw/apps/bioinfo/BUSCO/1.1b1/milou/BUSCO
-  options: ["-l", "/sw/apps/bioinfo/BUSCO/1.1b1/lineage_sets/vertebrata", "-m", "genome", "-f"] 
- BUSCObacteria:
-  bin: /sw/apps/bioinfo/BUSCO/1.1b1/milou/BUSCO
-  options: ["-l", "/sw/apps/bioinfo/BUSCO/1.1b1/lineage_sets/bacteria", "-m", "genome", "-f"]
- BUSCOfungi:
-  bin: /sw/apps/bioinfo/BUSCO/1.1b1/milou/BUSCO
-  options: ["-l", "$/sw/apps/bioinfo/BUSCO/1.1b1/lineage_sets/fungi", "-m", "genome", "-f"]
+  options:  ["-m", "genome", "-f"]

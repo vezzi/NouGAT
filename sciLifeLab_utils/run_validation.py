@@ -45,8 +45,10 @@ def main(args):
             sample_YAML.write("tools:\n")
             if lineage == 'none':
                 sample_YAML.write(" [align, qaTools, FRC]\n")
-            else:
-                sample_YAML.write(" [align, qaTools, FRC, BUSCO{}]\n".format(lineage))
+            elif lineage in ['eukaryota', 'bacteria', 'vertebrata', 'fungi', 'metazoa',
+                'plant_early_release', 'arthropoda']:
+                sample_YAML.write(" [align, qaTools, FRC, BUSCO]\n")
+                sample_YAML.write("BUSCODataPath: /sw/apps/bioinfo/BUSCO/1.1b1/lineage_sets/{}\n".format(lineage))
             sample_YAML.write(
                     "output: {}\n".format(sample_config_assembly["output"]))
             sample_YAML.write(

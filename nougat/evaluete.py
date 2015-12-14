@@ -124,28 +124,6 @@ def _build_new_reference(sample_config):
     os.chdir("..")
     return sample_config
 
-def _run_BUSCOeukarya(global_config, sample_config, sorted_alignments_by_insert):
-    options = global_config["Tools"]["BUSCOeukarya"]["options"]
-    program = global_config["Tools"]["BUSCOeukarya"]["bin"]
-    _BUSCO(program, options, sample_config, sorted_alignments_by_insert)
-
-
-def _run_BUSCObacteria(global_config, sample_config, sorted_alignments_by_insert):
-    options = global_config["Tools"]["BUSCObacteria"]["options"]
-    program = global_config["Tools"]["BUSCObacteria"]["bin"]
-    _BUSCO(program, options, sample_config, sorted_alignments_by_insert)
-
-
-def _run_BUSCOvertebrata(global_config, sample_config, sorted_alignments_by_insert):
-    options = global_config["Tools"]["BUSCOvertebrata"]["options"]
-    program = global_config["Tools"]["BUSCOvertebrata"]["bin"]
-    _BUSCO(program, options, sample_config, sorted_alignments_by_insert)
-
-def _run_BUSCOfungi(global_config, sample_config, sorted_alignments_by_insert):
-    options = global_config["Tools"]["BUSCOfungi"]["options"]
-    program = global_config["Tools"]["BUSCOfungi"]["bin"]
-    _BUSCO(program, options, sample_config, sorted_alignments_by_insert)
-
 
 def _BUSCO(program, options, sample_config, sorted_alignments_by_insert):
     main_dir = os.getcwd()
@@ -154,10 +132,14 @@ def _BUSCO(program, options, sample_config, sorted_alignments_by_insert):
         os.makedirs(BUSCOfolder)
     os.chdir(BUSCOfolder)
 
+    BUSCO_data_path = sample_config["BUSCODataPath"]
+    if not os.path.exists(BUSCO_data_path):
+        raise IOError("Path to the BUSCO data set does not exist!")
+
     reference = sample_config["reference"]
     output = sample_config["output"]
     threads = sample_config.get("threads", 16)
-    command = [program, "-in", "{}".format(reference), "-o", "{}".format(output), 
+    command = [program, "-l", BUSCO_data_path, "-in", "{}".format(reference), "-o", "{}".format(output),
             "-c", "{}".format(threads)]
     command.extend(options)
     common.print_command(command)

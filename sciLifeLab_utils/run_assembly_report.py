@@ -193,23 +193,18 @@ def collect_results_and_report(validation_sample_dir, assemblies_sample_dir,
     # Building the BUSCO results table
     BUSCO = [] # Assembly, BUSCO dataset, Complete, Duplicates, Fragmented, Missing, Total
     BUSCO_dirs = []
+    BUSCO_lineage = []
     for assembler in assemblers_assemblies:
 
         row = [assembler]
-
         #Find which BUSCO data set was used from the evaluation config file
         sample_config_g = os.path.join(validation_sample_dir,
                     assembler, "*_evaluete.yaml")
         sample_config_f = glob.glob(sample_config_g)[0]
         with open(sample_config_f, "r") as f:
             sample_config = yaml.load(f)
-        tools = sample_config.get("tools", [])
-
-        data_set = "Unknown"
-        for tool in tools:
-            if tool.startswith("BUSCO"):
-                data_set = tool
-        row.append(data_set)
+        data_path = sample_config["BUSCODataPath"]
+        BUSCO_lineage.append(data_path)
 
         #Find the BUSCO metrics from the result file
         summary_g = os.path.join(validation_sample_dir, assembler, "BUSCO", "run_*", "short_summary_*")
@@ -224,7 +219,10 @@ def collect_results_and_report(validation_sample_dir, assemblies_sample_dir,
                     if line.startswith("Representing"):
                         found = True
             BUSCO.append(row)
-            
+    # We have samples run with differing BUSCO data sets?!
+    if len(set(BUSCO_lineage)) != 1:
+        raise RunTimeError("There are samples run with differing BUSCO data sets. Check the (*.yaml) sample configuration files!")
+
     BUSCO_target = os.path.join(sample_folder, "evaluation", "BUSCO")
     if not os.path.exists(BUSCO_target):
         os.makedirs(BUSCO_target)
@@ -233,12 +231,12 @@ def collect_results_and_report(validation_sample_dir, assemblies_sample_dir,
 
     #### now I can produce the report
     write_report(sample_folder, sample, assemblers_assemblies, picturesQA,
-            FRC_to_print, min_contig_length, contig_stats, BUSCO)
+            FRC_to_print, min_contig_length, contig_stats, BUSCO, BUSCO_lineage[0])
     return
 
 
 def write_report(sample_folder, sample, assemblers,
-        picturesQA, FRCname, min_contig_length, contig_stats, BUSCO):
+        picturesQA, FRCname, min_contig_length, contig_stats, BUSCO, BUSCO_lineage):
     """This function produces a pdf report """
     # TODO: Build my own report generation function, with blackjack 
     # and markdown. In fact, forget the blackjack.
@@ -462,7 +460,7 @@ def write_report(sample_folder, sample, assemblers,
             "coverage (based on estimated genome size).")
 
     #BUSCO
-    BUSCO_table = [["Assembly", "BUSCO data set", "Complete", "Duplicates",
+    BUSCO_table = [["Assembly", "Complete", "Duplicates",
         "Fragmented", "Missing", "Total"]]
     BUSCO_table.extend(BUSCO)
     doc.add_pagebreak()
@@ -478,6 +476,7 @@ def write_report(sample_folder, sample, assemblers,
             "If two complete copies of a gene is recovered, it is classified "
             "as duplicate.")
     doc.add_spacer()
+    doc.add_paragraph("BUSCO lineage: {}".format(BUSCO_lineage))
     doc.add_table(BUSCO_table, TABLE_WIDTH)
     doc.render(PDFtitle)
     return 0
