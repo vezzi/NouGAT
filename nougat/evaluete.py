@@ -125,7 +125,9 @@ def _build_new_reference(sample_config):
     return sample_config
 
 
-def _run_BUSCO(program, options, sample_config, sorted_alignments_by_insert):
+def _run_BUSCO(global_config, sample_config, sorted_alignments_by_insert):
+    program = global_config["Tools"]["BUSCO"]["bin"]
+    options = global_config["Tools"]["BUSCO"]["options"]
     main_dir = os.getcwd()
     BUSCOfolder = os.path.join(main_dir, "BUSCO")
     if not os.path.exists(BUSCOfolder):
