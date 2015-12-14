@@ -1,7 +1,7 @@
 Pipelines:
  QCcontrol: ["fastqc", "abyss", "trimmomatic", "kmergenie", "align"]
  assemble: ["abyss", "allpaths", "cabog",  "masurca", "soapdenovo", "spades", "trinity"]
- evaluete: ["align", "qaTools", "FRC", "BUSCObacteria", "BUSCOeukarya", "BUSCOvertebrata", "BUSCOfungi"]
+ evaluete: ["align", "qaTools", "FRC", "BUSCO"]
  align: []
 Tools:
  kmergenie:

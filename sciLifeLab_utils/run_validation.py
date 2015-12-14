@@ -76,7 +76,7 @@ def main(args):
             sample_YAML.close
 
             # Run the job
-            extramodules = ["module load samtools/1.1\nmodule load bwa\n"]
+            extramodules = ["module load samtools/1.1\nmodule load bwa\nmodule load BUSCO\n"]
             jobname = "{}_{}_{}".format(sample_dir_name, pipeline, assembler)
             submit_job(sample_YAML_name, jobname, os.getcwd(), args, extramodules)
 
