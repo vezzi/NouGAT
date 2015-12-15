@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import sys, os, yaml, glob
 import argparse
 from nougat import evaluete, assemble, QCcontrol, align, common
@@ -11,8 +13,8 @@ def main(args):
 
     check_consistency(global_config,sample_config)
     if common.check_dryrun(sample_config):
-        print "Option dryrun idenitfied: commands will only be printed, \
-               not executed"
+        print("Option dryrun idenitfied: commands will only be printed,)",
+               "not executed")
 
     if sample_config["pipeline"] in global_config["Pipelines"]:
         run_analys(global_config, sample_config)

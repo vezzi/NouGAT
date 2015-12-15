@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import sys, os, yaml, glob
 import subprocess
 import pandas as pd
@@ -189,21 +190,56 @@ def collect_results_and_report(validation_sample_dir, assemblies_sample_dir,
     for src_stat in source_stats:
         shutil.copy(src_stat[0], os.path.join(stat_folder, "{}.contiguity.out".format(src_stat[1])))
 
+    # Building the BUSCO results table
+    BUSCO = [] # Assembly, BUSCO dataset, Complete, Duplicates, Fragmented, Missing, Total
+    BUSCO_dirs = []
+    BUSCO_lineage = []
+    for assembler in assemblers_assemblies:
+
+        row = [assembler]
+        #Find which BUSCO data set was used from the evaluation config file
+        sample_config_g = os.path.join(validation_sample_dir,
+                    assembler, "*_evaluete.yaml")
+        sample_config_f = glob.glob(sample_config_g)[0]
+        with open(sample_config_f, "r") as f:
+            sample_config = yaml.load(f)
+        data_path = sample_config["BUSCODataPath"]
+        BUSCO_lineage.append(data_path)
+
+        #Find the BUSCO metrics from the result file
+        summary_g = os.path.join(validation_sample_dir, assembler, "BUSCO", "run_*", "short_summary_*")
+        if len(summary_g) > 0:
+            summary_f = glob.glob(summary_g)[0]
+            BUSCO_dirs.append([os.path.dirname(summary_f), assembler])
+            with open(summary_f, "r") as f:
+                found = False
+                for line in f:
+                    if found:
+                        row.append(line.split()[0])
+                    if line.startswith("Representing"):
+                        found = True
+            BUSCO.append(row)
+    # We have samples run with differing BUSCO data sets?!
+    if len(set(BUSCO_lineage)) != 1:
+        raise RunTimeError("There are samples run with differing BUSCO data sets. Check the (*.yaml) sample configuration files!")
+
+    BUSCO_target = os.path.join(sample_folder, "evaluation", "BUSCO")
+    if not os.path.exists(BUSCO_target):
+        os.makedirs(BUSCO_target)
+    for bdir in BUSCO_dirs:
+        shutil.copytree(bdir[0], os.path.join(BUSCO_target, bdir[1]))
 
     #### now I can produce the report
-    write_report(sample_folder, sample, assemblies_sample_dir,
-            assemblers_assemblies,  picturesQA, FRC_to_print,
-            min_contig_length, contig_stats)
+    write_report(sample_folder, sample, assemblers_assemblies, picturesQA,
+            FRC_to_print, min_contig_length, contig_stats, BUSCO, BUSCO_lineage[0])
     return
 
 
-def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,
-        picturesQA, FRCname ,min_contig_length, contig_stats):
+def write_report(sample_folder, sample, assemblers,
+        picturesQA, FRCname, min_contig_length, contig_stats, BUSCO, BUSCO_lineage):
     """This function produces a pdf report """
-
-    with open(os.path.join(assemblies_sample_dir,
-        "{}_assemble.yaml").format(sample)) as sample_config_handle:
-        sample_config = yaml.load(sample_config_handle)
+    # TODO: Build my own report generation function, with blackjack 
+    # and markdown. In fact, forget the blackjack.
 
     reportDir   = os.path.join(sample_folder, "report")
     if not os.path.exists(reportDir):
@@ -391,7 +427,7 @@ def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,
             "original cov.gc table is present under the "
             "evaluation/QA_pictures folder")
 
-    for assembler, assembler_QC_pictures in picturesQA.iteritems():
+    for assembler, assembler_QC_pictures in picturesQA.items():
         doc.add_pagebreak() 
         doc.add_header("QC plots for {}".format(assembler) , pdf.H3)
         doc.add_image(assembler_QC_pictures[0][0], 280, 200, pdf.CENTER,
@@ -422,6 +458,26 @@ def write_report(sample_folder, sample, assemblies_sample_dir, assemblers,
     doc.add_image(FRCname, 336, 220, pdf.CENTER, "Feature-Response curve. "
             "On x-axis is the number of features in total, on y-axis is "
             "coverage (based on estimated genome size).")
+
+    #BUSCO
+    BUSCO_table = [["Assembly", "Complete", "Duplicates",
+        "Fragmented", "Missing", "Total"]]
+    BUSCO_table.extend(BUSCO)
+    doc.add_pagebreak()
+    doc.add_header("BUSCO", pdf.H2)
+    doc.add_paragraph("BUSCO evaluates the completeness de novo assemblies in "
+            "terms of gene content. It uses a lineage specific dataset (eg. "
+            "eykaryotes, vertebrates, bacteria) of single-copy orthologous "
+            "genes to query the assembly. Genes that are recovered from the "
+            "de novo assembled sequence are classified as 'Complete', "
+            "'Duplicate' , or 'Fragmented'. A complete gene falls within "
+            "two standard deviations of the expected gene length of the "
+            "particular dataset, otherwise it's classified as fragmented. "
+            "If two complete copies of a gene is recovered, it is classified "
+            "as duplicate.")
+    doc.add_spacer()
+    doc.add_paragraph("BUSCO lineage: {}".format(BUSCO_lineage))
+    doc.add_table(BUSCO_table, TABLE_WIDTH)
     doc.render(PDFtitle)
     return 0
 

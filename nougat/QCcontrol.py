@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import sys, os, yaml, glob
 import subprocess
 import pandas as pd
@@ -41,9 +43,9 @@ def run(global_config, sample_config):
 def _run_align(global_config, sample_config,sorted_libraries_by_insert):
 
     if "reference" not in sample_config:
-        print "reference sequence not provided, skypping alignment step. "
-        "Please provide a reference if you are intrested in aligning the reads "
-        "against a reference"
+        print("reference sequence not provided, skypping alignment step.",
+        "Please provide a reference if you are intrested in aligning the reads",
+        "against a reference")
         return sample_config
     if not os.path.exists("alignments"):
         os.makedirs("alignments")
@@ -145,7 +147,7 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
         returnValue = subprocess.call(command, shell=True, \
                 stdout=ABySS_Kmer_stdOut, stderr=ABySS_Kmer_stdErr)
         if returnValue > 0:
-            print "ABySS kmer plotting failed: unkwnown reason"
+            print("ABySS kmer plotting failed: unkwnown reason")
         else :
             subprocess.call(("rm", "preUnitgs.fa"))
             _plotKmerFixed(1,200, kmer, "kmer_coverage_1_200.png")
@@ -175,8 +177,8 @@ def _plotKmer(kmer, output_name):
     # Lazily drift towards the most spacious area under the curve
     # using divide and conquer.
     def get_bisect(chunk):
-        left = chunk[:len(chunk)/2]
-        right = chunk[len(chunk)/2:]
+        left = chunk[:int(len(chunk)/2)]
+        right = chunk[int(len(chunk)/2):]
         lweight = sum(map(lambda x: x[0] * x[1], left)) / len(left)
         rweight = sum(map(lambda x: x[0] * x[1], right)) / len(right)
         if lweight > rweight:
@@ -185,8 +187,8 @@ def _plotKmer(kmer, output_name):
             return right
 
     # Perform six bisections
-    cov_count = zip(kcov, kcount_gradient)
-    for i in xrange(0,6):
+    cov_count = list(zip(kcov, kcount_gradient))
+    for i in range(0,6):
         cov_count = get_bisect(cov_count)
     xmax = cov_count[-1][0]
 
@@ -303,7 +305,7 @@ def _run_trimmomatic(global_config, sample_config, sorted_libraries_by_insert):
                 returnValue = subprocess.call(command, stdout=stdOut,
                         stderr=stdErr) # run the program
                 if returnValue != 0:
-                    print "error while running command: {}".format(command)
+                    print("error while running command: {}".format(command))
             libraryInfo["pair1"] = output_read1_pair
             libraryInfo["pair2"] = output_read2_pair
             libraryInfo["trimmomatic"] = os.path.join(trimmomaticDir,
@@ -381,7 +383,7 @@ def _run_kmergenie(global_config, sample_config, sorted_libraries_by_insert):
         stdErr = open("kmergenie.stdErr", "w")
         returnValue = subprocess.call(cmd_list, stdout=stdOut, stderr=stdErr)
         if returnValue != 0:
-            print "error while running command: {}".format(command)
+            print("error while running command: {}".format(command))
         else:
             _kmergenie_plot("histograms.dat")
     sample_config["kmergenie"] = kmerdir

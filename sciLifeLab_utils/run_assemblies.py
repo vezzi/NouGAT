@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import sys, os, yaml, glob
 import subprocess
 import argparse
@@ -30,7 +31,7 @@ def main(args):
         #Now all the info is in place and I am in the correct folder
         pipeline = "assemble"
         tools = list(args.assemblers)
-        tools = map(str, tools) # Beware whoever inputs unicode characters
+        tools = list(map(str, tools)) # Beware whoever inputs unicode characters
         sample_YAML_name = os.path.join(sample_folder,
                 "{}_{}.yaml".format(sample_dir_name, pipeline))
         sample_YAML = open(sample_YAML_name, 'w')

@@ -5,8 +5,7 @@
     Date:    2012-10-14
 
 """
-
-from cStringIO import StringIO
+from __future__ import absolute_import
 import urllib
 from reportlab.platypus.doctemplate import SimpleDocTemplate
 from reportlab.platypus.flowables import Image
@@ -18,9 +17,13 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.rl_config import defaultPageSize
 from reportlab.pdfgen import canvas
-from theme import DefaultTheme
-from util import calc_table_col_widths
-from common import *
+from nougat.pdf.theme import DefaultTheme
+from nougat.pdf.util import calc_table_col_widths
+from nougat.pdf.common import *
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import BytesIO as StringIO
 
 # Adapted from http://code.activestate.com/recipes/576832/
 class NumberedCanvas(canvas.Canvas):
@@ -100,7 +103,7 @@ class Pdf(object):
 
         if src.split(".")[-1] in ["png", "PNG"]:
             try:
-                f = open(src)
+                f = open(src, 'rb')
                 data = StringIO(f.read())
             except:
                 return

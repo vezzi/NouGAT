@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import sys, os, yaml, glob
 import subprocess
 import pandas as pd
@@ -42,8 +44,8 @@ def run(global_config, sample_config):
 
 def _run_align(global_config, sample_config,sorted_libraries_by_insert):
     if "reference" not in sample_config:
-        print("reference sequence not provided, skypping alignment step. "
-                "Please provide a reference if you are intrested in aligning "
+        print("reference sequence not provided, skypping alignment step.",
+                "Please provide a reference if you are intrested in aligning",
                 "the reads against a reference")
         return sample_config
     if not os.path.exists("alignments"):
@@ -123,12 +125,36 @@ def _build_new_reference(sample_config):
     return sample_config
 
 
-def _run_CEGMA(global_config, sample_config, sorted_alignments_by_insert):
-    cegma = global_config["evaluete"]["CEGMA"]["bin"]
-    assembly = sample_config["reference"]
-    #module load cegma/2.4.010312
-    return sample_config
+def _run_BUSCO(global_config, sample_config, sorted_alignments_by_insert):
+    program = global_config["Tools"]["BUSCO"]["bin"]
+    options = global_config["Tools"]["BUSCO"]["options"]
+    main_dir = os.getcwd()
+    BUSCOfolder = os.path.join(main_dir, "BUSCO")
+    if not os.path.exists(BUSCOfolder):
+        os.makedirs(BUSCOfolder)
+    os.chdir(BUSCOfolder)
 
+    BUSCO_data_path = sample_config["BUSCODataPath"]
+    if not os.path.exists(BUSCO_data_path):
+        raise IOError("Path to the BUSCO data set does not exist!")
+
+    reference = sample_config["reference"]
+    output = sample_config["output"]
+    threads = sample_config.get("threads", 16)
+    command = [program, "-l", BUSCO_data_path, "-in", "{}".format(reference), "-o", "{}".format(output), 
+            "-c", "{}".format(threads)]
+    command.extend(options)
+    common.print_command(command)
+
+    outfile = os.path.join(BUSCOfolder, "run_{}".format(output), 
+            "short_summary_{}".format(output))
+    if not common.check_dryrun(sample_config) and not os.path.exists(outfile):
+        stdOut = open("BUSCO.stdOut", "a")
+        stdErr = open("BUSCO.stdErr", "a")
+        return_value = subprocess.call(command, stdout=stdOut, stderr=stdErr) 
+        if not return_value == 0:
+            sys.exit("Error running BUSCO")
+    os.chdir("..")
 
 def _run_FRC(global_config, sample_config, sorted_libraries_by_insert):
     mainDir = os.getcwd()
@@ -382,8 +408,8 @@ def computeAssemblyStats(sample_config):
             fai = groupby(seq_file, lambda x: x.startswith(">"))
             while True:
                 try:
-                    _, header = fai.next()
-                    _, sequence = fai.next()
+                    _, header = next(fai)
+                    _, sequence = next(fai)
                 except StopIteration:
                     break
                 # Collect fasta sequence stats

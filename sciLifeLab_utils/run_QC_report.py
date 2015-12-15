@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import sys, os, yaml, glob
 import subprocess
 import argparse
@@ -21,10 +23,10 @@ def main(args):
                 sample_config = yaml.load(sample_config_handle)
             with open(global_yaml) as global_config_handle:
                 global_config = yaml.load(global_config_handle)
-        except IOError, e:
-            print "Cannot open file: {}".format(e)
-        except YAMLError, e:
-            print "Error in config file: {}".format(e)
+        except IOError as e:
+            print("Cannot open file: {}".format(e))
+        except YAMLError as e:
+            print("Error in config file: {}".format(e))
         else:
             _run_qc_report(global_config, sample_config)
 
@@ -118,7 +120,7 @@ def _run_qc_report(global_config, sample_config):
             "commands that have been run in the delivery folder on Uppmax")
 
     for tool in tools:
-	doc.add_pagebreak()
+        doc.add_pagebreak()
         doc.add_header(tool.title() , pdf.H2)
         if tool  == "trimmomatic":
             doc.add_paragraph("Reads (both paired and mate pairs) can "
@@ -130,9 +132,9 @@ def _run_qc_report(global_config, sample_config):
             doc.add_paragraph("Adapter sequences removed are:")
             adapter_file = sample_config["adapters"]
             adapters     = []
-            with open(adapter_file) as file:
-                lines       = file.readlines()
-                for index in xrange(1, len(lines), 2):
+            with open(adapter_file) as afile:
+                lines       = afile.readlines()
+                for index in range(1, len(lines), 2):
                     adapters.append(lines[index].rstrip())
             doc.add_list(adapters)
             doc.add_spacer()

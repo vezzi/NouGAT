@@ -1,6 +1,7 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import sys, os, yaml, glob
 import subprocess
-import align
 import datetime
 import time
 import types
@@ -117,8 +118,8 @@ def which(program):
 
 
 def _sort_libraries_by_insert(sample_config):
-    sorted_libraries_by_insert = sorted(sample_config["libraries"].iteritems(),
-            key=lambda (k,v): v["insert"])
+    sorted_libraries_by_insert = sorted(sample_config["libraries"].items(),
+            key=lambda v: v[1]["insert"])
     return sorted_libraries_by_insert
 
 
@@ -138,12 +139,12 @@ def get_command_str(command):
 
 def print_command(command):
     """ prints in a human readable way a command stored in a list"""
-    print get_command_str(command)
+    print(get_command_str(command))
 
 
 def _check_pipeline(sample_config, global_config):
     """ check that user specified commands are supported by this pipeline"""
-    print "checking tool consistency:"
+    print("checking tool consistency:")
 
     pipeline     = sample_config["pipeline"]
     user_tools   = sample_config["tools"] #might be empty
@@ -186,7 +187,7 @@ def _check_pipeline(sample_config, global_config):
                     "command.".format(tool))
 
         tool_bin = global_config["Tools"][tool]["bin"]
-        print tool_bin
+        print(tool_bin)
         """this step is a case by case step as several special cases are 
         present"""
         special_tools = ["allpaths", "abyss", "cabog", "masurca",  "trinity",

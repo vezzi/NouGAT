@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import sys
 from numpy import NaN, Inf, arange, isscalar, asarray, array
 

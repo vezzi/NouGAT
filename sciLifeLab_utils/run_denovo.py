@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import click
 import argparse
 import os
@@ -25,9 +26,9 @@ def callback(ctx, param, value):
 def _to_namespace(args_dict, **kwargs):
     args = argparse.Namespace()
     d = vars(args)
-    for key, val in args_dict.iteritems():
+    for key, val in args_dict.items():
         d[key] = val
-    for key, val in kwargs.iteritems():
+    for key, val in kwargs.items():
         d[key] = val
     return args
 
@@ -135,6 +136,10 @@ def assembly(state, **kwargs):
 @click.option('--assembly-dir', type=click.Path(exists=True), required=True, help="Path to directory containg assemblies")
 @click.option('--multiple-lib-project', is_flag=True, default=False, help="To be specified if we are running a "
             "mulitple library assembly")
+@click.option('--lineage',  type=click.Choice(['eukaryota', 'bacteria', 'vertebrata', 'fungi', 'metazoa',
+        'plant_early_release', 'arthropoda','none']), required=True,
+        help="Used for running BUSCO. Which taxa does the organism belong to, the lower taxa will contain more target genes, " 
+        "but might take a longer time to run. If 'none' is specified, BUSCO will not be run.")
 @pass_state
 def validation(state, **kwargs):
     """Runs assembly validation with sample sequenced with a single
