@@ -1,6 +1,6 @@
 *.pyc
 *.idx
-de_novo_scilife.egg-info/
+*.egg-info/
 build/
 .DS_Store
 .#*
