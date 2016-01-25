@@ -4,15 +4,6 @@ import glob
 import re
 import subprocess
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--source", required=True, type = str,
-            help= "Path to QC analysis folder")
-    parser.add_argument"--uppnexid", required=True, type = str,
-            help ="Destination Uppnex id")
-    projectID = parser.parse_args()
-    main(projectID)
-
 def main(arg):
     project = os.path.split(os.path.realpath(arg.source))
     move_from_path = "{}/*/results/".format(arg.source)
@@ -24,9 +15,20 @@ def main(arg):
             samples.append(pattern.match(path).groups()[0])
         except IndexError:
             pass
-    dest = "/proj/{}/INBOX/{}/QC_analysis".format(uppnexid,project)
+    
     
     for sample in samples:
+        dest = "/proj/{}/INBOX/{}/QC_analysis/{}".format(arg.uppnexid,project,sample)
         cmd = ["rsync", "-auhv", "{}/{}/results".format(arg.source, sample), dest]
         subprocess.call(cmd)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--source", required=True, type = str,
+            help= "Path to QC analysis folder")
+    parser.add_argument"--uppnexid", required=True, type = str,
+            help =("Destination Uppnex id")
+    projectID = parser.parse_args()
+    main(projectID)
+
 
