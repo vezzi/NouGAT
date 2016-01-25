@@ -19,7 +19,11 @@ def main(arg):
     
     for sample in samples:
         dest = "/proj/{}/INBOX/{}/QC_analysis/{}".format(arg.uppnexid,project,sample)
-        cmd = ["rsync", "-auhv", "{}/{}/results".format(arg.source, sample), dest]
+        try:
+             os.mkdir(dest)
+        except OSError:
+            pass
+        cmd = ["rsync", "-auhvr", "{}/{}/results".format(arg.source, sample), dest]
         subprocess.call(cmd)
 
 if __name__ == '__main__':
