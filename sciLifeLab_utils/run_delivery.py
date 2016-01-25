@@ -5,7 +5,7 @@ import re
 import subprocess
 
 def main(arg):
-    project = os.path.split(os.path.realpath(arg.source))
+    project = os.path.split(os.path.realpath(arg.source))[1]
     move_from_path = "{}/*/results/".format(arg.source)
     pathway = glob.glob(move_from_path)
     pattern = re.compile(r"^(?:\\.|[^/\\])*/((?:\\.|[^/\\])*)/")
@@ -26,8 +26,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", required=True, type = str,
             help= "Path to QC analysis folder")
-    parser.add_argument"--uppnexid", required=True, type = str,
-            help =("Destination Uppnex id")
+    parser.add_argument("--uppnexid", required=True, type = str,
+            help =("Destination Uppnex id"))
     projectID = parser.parse_args()
     main(projectID)
 
