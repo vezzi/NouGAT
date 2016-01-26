@@ -8,7 +8,7 @@ def main(arg):
     project = os.path.split(os.path.realpath(arg.source))[1]
     move_from_path = "{}/*/results/".format(arg.source)
     pathway = glob.glob(move_from_path)
-    pattern = re.compile(r"^(?:\\.|[^/\\])*/((?:\\.|[^/\\])*)/")
+    pattern = re.compile(r"/[^/]+/[^/]+/[^/]+/[^/]+/[^/]+/([^/]+)/") #Matches the group betwen the 6th / /
     samples = []
     for path in pathway:
         try:
