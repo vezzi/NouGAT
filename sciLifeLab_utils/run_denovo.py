@@ -104,6 +104,17 @@ def qc_report(state, **kwargs):
     from . import run_QC_report
     run_QC_report.main(_to_namespace(state.params, **kwargs))
 
+@cli.command()
+@common_options
+@click.option('--source', required=True, type =click.Path(exists=True), help= "Path to QC analysis folder")
+@click.option('--uppnexid', required=True, type = str, help ="Destination Uppnex id")
+@pass_state
+def delivery(state, **kwargs):
+    """Delivers deNovo data results folder to users inbox"""
+    from . import run_delivery
+    run_delivery.main(_to_namespace(state.params, **kwargs))
+
+
 
 @cli.command()
 @common_options
