@@ -82,7 +82,12 @@ def main(args):
             elif "_2.fastq.gz" in file:
                 pair2_file = file
                 pair1_file = re.sub("_2.fastq.gz", "_1.fastq.gz", file)
-
+            elif "R1_001.fastq.gz" in file:
+                pair1_file = file
+                pair2_file = re.sub("R1_001.fastq.gz", "R2_001.fastq.gz", file)
+            elif "R2_001.fastq.gz" in file:
+                pair2_file = file
+                pair1_file = re.sub("R2_001.fastq.gz", "R1_001.fastq.gz", file)
             sample_YAML.write("  pair1: {}\n".format(pair1_file))
             sample_YAML.write("  pair2: {}\n".format(pair2_file))
             sample_YAML.write("  orientation: {}\n".format(args.orientation))
