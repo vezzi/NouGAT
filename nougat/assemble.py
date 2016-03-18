@@ -349,10 +349,10 @@ def _run_cabog(global_config, sample_config, sorted_libraries_by_insert):
         #assembly succed, remove files and save assembly
         if os.path.exists(os.path.join("runCABOGfolder","9-terminator",
             "{}.ctg.fasta".format(outputName))):
-            subprocess.call(["mv", os.path.join("runCABOGfolder","9-terminator",
+            subprocess.call(["cp", os.path.join("runCABOGfolder","9-terminator",
                 "{}.ctg.fasta".format(outputName)),
                 "{}.ctg.fasta".format(outputName)])
-            subprocess.call(["mv", os.path.join("runCABOGfolder","9-terminator",
+            subprocess.call(["cp", os.path.join("runCABOGfolder","9-terminator",
                 "{}.scf.fasta".format(outputName)),
                 "{}.scf.fasta".format(outputName)])
             if not "keep_tmp_files" in flags:
@@ -570,9 +570,9 @@ def _run_soapdenovo(global_config, sample_config, sorted_libraries_by_insert):
     flags = sample_config.get("flags", [])
     if returnValue == 0:
         if(os.path.exists(os.path.join("runSOAP","soapAssembly.scafSeq"))):
-            subprocess.call(["mv", os.path.join("runSOAP",
+            subprocess.call(["cp", os.path.join("runSOAP",
                 "soapAssembly.scafSeq"), "{}.scf.fasta".format(outputName)])
-            subprocess.call(["mv", os.path.join("runSOAP",
+            subprocess.call(["cp", os.path.join("runSOAP",
                 "soapAssembly.contig"), "{}.ctg.fasta".format(outputName)])
             if not "keep_tmp_files" in flags:
                 subprocess.call(["rm", "-r", "runSOAP"])
