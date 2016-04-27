@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 import sys, os, yaml, glob
+from yaml import YAMLError
 import subprocess
 import argparse
 import itertools
