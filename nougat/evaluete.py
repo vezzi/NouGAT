@@ -321,7 +321,10 @@ def plotQA(QA_GC_file):
     plt.clf()
 
     #Coverage Distribution Histogram
-    n, bins, patches = plt.hist(MedianCov, 100, facecolor='g')
+    try:
+        n, bins, patches = plt.hist(MedianCov, 100, facecolor='g')
+    except ValueError:
+        n, bins, patches = plt.hist(MedianCov, bins=range(0, max(MedianCov)+100, 10), facecolor='g')
     plt.xlabel('Coverage')
     plt.ylabel('Frequency')
     plt.title('Coverage Distribution')
