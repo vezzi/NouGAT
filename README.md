@@ -22,7 +22,7 @@ The pipeline is structured in three different sub-pipelines, and a number of con
 
 
 ## Installation
-NouGAT is a python package. From a practical point of view it is a wrapper around a certain number of tools that allow to perform de novo assembly analysis. In order to install NouGAT the following steps must be followed:
+NouGAT is a python package. From a practical point of view it is a wrapper around a certain number of tools that allow to perform de novo assembly analysis. We recommend creating a Conda virtual environment for installing NouGAT:
 
 ```bash
 # First we create a new virtual python environment using conda, get it here: 
