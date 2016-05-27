@@ -1,0 +1,7 @@
+reportlab>=3.1.8
+pandas>=0.14.0
+numpy>=1.8.1
+matplotlib>=1.4.3
+reportlab>=3.1.8
+pyyaml>=3.11
+click>=5.0

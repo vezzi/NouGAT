@@ -5,17 +5,7 @@ python:
 notifications:
   email: false
 
-# Setup anaconda
-before_install:
-  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-  - chmod +x miniconda.sh
-  - ./miniconda.sh -b
-  - export PATH=$HOME/miniconda2/bin:$PATH
-  - conda update -y -q conda
-# Install packages
 install:
-  - conda create -q -y -n DeNovoPipeline python=$TRAVIS_PYTHON_VERSION numpy matplotlib click reportlab pandas pyyaml
-  - source activate DeNovoPipeline
   - python setup.py develop
 
 script:
