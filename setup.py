@@ -1,5 +1,8 @@
 #!/usr/bin/env python
+from nougat import __version__
 from setuptools import setup
+
+version = __version__
 
 try:
     with open("requirements.txt", "r") as f:
@@ -9,7 +12,7 @@ except IOError:
 
 
 setup(name='nougat',
-    version='0.6',
+    version=version,
     description= 'An automated analysis pipeline for de novo assembly',
     author='Francesco Vezzi',
     author_email='francesco.vezzi@scilifelab.se',
