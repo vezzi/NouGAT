@@ -184,7 +184,7 @@ def report(state, **kwargs):
 
 def main():
     try:
-        conf_file = os.path.join(os.environ.get('HOME'), '.nougat','scilifelab.conf')
+        conf_file = os.environ.get("NOUGAT_CONF", os.path.join(os.environ.get('HOME'), '.nougat','scilifelab.conf'))
         with open(conf_file) as f:
             config = yaml.load(f)
     except IOError:
