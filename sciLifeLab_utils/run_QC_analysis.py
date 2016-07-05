@@ -94,7 +94,7 @@ def main(args):
         if "abyss" in tools:
             extramodules.append("module load abyss/1.3.5\n")
         if "align" in tools:
-            extramodules.append("module load samtools/1.1\nmodule load bwa\n")
+            extramodules.append("module load samtools\nmodule load bwa\n")
         jobname = "{}_{}".format(sample_dir_name, pipeline)
         submit_job(sample_YAML_name, jobname, os.getcwd(), args, extramodules)
         os.chdir(projectFolder)
