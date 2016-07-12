@@ -47,7 +47,14 @@ def main(args):
         flowcells_dirs  = [os.path.join(sample_data_dir,flowcell) \
                 for flowcell in os.listdir(sample_data_dir) \
                 if os.path.isdir(os.path.join(sample_data_dir,flowcell))]
-
+        
+        # to adapt the diretory structure of X runs
+        checked_fc = [fc for fc in flowcells_dirs if re.match(r'^[A-Z]$', os.path.basename(fc))]
+        for fc_dir in checked_fc:
+            flowcells_dirs.extend([os.path.join(fc_dir,flowcell) \
+                for flowcell in os.listdir(fc_dir) \
+                if os.path.isdir(os.path.join(fc_dir,flowcell))])
+            
         sample_files = []
         for flowcell in flowcells_dirs:
 
