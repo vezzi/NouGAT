@@ -43,11 +43,23 @@ def main(args):
         sample_YAML.write("libraries:\n")
 
         sample_data_dir = os.path.join(samples_data_dir,sample_dir_name)
-        # full path to flowcell
-        flowcells_dirs  = [os.path.join(sample_data_dir,flowcell) \
-                for flowcell in os.listdir(sample_data_dir) \
-                if os.path.isdir(os.path.join(sample_data_dir,flowcell))]
-
+        
+        # helper variables for collecting FCs
+        fc_pat, prep_pat = (r'^\d{6}_.*_?.*$', r'^[A-Z]$')
+        def _get_expected_dir(path, pat):
+            return [os.path.join(path, d) for d in os.listdir(path) if re.match(pat, d) \
+                    and os.path.isdir(os.path.join(path, d))]
+        
+        #collect FC directories            
+        flowcells_dirs  = _get_expected_dir(sample_data_dir, fc_pat)
+        
+        # to adapt the directory structure in IRMA where it have lib prep dir
+        lib_prep_dirs  = _get_expected_dir(sample_data_dir, prep_pat)
+        
+        # Check and collect the flowcells in the lib prep directory
+        for prep_dir in lib_prep_dirs:
+            flowcells_dirs.extend(_get_expected_dir(prep_dir, fc_pat))
+            
         sample_files = []
         for flowcell in flowcells_dirs:
 
