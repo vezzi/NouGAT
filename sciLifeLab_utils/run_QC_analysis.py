@@ -48,12 +48,15 @@ def main(args):
                 for flowcell in os.listdir(sample_data_dir) \
                 if os.path.isdir(os.path.join(sample_data_dir,flowcell))]
         
-        # to adapt the diretory structure of X runs
-        checked_fc = [fc for fc in flowcells_dirs if re.match(r'^[A-Z]$', os.path.basename(fc))]
-        for fc_dir in checked_fc:
-            flowcells_dirs.extend([os.path.join(fc_dir,flowcell) \
-                for flowcell in os.listdir(fc_dir) \
-                if os.path.isdir(os.path.join(fc_dir,flowcell))])
+        # to adapt the diretory structure in IRMA where it have one folder for lib prep.
+        # So shcek if the collected FC directories are really FC directory or a LIB prep dir
+        lib_prep_dirs = [fc for fc in flowcells_dirs if re.match(r'^[A-Z]$', os.path.basename(fc))]
+        for prep_dir in lib_prep_dirs:
+            flowcells_dirs.extend([os.path.join(prep_dir,flowcell) \
+                for flowcell in os.listdir(prep_dir) \
+                if os.path.isdir(os.path.join(prep_dir,flowcell))])
+            if prep_dir in flowcells_dirs:
+                flowcells_dirs.remove(prep_dir)
             
         sample_files = []
         for flowcell in flowcells_dirs:
