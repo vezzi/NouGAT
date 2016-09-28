@@ -203,7 +203,12 @@ def collect_results_and_report(validation_sample_dir, assemblies_sample_dir,
         sample_config_f = glob.glob(sample_config_g)[0]
         with open(sample_config_f, "r") as f:
             sample_config = yaml.load(f)
-        data_path = sample_config["BUSCODataPath"]
+        try:
+            data_path = sample_config["BUSCODataPath"]
+        except KeyError:
+            print("No BUSCO data found. Assuming BUSCO was not run.")
+            BUSCO_lineage.append(None)
+            continue
         BUSCO_lineage.append(data_path)
 
         #Find the BUSCO metrics from the result file

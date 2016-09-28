@@ -109,7 +109,6 @@ class Pdf(object):
                 return
             else:
                 img = Image(data, width, height)
-            finally:
                 f.close()
         else:
             img = Image(src, width, height)

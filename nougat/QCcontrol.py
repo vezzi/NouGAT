@@ -189,7 +189,10 @@ def _plotKmer(kmer, output_name):
     # Perform six bisections
     cov_count = list(zip(kcov, kcount_gradient))
     for i in range(0,6):
-        cov_count = get_bisect(cov_count)
+        try:
+            cov_count = get_bisect(cov_count)
+        except ZeroDivisionError: # Already at the leftmost position
+            pass
     xmax = cov_count[-1][0]
 
     # We could always use more space
