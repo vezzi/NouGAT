@@ -196,7 +196,6 @@ def collect_results_and_report(validation_sample_dir, assemblies_sample_dir,
     BUSCO_lineage = []
     for assembler in assemblers_assemblies:
 
-        row = [assembler]
         #Find which BUSCO data set was used from the evaluation config file
         sample_config_g = os.path.join(validation_sample_dir,
                     assembler, "*_evaluete.yaml")
@@ -212,18 +211,23 @@ def collect_results_and_report(validation_sample_dir, assemblies_sample_dir,
         BUSCO_lineage.append(data_path)
 
         #Find the BUSCO metrics from the result file
-        summary_g = os.path.join(validation_sample_dir, assembler, "BUSCO", "run_*", "short_summary_*")
+        summary_g = os.path.join(validation_sample_dir, assembler, "BUSCO", "run_*", "full_table_*")
         if len(summary_g) > 0:
             summary_f = glob.glob(summary_g)[0]
             BUSCO_dirs.append([os.path.dirname(summary_f), assembler])
+            summary_b = {"Complete":0, "Duplicated":0, "Fragmented":0, "Missing":0, "Total":0}
+            groups_b = {}
             with open(summary_f, "r") as f:
-                found = False
                 for line in f:
-                    if found:
-                        row.append(line.split()[0])
-                    if line.startswith("Representing"):
-                        found = True
-            BUSCO.append(row)
+                    b_status = line.split()[1]
+                    b_group = line.split()[0]
+                    # File may or may not contain header                    
+                    if b_status in summary_b.keys():
+                        summary_b[b_status] += 1
+                        groups_b[b_group] = 0
+
+            summary_b["Total"] = len(groups_b.keys()) # Unique orthos in this dataset
+            BUSCO.append([assembler] + [summary_b[i] for i in ["Complete", "Duplicated", "Fragmented", "Missing", "Total"]])
     # We have samples run with differing BUSCO data sets?!
     if len(set(BUSCO_lineage)) != 1:
         raise RunTimeError("There are samples run with differing BUSCO data sets. Check the (*.yaml) sample configuration files!")
