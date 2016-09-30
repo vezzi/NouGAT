@@ -212,7 +212,7 @@ def collect_results_and_report(validation_sample_dir, assemblies_sample_dir,
 
         #Find the BUSCO metrics from the result file
         summary_g = os.path.join(validation_sample_dir, assembler, "BUSCO", "run_*", "full_table_*")
-        if len(summary_g) > 0:
+        if len(glob.glob(summary_g)) > 0:
             summary_f = glob.glob(summary_g)[0]
             BUSCO_dirs.append([os.path.dirname(summary_f), assembler])
             summary_b = {"Complete":0, "Duplicated":0, "Fragmented":0, "Missing":0, "Total":0}
