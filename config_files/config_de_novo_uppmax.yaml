@@ -53,5 +53,5 @@ Tools:
   bin: /proj/a2010002/nobackup/sw/mf/bioinfo-tools/misc/qaTools/qaCompute
   options: ""
  BUSCO:
-  bin: /sw/apps/bioinfo/BUSCO/1.1b1/milou/BUSCO
+  bin: /sw/apps/bioinfo/BUSCO/1.22/milou/BUSCO
   options:  ["-m", "genome", "-f"]
