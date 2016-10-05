@@ -215,19 +215,18 @@ def collect_results_and_report(validation_sample_dir, assemblies_sample_dir,
         if len(glob.glob(summary_g)) > 0:
             summary_f = glob.glob(summary_g)[0]
             BUSCO_dirs.append([os.path.dirname(summary_f), assembler])
-            summary_b = {"Complete":0, "Duplicated":0, "Fragmented":0, "Missing":0, "Total":0}
-            groups_b = {}
+            summary_b = {"Complete":[], "Duplicated":[], "Fragmented":[], "Missing":[], "Total":[]}
             with open(summary_f, "r") as f:
                 for line in f:
                     b_status = line.split()[1]
                     b_group = line.split()[0]
                     # File may or may not contain header                    
                     if b_status in summary_b.keys():
-                        summary_b[b_status] += 1
-                        groups_b[b_group] = 0
+                        summary_b[b_status].append(b_group)
+                        summary_b["Total"].append(b_group)
 
-            summary_b["Total"] = len(groups_b.keys()) # Unique orthos in this dataset
-            BUSCO.append([assembler] + [summary_b[i] for i in ["Complete", "Duplicated", "Fragmented", "Missing", "Total"]])
+            reduced_summary = {k: len(set(summary_b[k])) for k in summary_b.keys()}
+            BUSCO.append([assembler] + [reduced_summary[i] for i in ["Complete", "Duplicated", "Fragmented", "Missing", "Total"]])
     # We have samples run with differing BUSCO data sets?!
     if len(set(BUSCO_lineage)) != 1:
         raise RunTimeError("There are samples run with differing BUSCO data sets. Check the (*.yaml) sample configuration files!")
