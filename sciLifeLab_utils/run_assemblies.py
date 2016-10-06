@@ -105,7 +105,7 @@ def main(args):
                 "spades": "module load spades/3.6.0\n",
                 "cabog": "module load cabog/8.1\n",
                 "allpaths": "module unload gcc\nmodule load allpathslg/52485\n",
-                "masurca": "module load masurca MaSuRCA/2.3.2\n"
+                "masurca": "module load MaSuRCA/2.3.2\n"
         }
 
         extramodules = [all_modules[tool] for tool in tools]
