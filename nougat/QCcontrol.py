@@ -143,8 +143,6 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
             os.path.exists("histogram.hist"):
         ABySS_Kmer_stdOut = open("ABySS_Kmer_Folder.stdOut", "a")
         ABySS_Kmer_stdErr = open("ABySS_Kmer_Folder.stdErr", "a")
-        import pdb
-        pdb.set_trace()
         returnValue = subprocess.call(command, shell=True, \
                 stdout=ABySS_Kmer_stdOut, stderr=ABySS_Kmer_stdErr)
         if returnValue > 0:
