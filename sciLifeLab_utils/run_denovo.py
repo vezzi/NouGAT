@@ -96,6 +96,8 @@ def qc_analysis(state, **kwargs):
 @common_options
 @click.option('--QC-folder', type=click.Path(exists=True), required=True, help="Path to where denovo QC pipeline was run. Where you find, "
     "the sample folders P????_??? eg. in, /foo/B.Baz_15_01/01-QC/")
+@click.option('--delivery-folder', type=str, required=False, help="Where the delivery will be staged")
+
 @pass_state
 def qc_report(state, **kwargs):
     """Generate a PDF report detailing the QC analysis results. 

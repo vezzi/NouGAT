@@ -407,8 +407,6 @@ if __name__ == '__main__':
     parser.add_argument('--qc-folder', type=str, required=True,
             help=("Path to where denovo QC pipeline was run. Where you find, "
                 "the sample folders P????_??? eg. in, /foo/B.Baz_15_01/01-QC/"))
-    parser.add_argument('--delivery-folder', type=str, required=False,
-            help="Where the delivery will be staged")
     args = parser.parse_args()
     main(args)
 
