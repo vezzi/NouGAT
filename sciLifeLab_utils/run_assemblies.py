@@ -51,8 +51,7 @@ def main(args):
         sample_files = []
         if args.afterqc:
             sample_data_dir = os.path.join(samples_data_dir,sample_dir_name)
-            fastq_files     = os.path.join(sample_data_dir, "results",
-                    "fastq_trimmed")
+            fastq_files     = os.path.join(sample_data_dir, "Trimmomatic")
             sample_files    = [os.path.join(fastq_files, f) for f in \
                     os.listdir(fastq_files) \
                     if (os.path.isfile(os.path.join(fastq_files,f)) \

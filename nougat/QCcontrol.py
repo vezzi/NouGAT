@@ -136,7 +136,6 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
                 command += " {} ".format(read2)
         if orientation == "none":
             command += " {} ".format(read1)
-
     common.print_command(command)
     sample_config["commands"] += "\n" + common.get_command_str(command)
 
@@ -144,6 +143,8 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
             os.path.exists("histogram.hist"):
         ABySS_Kmer_stdOut = open("ABySS_Kmer_Folder.stdOut", "a")
         ABySS_Kmer_stdErr = open("ABySS_Kmer_Folder.stdErr", "a")
+        import pdb
+        pdb.set_trace()
         returnValue = subprocess.call(command, shell=True, \
                 stdout=ABySS_Kmer_stdOut, stderr=ABySS_Kmer_stdErr)
         if returnValue > 0:

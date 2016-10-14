@@ -7,7 +7,6 @@ import subprocess
 
 def submit_job(sample_config, jobname, rundir, cliargs, extramodules=[]):
     """ Write a slurm file and sbatch it (if not dry-run)."""
-
     slurmfile_path = os.path.join(rundir, "{}.slurm".format(jobname))
     with open(slurmfile_path, "w") as slurmfile:
         slurmfile.write("#! /bin/bash -l\n")
