@@ -15,7 +15,7 @@ from nougat.pdf.peakdetect import peakdet
 def main(args):
     if "delivery_folder" not in args:
         delivery_folder = os.getcwd() #stage place is the local directory
-    delivery_folder = os.path.abspath(delivery_folder)
+    delivery_folder = os.path.abspath(args.delivery_folder)
     for qdir in os.listdir(args.qc_folder):
         # Dumping the pipeline state to yaml.. Not elegant, but gets the job done
         sample_yaml = os.path.join(args.qc_folder, qdir, "{}.nougat".format(qdir))
