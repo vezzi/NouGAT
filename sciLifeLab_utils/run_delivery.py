@@ -9,8 +9,7 @@ def main(arg):
     move_from_path = "{}/*/".format(arg.source)
     samples_path = glob.glob(move_from_path)
     #create in inbox folder for project
-    #dest = "/proj/{}/INBOX/{}/".format(arg.uppnexid,project)
-    dest = "/Users/vezzi/Desktop/"
+    dest = "/proj/{}/INBOX/{}/".format(arg.uppnexid,project)
     try:
         os.makedirs(dest)
     except OSError:
