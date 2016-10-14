@@ -136,7 +136,6 @@ def _run_abyss(global_config, sample_config, sorted_libraries_by_insert):
                 command += " {} ".format(read2)
         if orientation == "none":
             command += " {} ".format(read1)
-
     common.print_command(command)
     sample_config["commands"] += "\n" + common.get_command_str(command)
 

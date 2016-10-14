@@ -13,6 +13,9 @@ from nougat.pdf.peakdetect import peakdet
 
 
 def main(args):
+    if "delivery_folder" not in args:
+        delivery_folder = os.getcwd() #stage place is the local directory
+    delivery_folder = os.path.abspath(args.delivery_folder)
     for qdir in os.listdir(args.qc_folder):
         # Dumping the pipeline state to yaml.. Not elegant, but gets the job done
         sample_yaml = os.path.join(args.qc_folder, qdir, "{}.nougat".format(qdir))
@@ -29,10 +32,10 @@ def main(args):
         except YAMLError as e:
             print("Error in config file: {}".format(e))
         else:
-            _run_qc_report(global_config, sample_config)
+            _run_qc_report(global_config, sample_config, delivery_folder)
 
 
-def _run_qc_report(global_config, sample_config):
+def _run_qc_report(global_config, sample_config, delivery_folder):
     """This function produces a pdf report and stores the important \
             resutls in a single folder"""
 
@@ -45,18 +48,19 @@ def _run_qc_report(global_config, sample_config):
     projectName = "anonymous_project"
     if "projectName" in sample_config:
         projectName = sample_config["projectName"]
+    
+    currentDir = os.getcwd()
+    workingDir = os.path.join(currentDir, sampleName)
+    #create delivery dir for this sample
+    sample_delivery_dir = os.path.join(delivery_folder, sampleName)
+    if not os.path.exists(sample_delivery_dir):
+        os.makedirs(sample_delivery_dir)
 
-    currentDir  = os.getcwd()
-    workingDir  = os.path.join(currentDir, "results")
-    if not os.path.exists(workingDir):
-        os.makedirs(workingDir)
-    os.chdir(workingDir)
-
-    reportDir   = os.path.join(workingDir, "report")
+    reportDir   = os.path.join(sample_delivery_dir, "report")
     if not os.path.exists(reportDir):
         os.makedirs(reportDir)
 
-    PDFtitle = os.path.join(workingDir, "report",
+    PDFtitle = os.path.join(sample_delivery_dir, "report",
             "{}.pdf".format(sample_config["output"]))
 
     # this you cannot do in rLab which is why I wrote the helper initially
@@ -211,7 +215,7 @@ def _run_qc_report(global_config, sample_config):
             doc.add_table(trimmomatic_table_part2, TABLE_WIDTH)
             ##now save the trimmed reads
             trimmomaticDir = os.path.split(libraryInfo["trimmomatic"])[0]
-            trimmomaticResultDir  = os.path.join(workingDir, "fastq_trimmed")
+            trimmomaticResultDir  = os.path.join(sample_delivery_dir, "fastq_trimmed")
             if not os.path.exists(trimmomaticResultDir):
                 os.makedirs(trimmomaticResultDir)
             filesToCopy = [os.path.join(trimmomaticDir, f) for f in \
@@ -219,7 +223,7 @@ def _run_qc_report(global_config, sample_config):
                     if (os.path.isfile(os.path.join(trimmomaticDir,f)) \
                     and re.search('.gz$',f))]
             for source in filesToCopy:
-                dest = os.path.join("fastq_trimmed" , os.path.split(source)[1])
+                dest = os.path.join(trimmomaticResultDir , os.path.split(source)[1])
                 if not os.path.isfile(dest):
                     shutil.copyfile(source, dest)
 
@@ -236,14 +240,16 @@ def _run_qc_report(global_config, sample_config):
                     "sequence_length_distribution.png"), 400, 180, pdf.CENTER,
                     "{} -- Sequence Length Distribution".format(fastqc_run))
             #If I have not yet copied fastqc results do it
-            if not os.path.exists("fastqc"):
-                dirsToBeCopied = [os.path.join(fastqc_dir, f) for f in \
-                        os.listdir(fastqc_dir) \
-                        if os.path.isdir(os.path.join(fastqc_dir, f))]
-                for source in dirsToBeCopied:
-                    dest = os.path.join("fastqc", os.path.split(source)[1])
-                    if not os.path.exists(dest):
-                        shutil.copytree(source, dest)
+            fastqcResultDir  = os.path.join(sample_delivery_dir, "fastqc")
+            if not os.path.exists(fastqcResultDir):
+                os.makedirs(fastqcResultDir)
+            dirsToBeCopied = [os.path.join(fastqc_dir, f) for f in \
+                    os.listdir(fastqc_dir) \
+                    if os.path.isdir(os.path.join(fastqc_dir, f))]
+            for source in dirsToBeCopied:
+                dest = os.path.join(fastqcResultDir, os.path.split(source)[1])
+                if not os.path.exists(dest):
+                    shutil.copytree(source, dest)
 
         if tool == "abyss" and "abyss" in sample_config:
             doc.add_paragraph("A possible way to assess the complexity of a "
@@ -274,8 +280,11 @@ def _run_qc_report(global_config, sample_config):
                     if (os.path.isfile(os.path.join(kmerDir,f)) \
                     and re.search('.png$',f))]
             filesToCopy.append(os.path.join(kmerDir, "histogram.hist"))
+            abyssResultDir = os.path.join(sample_delivery_dir, "kmer_analysis")
+            if not os.path.exists(abyssResultDir):
+                os.makedirs(abyssResultDir)
             for source in filesToCopy:
-                dest = os.path.join("kmer_analysis", os.path.split(source)[1])
+                dest = os.path.join(abyssResultDir, os.path.split(source)[1])
                 if not os.path.exists(dest):
                     shutil.copyfile(source, dest)
 
@@ -347,8 +356,11 @@ def _run_qc_report(global_config, sample_config):
                     os.listdir(align_dir) \
                     if (os.path.isfile(os.path.join(align_dir,f)) \
                     and re.search('{}'.format(alignment_prefix),f))]
+            alignmentResultDir = os.path.join(sample_delivery_dir, "alignments")
+            if not os.path.exists(alignmentResultDir):
+                os.makedirs(alignmentResultDir)
             for source in filesToCopy:
-                dest = os.path.join("alignments", os.path.split(source)[1])
+                dest = os.path.join(alignmentResultDir, os.path.split(source)[1])
                 if not os.path.exists(dest):
                     shutil.copyfile(source, dest)
 
@@ -371,7 +383,8 @@ def _run_qc_report(global_config, sample_config):
                             "a clear global maximum, if not the predicted best "
                             "k is likely to be inaccurate"))
             #copy everything to results
-            dest = os.path.join(os.getcwd(), "kmergenie")
+            kmergenieResultDir =  os.path.join(sample_delivery_dir, "kmergenie")
+            dest = kmergenieResultDir
             if not os.path.exists(dest):
                 shutil.copytree(kmerdir, dest)
     doc.render(PDFtitle)
