@@ -22,25 +22,37 @@ vim: syntax=groovy
 version = 0.1
 
 // Configurable variables
-params.genome = 'GRCh37'
-if( params.genomes ) {
-    params.bwa_index = params.genomes[ params.genome ].bwa
+params.align  = false
+bwa_index = false
+params.bwa_index = params.genomes[ params.genome ].bwa ?: false
+
+if( params.align ) {
+    if( !params.bwa_index && params.align ){
+        exit 1, "No reference genome specified!"
+    }
+    if( params.bwa_index ){
+        bwa_index = file(params.bwa_index)
+        if( !bwa_index.exists() ) exit 1, "BWA index not found: $bwa_index"
+        bwa_index_amb = file( params.bwa_index+'.amb' )
+        if( !bwa_index_amb.exists() ) exit 1, "BWA index not found: $bwa_index_amb"
+        bwa_index_ann = file( params.bwa_index+'.ann' )
+        if( !bwa_index_ann.exists() ) exit 1, "BWA index not found: $bwa_index_ann"
+        bwa_index_bwt = file( params.bwa_index+'.bwt' )
+        if( !bwa_index_bwt.exists() ) exit 1, "BWA index not found: $bwa_index_bwt"
+        bwa_index_pac = file( params.bwa_index+'.pac' )
+        if( !bwa_index_pac.exists() ) exit 1, "BWA index not found: $bwa_index_pac"
+        bwa_index_sa = file( params.bwa_index+'.sa' )
+        if( !bwa_index_sa.exists() ) exit 1, "BWA index not found: $bwa_index_sa"
+    } else if ( params.fasta ){
+        fasta = file(params.fasta)
+        if( !fasta.exists() ) exit 1, "Fasta file not found: $fasta"
+    }
 }
+
+
 params.reads = "data/*{_1,_2}*.fastq.gz"
 params.outdir = './results'
 
-// Validate inputs
-def bwa_index, fasta
-if( !params.bwa_index && !params.fasta  ){
-    exit 1, "No reference genome specified!"
-}
-if( params.bwa_index ){
-    bwa_index = file(params.bwa_index)
-    if( !bwa_index.exists() ) exit 1, "BWA index not found: $bwa_index"
-} else if ( params.fasta ){
-    fasta = file(params.fasta)
-    if( !fasta.exists() ) exit 1, "Fasta file not found: $fasta"
-}
 
 if( workflow.profile == 'standard' && !params.project ) exit 1, "No UPPMAX project ID found! Use --project"
 
@@ -100,7 +112,7 @@ process trim_galore {
     set val(name), file(reads) from read_files_trimming
 
     output:
-    file '*fq.gz' into trimmed_reads
+    file '*fq.gz' into trimmed_reads_jellyfish, trimmed_reads_bwa
     file '*trimming_report.txt' into trimgalore_results
 
     script:
@@ -124,7 +136,7 @@ process trim_galore {
  * STEP 3 - Jellyfish
  */
 process jellyfish {
-    tag "$name"
+    tag "$reads"
     publishDir "${params.outdir}/jellyfish", mode: 'copy'
 
     cpus { params.jellyfish_cpus ?: 16 }
@@ -133,7 +145,7 @@ process jellyfish {
     errorStrategy = task.exitStatus == 143 ? 'retry' : 'terminate'
 
     input:
-    file reads from trimmed_reads
+    file reads from trimmed_reads_jellyfish
 
     output:
     file '*.jf' into jellyfish_db
@@ -153,7 +165,43 @@ process jellyfish {
 
 
 /*
- * STEP 4 MultiQC
+ * STEP 4 BWA
+ */
+process bwa {
+    tag "$reads"
+    publishDir "${params.outdir}/bwa", mode: 'copy'
+
+    memory { (params.multiqc_memory ?: 4.GB) * task.attempt }
+    time { (params.multiqc_time ?: 4.h) * task.attempt }
+    errorStrategy = 'ignore'
+
+    when:
+    params.align
+
+    input:
+    file index from bwa_index
+    file bwa_index_sa
+    file bwa_index_bwt
+    file bwa_index_ann
+    file bwa_index_amb
+    file bwa_index_pac
+    file reads from trimmed_reads_bwa
+
+    output:
+    file ('*.bam') into aligned
+    stdout into bwa_log
+
+    script:
+    """
+    f='$reads';f=(\$f);f=\${f[0]};f=\${f%.gz};f=\${f%.fastq};f=\${f%.fq};f=\${f%_val_1};f=\${f%_trimmed};f=\${f%_1};f=\${f%_R1}
+    bwa mem -t ${task.cpus} $index $reads | samtools view -Sb - | samtools sort - \$f
+
+    """
+}
+
+
+/*
+ * STEP 5 MultiQC
  */
 process multiqc {
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
@@ -166,6 +214,7 @@ process multiqc {
     file ('fastqc/*') from fastqc_results.flatten().toList()
     file ('trimgalore/*') from trimgalore_results.flatten().toList()
     file ('jellyfish/*hist') from jellifish_hist.flatten().toList()
+
 
     output:
     file '*multiqc_report.html'
