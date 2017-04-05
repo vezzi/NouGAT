@@ -1,5 +1,5 @@
 Pipelines:
- QCcontrol: ["fastqc", "abyss", "trimmomatic", "align"]
+ QCcontrol: ["fastqc", "abyss", "trimmomatic", "kmergenie", "align"]
  assemble: ["abyss", "allpaths", "cabog",  "masurca", "soapdenovo", "spades", "trinity"]
  evaluate: ["align", "BUSCO"]
  align: []
@@ -47,5 +47,5 @@ Tools:
   bin: /sw/apps/bioinfo/BUSCO/1.1b1/irma/BUSCO
   options:  ["-m", "genome", "-f"]
  kmergenie:
-  bin: /sw/apps/bioinfo/KmerGenie/1.7039/irma/kmergenie
+  bin: /lupus/ngi/production/latest/KmerGenie/kmergenie
   options: [""]
