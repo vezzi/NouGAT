@@ -24,7 +24,14 @@ version = 0.1
 // Configurable variables
 params.align  = false
 bwa_index = false
-params.bwa_index = params.genomes[ params.genome ].bwa ?: false
+params.genome = false
+params.bwa_index =  params.genome ? params.genomes[ params.genome ].bwa ?: false : false
+bwa_index_sa = false
+bwa_index_bwt = false
+bwa_index_pac = false
+bwa_index_ann = false
+bwa_index_amb = false
+
 
 if( params.align ) {
     if( !params.bwa_index && params.align ){
@@ -50,17 +57,22 @@ if( params.align ) {
 }
 
 
-params.reads = "data/*{_1,_2}*.fastq.gz"
+params.reads = "*{R1,R2}*.fastq.gz"
 params.outdir = './results'
 
 
-if( workflow.profile == 'standard' && !params.project ) exit 1, "No UPPMAX project ID found! Use --project"
+// Custom trimming options
+params.clip_r1 = 0
+params.clip_r2 = 0
+params.three_prime_clip_r1 = 0
+params.three_prime_clip_r2 = 0
+
+
 
 // Header log info
 log.info "========================================="
 log.info " NouGat : De Novo Best Practice v${version}"
 log.info "========================================="
-// print a lot of shit....
 
 
 /*
@@ -78,10 +90,6 @@ Channel
 process fastqc {
     tag "$name"
     publishDir "${params.outdir}/fastqc", mode: 'copy'
-
-    memory { (params.fastqc_memory ?: 2.GB) * task.attempt }
-    time { (params.fastqc_time ?: 4.h) * task.attempt }
-    errorStrategy = task.exitStatus == 143 ? 'retry' : 'ignore'
 
     input:
     set val(name), file(reads) from read_files_fastqc
@@ -102,11 +110,6 @@ process fastqc {
 process trim_galore {
     tag "$name"
     publishDir "${params.outdir}/trim_galore", mode: 'copy'
-
-    cpus { params.trim_galore_cpus ?: 2 }
-    memory { (params.trim_galore_memory ?: 4.GB) * task.attempt }
-    time { (params.trim_galore_time ?: 8.h) * task.attempt }
-    errorStrategy = task.exitStatus == 143 ? 'retry' : 'terminate'
 
     input:
     set val(name), file(reads) from read_files_trimming
@@ -139,11 +142,6 @@ process jellyfish {
     tag "$reads"
     publishDir "${params.outdir}/jellyfish", mode: 'copy'
 
-    cpus { params.jellyfish_cpus ?: 16 }
-    memory { (params.jellyfish_memory ?: 124.GB) * task.attempt }
-    time { (params.jellyfish_time ?: 16.h) * task.attempt }
-    errorStrategy = task.exitStatus == 143 ? 'retry' : 'terminate'
-
     input:
     file reads from trimmed_reads_jellyfish
 
@@ -170,10 +168,6 @@ process jellyfish {
 process bwa {
     tag "$reads"
     publishDir "${params.outdir}/bwa", mode: 'copy'
-
-    memory { (params.multiqc_memory ?: 4.GB) * task.attempt }
-    time { (params.multiqc_time ?: 4.h) * task.attempt }
-    errorStrategy = 'ignore'
 
     when:
     params.align
@@ -205,10 +199,6 @@ process bwa {
  */
 process multiqc {
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
-
-    memory { (params.multiqc_memory ?: 4.GB) * task.attempt }
-    time { (params.multiqc_time ?: 4.h) * task.attempt }
-    errorStrategy = 'ignore'
 
     input:
     file ('fastqc/*') from fastqc_results.flatten().toList()
