@@ -57,7 +57,7 @@ if( params.align ) {
 }
 
 
-params.reads = "*{R1,R2}*.fastq.gz"
+params.reads = "data/*{1,2}.fastq.gz"
 params.outdir = './results'
 
 
@@ -153,7 +153,7 @@ process jellyfish {
     """
     #Getting prefix
     f='$reads';f=(\$f);f=\${f[0]};f=\${f%.gz};f=\${f%.fastq};f=\${f%.fq};f=\${f%_val_1};f=\${f%_trimmed};f=\${f%_1};f=\${f%_R1}
-    zcat $reads | jellyfish count -o \$f.jf  -m 25 -s 1000M -t ${task.cpus} -C /dev/fd/0
+    gunzip -c $reads | jellyfish count -o \$f.jf  -m 25 -s 1000M -t ${task.cpus} -C /dev/fd/0
     jellyfish histo -o \$f.hist -f \$f.jf
     """
 
