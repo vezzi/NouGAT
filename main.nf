@@ -13,13 +13,23 @@ vim: syntax=groovy
 ----------------------------------------------------------------------------------------
 */
 
-/*
- * SET UP CONFIGURATION VARIABLES
-*/
-
+revision = grabRevision()
 
 // Pipeline version
 version = 0.1
+
+if (!isAllowedParams(params)) {exit 1, "params is unknown, see --help for more information"}
+
+
+if (params.help) {
+  helpMessage(version, revision)
+  exit 1
+}
+
+if (params.version) {
+  versionMessage(version, revision)
+  exit 1
+}
 
 // Configurable variables
 params.align  = false
@@ -34,7 +44,7 @@ bwa_index_amb = false
 
 
 if( params.align ) {
-    if( !params.bwa_index && params.align ){
+    if( !params.bwa_index ){
         exit 1, "No reference genome specified!"
     }
     if( params.bwa_index ){
@@ -85,7 +95,7 @@ Channel
 
 
 /*
- * STEP 1 - FastQC
+ * STEP - FastQC
  */
 process fastqc {
     tag "$name"
@@ -105,7 +115,7 @@ process fastqc {
 
 
 /*
- * STEP 2 - Trim Galore!
+ * STEP - Trim Galore!
  */
 process trim_galore {
     tag "$name"
@@ -136,7 +146,7 @@ process trim_galore {
 }
 
 /*
- * STEP 3 - Jellyfish
+ * STEP - Jellyfish
  */
 process jellyfish {
     tag "$reads"
@@ -150,11 +160,12 @@ process jellyfish {
     file '*.hist' into jellifish_hist
 
     script:
+    prefix = reads[0].toString() - ~/(_R1)?(_trimmed)?(_val_1)?(\.fq)?(\.fastq)?(\.gz)?$/
+
     """
     #Getting prefix
-    f='$reads';f=(\$f);f=\${f[0]};f=\${f%.gz};f=\${f%.fastq};f=\${f%.fq};f=\${f%_val_1};f=\${f%_trimmed};f=\${f%_1};f=\${f%_R1}
-    gunzip -c $reads | jellyfish count -o \$f.jf  -m 25 -s 1000M -t ${task.cpus} -C /dev/fd/0
-    jellyfish histo -o \$f.hist -f \$f.jf
+    gunzip -c $reads | jellyfish count -o ${prefix}.jf  -m 25 -s 1000M -t ${task.cpus} -C /dev/fd/0
+    jellyfish histo -o ${prefix}_jf.hist -f ${prefix}.jf
     """
 
 
@@ -163,7 +174,7 @@ process jellyfish {
 
 
 /*
- * STEP 4 BWA
+ * STEP - BWA
  */
 process bwa {
     tag "$reads"
@@ -188,7 +199,30 @@ process bwa {
     script:
     """
     f='$reads';f=(\$f);f=\${f[0]};f=\${f%.gz};f=\${f%.fastq};f=\${f%.fq};f=\${f%_val_1};f=\${f%_trimmed};f=\${f%_1};f=\${f%_R1}
-    bwa mem -t ${task.cpus} $index $reads | samtools view -Sb - | samtools sort - \$f
+    bwa mem -t ${task.cpus} $index $reads |  samtools sort  --threads $task.cpus - > \$f.bam
+
+    """
+}
+
+/*
+ * STEP - QUALIMAP
+*/
+process qualimap {
+    tag "$reads"
+    publishDir "${params.outdir}/qualimap", mode: 'copy'
+
+    when:
+    params.align
+
+    input:
+    file bam from aligned
+
+    output:
+    file ('*_stats') into qualimap_result
+
+    script:
+    """
+    qualimap bamqc -nt 4 -bam $bam
 
     """
 }
@@ -203,8 +237,8 @@ process multiqc {
     input:
     file ('fastqc/*') from fastqc_results.flatten().toList()
     file ('trimgalore/*') from trimgalore_results.flatten().toList()
-    file ('jellyfish/*hist') from jellifish_hist.flatten().toList()
-
+    file ('jellyfish/*') from jellifish_hist.flatten().toList()
+    file ('qualimap/*') from qualimap_result.flatten().toList()
 
     output:
     file '*multiqc_report.html'
@@ -212,20 +246,63 @@ process multiqc {
 
     script:
     """
+    which multiqc
     multiqc -f .
     """
 }
 
 
+/*
+================================================================================
+=                               F U N C T I O N S                              =
+================================================================================
+*/
 
 
+def isAllowedParams(params) {
+  final test = true
+  params.each{
+    if (!checkParams(it.toString().split('=')[0])) {
+      println "params ${it.toString().split('=')[0]} is unknown"
+      test = false
+    }
+  }
+  return test
+}
+
+def checkParams(it) {
+  // Check if params is in this given list
+  return it in [
+    'help',
+    'version',
+    'genomes',
+    'reads',
+    'align',
+    'bwa_index']
+}
 
 
+def grabRevision() {
+  return workflow.revision ?: workflow.commitId ?: workflow.scriptId.substring(0,10)
+}
+
+def helpMessage(version, revision) { // Display help message
+  log.info "NouGat de novo pipeline ~ $version - revision: $revision"
+  log.info "    usage:"
+  log.info "        nextflow run -c configuration.config ...."
+  log.info "    --version: prints the version"
+  log.info "    --help: prints this help message"
+  log.info "    --genomes: still not rsure..."
+  log.info "    --reads: ehre the reads are"
+  log.info "    --align: if present performs also aligment"
+}
 
 
-
-
-
+def versionMessage(version, revision) { // Display version message
+  log.info "NouGat de novo assembly pipeline"
+  log.info "  version   : $version"
+  log.info workflow.commitId ? "Git info    : $workflow.repository - $workflow.revision [$workflow.commitId]" : "  revision  : $revision"
+}
 
 
 
